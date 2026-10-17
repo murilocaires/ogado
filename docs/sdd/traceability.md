@@ -4,6 +4,9 @@ Atualizada pelo `docs-keeper` com a skill `traceability`. Rode `node scripts/tra
 
 | ID | Ticket | Teste(s) | Código | Status |
 |---|---|---|---|---|
+| RNF-011 | T-01 | `apps/api/test/health.test.ts` | `apps/api/src/app.ts`, `docker-compose.yml` | Parcial (seed de ouro nos tickets de telas) |
+| RNF-010 | T-01 | — (gate de CI: typecheck, lint, test; exceção: não é testável por ID; cobertura ≥ 95% do domínio vem em T-02) | `.github/workflows/ci.yml`, `eslint.config.js` | Atendido pelo gate |
+| RNF-001 | T-01 (base) | `packages/domain/src/index.test.ts` | `packages/domain/src/index.ts` | Parcial (cálculos em T-02/T-03) |
 | RN-001…RN-006 | T-02 | `packages/domain/**/compra-venda.test.ts` | `packages/domain/src/compra-venda.ts` | Pendente |
 | RN-007…RN-023 | T-03 | `packages/domain/**/recria.test.ts` | `packages/domain/src/recria.ts` | Pendente |
 | RF-001 (e-mail), RF-010, RNF-003, RNF-004 | T-04 | — | — | Pendente |

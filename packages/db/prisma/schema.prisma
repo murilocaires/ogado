@@ -1,0 +1,9 @@
+// T-01: sem modelos de negócio. Tabelas entram nos tickets seguintes (ver skill prisma-migrations).
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}

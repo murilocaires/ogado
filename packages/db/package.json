@@ -1,0 +1,25 @@
+{
+  "name": "@ogado/db",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev",
+    "seed": "echo \"seed vazio (T-01); o cenário de ouro entra com T-06/T-07\"",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "echo \"sem testes em packages/db (T-01)\""
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "pg": "^8.23.1"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "prisma": "^7.10.1",
+    "@types/pg": "^8.23.1"
+  }
+}

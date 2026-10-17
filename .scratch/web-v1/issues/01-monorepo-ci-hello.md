@@ -9,7 +9,9 @@
 **Reqs:** RNF-010, RNF-011 · **Seam:** rotas HTTP da API + e2e mínimo
 
 - [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test` verdes; `pnpm test:parity` roda o oráculo (decidir uso do `verify.py` no Windows)
-- [ ] `docker compose up` sobe o Postgres e a API responde ao "hello" visto na web
+- [x] `docker compose up` sobe o Postgres; a API e a web sobem com `pnpm dev` e a web mostra o "hello" (interpretação: compose = só Postgres, decisão registrada na revisão)
+- [x] Seed vazio: `pnpm --filter @ogado/db seed` (no-op); o cenário de ouro entra nos tickets de telas
+- Lacunas anotadas para o T-04: `setErrorHandler` sem vazar `err.message`, helmet, rate limit; `@ogado/domain` entra em `transpilePackages` no T-13; `@ogado/db` nunca é importado pela web
 - [ ] `node scripts/trace-check.mjs` e `node scripts/validate-routing.mjs` rodam
 - [ ] CI executa install → typecheck → lint → test → build
 - [ ] README explica como subir tudo

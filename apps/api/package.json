@@ -1,0 +1,25 @@
+{
+  "name": "@ogado/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/server.ts",
+    "build": "tsup",
+    "start": "node dist/server.js",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "fastify": "^5.12.7",
+    "fastify-type-provider-zod": "^7.0.0",
+    "@fastify/cors": "^11.3.1",
+    "zod": "^4.6.7",
+    "@ogado/contracts": "workspace:*",
+    "@ogado/db": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15",
+    "tsup": "^9.0.0"
+  }
+}

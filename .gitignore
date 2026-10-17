@@ -6,3 +6,6 @@ dist
 *.log
 .scratch/*/notes
 coverage
+packages/db/src/generated
+!.env.example
+*.tsbuildinfo
