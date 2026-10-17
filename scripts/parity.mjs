@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 // calc.js é CommonJS/UMD; o package.json raiz é ESM, então carregamos em um sandbox com `module`.
@@ -16,12 +17,17 @@ vm.runInNewContext(readFileSync(join(root, 'references', 'calculo', 'calc.js'), 
 const oracle = sandbox.module.exports;
 const golden = JSON.parse(readFileSync(join(root, 'tests', 'fixtures', 'golden.json'), 'utf8'));
 
+// Domínio TS (T-02): carregado direto via Node strip-types (compra-venda.ts não tem imports locais).
+const domainCV = await import(
+  pathToFileURL(join(root, 'packages', 'domain', 'src', 'compra-venda.ts')).href
+);
+
 const REL_TOL = 1e-6;
 const failures = [];
 let checks = 0;
 
 function close(actual, expected) {
-  return Math.abs(actual - expected) <= REL_TOL * Math.max(1, Math.abs(expected));
+  return Math.abs(actual - expected) <= REL_TOL * Math.abs(expected);
 }
 
 function compare(path, actual, expected) {
@@ -52,6 +58,21 @@ const runners = {
   recria: (entrada) => oracle.recria(entrada),
 };
 
+// Converte Decimal -> number só para comparar com o ouro (tolerância relativa).
+function plain(v) {
+  if (v !== null && typeof v === 'object' && typeof v.toNumber === 'function') return v.toNumber();
+  if (Array.isArray(v)) return v.map(plain);
+  if (v !== null && typeof v === 'object')
+    return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, plain(x)]));
+  return v;
+}
+
+// Funções de packages/domain validadas contra o mesmo golden (além do oráculo calc.js).
+const domainRunners = {
+  compraVenda: (entrada) => plain(domainCV.calcularCompraVenda(entrada)),
+  compraVendaIndividual: (entrada) => plain(domainCV.calcularCompraVenda(entrada)),
+};
+
 for (const [name, run] of Object.entries(runners)) {
   const caso = golden[name];
   if (!caso) {
@@ -59,7 +80,28 @@ for (const [name, run] of Object.entries(runners)) {
     continue;
   }
   compare(name, run(caso.entrada), caso.esperado);
+  if (domainRunners[name]) compare(`domain.${name}`, domainRunners[name](caso.entrada), caso.esperado);
 }
+// --- T-03: recria de packages/domain contra o golden (variantes padrão, ADR-0008) ---
+// Carrega recria.ts direto via Node strip-types (só depende de decimal.js).
+{
+  const domainRecria = await import(
+    pathToFileURL(join(root, 'packages', 'domain', 'src', 'recria.ts')).href
+  );
+  const casoRecria = golden.recria;
+  if (casoRecria) {
+    const { areaLotacaoInicial, ...entradaRecria } = casoRecria.entrada;
+    const variantes = {
+      lotacaoInicial: areaLotacaoInicial === 'area' ? 'areaPastavel' : 'fixa80',
+      faturamentoBruto: 'pesoVivo',
+    };
+    // 'inputs' é eco do oráculo, não resultado de negócio.
+    const esperadoRecria = { ...casoRecria.esperado };
+    delete esperadoRecria.inputs;
+    compare('domain.recria', plain(domainRecria.calcularRecria(entradaRecria, variantes)), esperadoRecria);
+  }
+}
+
 for (const name of Object.keys(golden)) {
   if (!name.startsWith('_') && !(name in runners))
     failures.push(`${name}: sem runner em parity.mjs`);

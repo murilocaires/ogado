@@ -37,6 +37,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
+      - run: pnpm --filter @ogado/domain test:coverage
       - run: pnpm test:parity
       - run: node scripts/validate-routing.mjs
       - run: node scripts/trace-check.mjs
