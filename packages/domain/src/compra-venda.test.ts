@@ -8,6 +8,7 @@ import {
   type CompraVendaInput,
   type LoteInput,
 } from './compra-venda';
+import { formatarBRL } from './pt-br';
 
 interface LinhaEsperada {
   qtd: number;
@@ -46,7 +47,7 @@ function linhaPerto(atual: ReturnType<typeof calcularCompra>, esp: LinhaEsperada
   perto(atual.arrobas, esp.arrobas);
   perto(atual.preco, esp.preco);
   perto(atual.total, esp.total);
-  perto(atual.porCab, esp.porCab);
+  perto(atual.porCab ?? new Decimal(NaN), esp.porCab);
 }
 
 describe('paridade com o ouro (compraVenda)', () => {
@@ -91,13 +92,13 @@ describe('RN-003: modo individual (soma dos pesos; qtd = nº de pesos)', () => {
     // (630 - 3*10) / 15 = 40 @ ; 40 * 300 = 12000
     expect(v.arrobas.toString()).toBe('40');
     expect(v.total.toString()).toBe('12000');
-    expect(v.porCab.toString()).toBe('4000');
+    expect(v.porCab?.toString()).toBe('4000');
   });
   it('RN-003: individual sem pesos resulta em lote vazio', () => {
     const c = calcularCompra({ modo: 'individual', preco: 300 });
     expect(c.qtd.toString()).toBe('0');
     expect(c.total.toString()).toBe('0');
-    expect(c.porCab.toString()).toBe('0');
+    expect(c.porCab).toBeNull();
   });
 });
 
@@ -107,11 +108,12 @@ describe('RN-001/RN-003/RN-004: compra', () => {
     expect(c.kg.toString()).toBe('2100');
     expect(c.arrobas.toString()).toBe('70');
     expect(c.total.toString()).toBe('20300');
-    expect(c.porCab.toString()).toBe('2030');
+    expect(c.porCab?.toString()).toBe('2030');
   });
-  it('RN-004: R$/cab. com qtd 0 não divide por zero', () => {
+  it('RN-004/RN-022: R$/cab. com qtd 0 é indefinido (null), não 0', () => {
     const c = calcularCompra({ modo: 'total', qtd: 0, peso: 300, preco: 300 });
-    expect(c.porCab.toString()).toBe('0');
+    expect(c.porCab).toBeNull();
+    expect(formatarBRL(c.porCab)).toBe('—');
   });
   it('RN-003: valores não finitos valem zero', () => {
     const c = calcularCompra({ modo: 'total', qtd: 1, peso: Infinity, preco: 300 });
@@ -128,7 +130,7 @@ describe('RN-002/RN-005: venda', () => {
     const v = calcularVenda({ modo: 'total', qtd: 16, peso: 2920, preco: 290 });
     expect(v.arrobas.toString()).toBe('184');
     expect(v.total.toString()).toBe('53360');
-    expect(v.porCab.toString()).toBe('3335');
+    expect(v.porCab?.toString()).toBe('3335');
   });
   it('RN-002: modo médio na venda', () => {
     const v = calcularVenda({ modo: 'medio', qtd: 10, peso: 310, preco: 300 });

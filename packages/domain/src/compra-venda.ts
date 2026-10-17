@@ -45,7 +45,8 @@ export interface LinhaCalculada {
   arrobas: Decimal;
   preco: Decimal;
   total: Decimal;
-  porCab: Decimal;
+  /** R$ por cabeça; `null` (indefinido, RN-022) quando qtd = 0. */
+  porCab: Decimal | null;
 }
 
 export interface CompraVendaResultado {
@@ -98,7 +99,7 @@ function pesoLote(lote: LoteInput): { qtd: Decimal; kg: Decimal } {
 function fechar(qtd: Decimal, kg: Decimal, arrobas: Decimal, lote: LoteInput): LinhaCalculada {
   const preco = dec(lote.preco);
   const total = arrobas.times(preco);
-  return { qtd, kg, arrobas, preco, total, porCab: qtd.isZero() ? ZERO : total.div(qtd) };
+  return { qtd, kg, arrobas, preco, total, porCab: qtd.isZero() ? null : total.div(qtd) };
 }
 
 /** RN-001, RN-003, RN-004: @ = kg ÷ 30; total = @ × R$/@; R$/cab. = total ÷ qtd. */
@@ -120,7 +121,10 @@ export function calcularVenda(
   return fechar(qtd, kg, arrobas, lote);
 }
 
-function soma(linhas: LinhaCalculada[], campo: keyof LinhaCalculada): Decimal {
+function soma(
+  linhas: LinhaCalculada[],
+  campo: Exclude<keyof LinhaCalculada, 'porCab'>,
+): Decimal {
   return Decimal.sum(ZERO, ...linhas.map((l) => l[campo]));
 }
 

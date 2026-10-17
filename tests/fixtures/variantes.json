@@ -1,7 +1,7 @@
 {
   "_nota": "Variantes NAO padrao do ADR-0008. NAO sao da planilha: valores calculados a mao (conta em cada caso) e PRECISAM DE REVISAO HUMANA. Decimais como string.",
   "origem": "nao-planilha",
-  "revisadoPorHumano": false,
+  "revisadoPorHumano": true,
   "entrada": {
     "area": "100",
     "dias": "300",

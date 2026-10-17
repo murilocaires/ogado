@@ -7,12 +7,26 @@ const MENOS_TIPOGRAFICO = '−';
 const TRACO = '—';
 const MILHAR = /^\d{1,3}(\.\d{3})+$/;
 
+const MILHAR_2_GRUPOS = /^\d{1,3}(\.\d{3}){2,}$/;
+
+export interface OpcoesParseNumero {
+  /**
+   * Ponto sem vírgula decimal. `'rejeitar'` (padrão, formulários): só a vírgula é decimal; ponto
+   * único é ambíguo e vira `null`. `'planilha'`: comportamento do calc.js (`1.234` = 1234, `12.5` = 12,5).
+   */
+  ambiguoPonto?: 'rejeitar' | 'planilha';
+}
+
 /**
  * Lê um número digitado em pt-BR (`1.234,56`, `R$ 10,5`, `1,5%`, `-3`).
  * Retorna `null` para vazio ou inválido (o chamador decide se vale 0 ou erro de campo).
- * Sem vírgula, `1.234` é milhar (1234) e `12.5` é decimal (12,5), como na planilha.
+ * Em formulário só a vírgula é decimal; o ponto é milhar apenas com vírgula decimal ou com 2+ grupos
+ * de 3 dígitos (`1.234.567`). `1.500`, `1.5` e `0.25` são ambíguos: `null` (a UI pede a vírgula).
  */
-export function parseNumeroPtBr(entrada: string | number | null | undefined): Decimal | null {
+export function parseNumeroPtBr(
+  entrada: string | number | null | undefined,
+  opcoes: OpcoesParseNumero = {},
+): Decimal | null {
   if (entrada === null || entrada === undefined) return null;
   if (typeof entrada === 'number') return Number.isFinite(entrada) ? new Decimal(entrada) : null;
 
@@ -35,6 +49,8 @@ export function parseNumeroPtBr(entrada: string | number | null | undefined): De
     return new Decimal(`${sinal}${inteiro.replace(/\./g, '') || '0'}.${fracao}`);
   }
 
+  if (/^\d+$/.test(s) || MILHAR_2_GRUPOS.test(s)) return new Decimal(sinal + s.replace(/\./g, ''));
+  if (opcoes.ambiguoPonto !== 'planilha') return null;
   if (MILHAR.test(s)) return new Decimal(sinal + s.replace(/\./g, ''));
   if (/^\d+(\.\d+)?$/.test(s)) return new Decimal(sinal + s);
   return null;

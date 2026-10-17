@@ -53,5 +53,10 @@ Entradas padrão: área 102 · dias 270 · investimento 122.534,80 · R$/cab. 2.
 `node -e "const c=require('./references/calculo/calc.js');console.log(c.recria(c.sample.recria).faturamentoLiquido)"` → `102408.0529717073`.
 `python3 references/calculo/verify.py` → `TOTAL 32 falhas 0` (requer `openpyxl`).
 
+## D2. Divergências deliberadas em relação ao `calc.js` (entrada e exibição)
+- **R$/cab. com quantidade 0** é indefinido ("—"), não 0 como no oráculo (RN-022).
+- **Parser de formulário** (`parseNumeroPtBr`): só a vírgula é decimal; `1.500` e `1.5` retornam inválido. O modo `{ ambiguoPonto: 'planilha' }` reproduz o `calc.js` (colar texto da planilha). Decisão do pecuarista em 2026-10-17.
+- **Tolerância de paridade:** relativa estrita, `|atual − esperado| ≤ 1e-6 × |esperado|`.
+
 ## E. Fórmulas futuras (v2) — Metas da RECRIA
 GMD = (saída − entrada) ÷ dias · lotação entrada/média/saída = (cab/ha × peso) ÷ 450 · R$ compra = (peso ÷ 30) × cab × R$/@ · custo op. = (dias ÷ 30) × cab × desembolso · faturamento = (peso saída ÷ 30) × cab × R$/@ · rentabilidade a.m. = (margem ÷ custo total) ÷ meses · @ produzidas = ((saída − entrada) ÷ 30) × cab · custo da @ = custo op. ÷ @ produzidas · anos para pagar = (custo total + investimentos) ÷ faturamento. Alertas: ≤ 250 cab./lote; lotação entrada ≤ 4 e saída ≤ 6 UA/ha.

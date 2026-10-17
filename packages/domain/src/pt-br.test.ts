@@ -15,12 +15,38 @@ describe('RNF-007: parser pt-BR', () => {
     expect(parseNumeroPtBr('0,3')?.toString()).toBe('0.3');
     expect(parseNumeroPtBr('325')?.toString()).toBe('325');
   });
-  it('RNF-007: ponto como separador de milhar (1.234 e 1.234.567)', () => {
-    expect(parseNumeroPtBr('1.234')?.toString()).toBe('1234');
+  // Decisão do humano: em campo de formulário só a VÍRGULA é decimal. O ponto só vale como milhar
+  // com vírgula decimal (1.234,56) ou com 2+ grupos de 3 dígitos (1.234.567). Ponto único é ambíguo
+  // (1.500 = 1500 ou 1,5?) e 1.5 / 0.25 também são tratados como inválidos: a UI pede a vírgula.
+  it('RNF-007: ponto de milhar com vírgula decimal (1.234,56)', () => {
+    expect(parseNumeroPtBr('1.234,56')?.toString()).toBe('1234.56');
+  });
+  it('RNF-007: dois ou mais grupos de milhar sem vírgula (1.234.567)', () => {
     expect(parseNumeroPtBr('1.234.567')?.toString()).toBe('1234567');
   });
-  it('RNF-007: ponto decimal sem grupo de milhar (12.5)', () => {
-    expect(parseNumeroPtBr('12.5')?.toString()).toBe('12.5');
+  it('RNF-007: ponto único com 3 dígitos é ambíguo e retorna null (1.500, 10.000)', () => {
+    expect(parseNumeroPtBr('1.500')).toBeNull();
+    expect(parseNumeroPtBr('10.000')).toBeNull();
+  });
+  it('RNF-007: ponto único com 1-2 casas é rejeitado em formulário (1.5, 0.25, 12.5)', () => {
+    expect(parseNumeroPtBr('1.5')).toBeNull();
+    expect(parseNumeroPtBr('0.25')).toBeNull();
+    expect(parseNumeroPtBr('12.5')).toBeNull();
+  });
+  it('RNF-007: vírgula decimal (1,5 e 0,5)', () => {
+    expect(parseNumeroPtBr('1,5')?.toString()).toBe('1.5');
+    expect(parseNumeroPtBr('0,5')?.toString()).toBe('0.5');
+  });
+  it("RNF-007: { ambiguoPonto: 'planilha' } reproduz o calc.js (colar da planilha)", () => {
+    const o = { ambiguoPonto: 'planilha' } as const;
+    expect(parseNumeroPtBr('1.500', o)?.toString()).toBe('1500');
+    expect(parseNumeroPtBr('10.000', o)?.toString()).toBe('10000');
+    expect(parseNumeroPtBr('1.234.567', o)?.toString()).toBe('1234567');
+    expect(parseNumeroPtBr('1.5', o)?.toString()).toBe('1.5');
+    expect(parseNumeroPtBr('0.25', o)?.toString()).toBe('0.25');
+    expect(parseNumeroPtBr('12.5', o)?.toString()).toBe('12.5');
+    expect(parseNumeroPtBr('1.234,56', o)?.toString()).toBe('1234.56');
+    expect(parseNumeroPtBr('1.2.3', o)).toBeNull();
   });
   it('RNF-007: negativo com hífen ou sinal tipográfico', () => {
     expect(parseNumeroPtBr('-1.000,25')?.toString()).toBe('-1000.25');
@@ -29,6 +55,14 @@ describe('RNF-007: parser pt-BR', () => {
   it('RNF-007: milhar mal posicionado antes da vírgula é inválido; ,5 vale 0,5', () => {
     expect(parseNumeroPtBr('1.2,5')).toBeNull();
     expect(parseNumeroPtBr(',5')?.toString()).toBe('0.5');
+  });
+  it('RNF-007: lixo e vazio retornam null; negativo preservado', () => {
+    expect(parseNumeroPtBr('')).toBeNull();
+    expect(parseNumeroPtBr('1a2')).toBeNull();
+    expect(parseNumeroPtBr('--5')).toBeNull();
+    expect(parseNumeroPtBr('-5')?.toString()).toBe('-5');
+    expect(parseNumeroPtBr('-1.500')).toBeNull();
+    expect(parseNumeroPtBr('-1.500,5')?.toString()).toBe('-1500.5');
   });
   it('RNF-007: aceita number finito', () => {
     expect(parseNumeroPtBr(12.5)?.toString()).toBe('12.5');

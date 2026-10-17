@@ -28,7 +28,7 @@ Legenda de prioridade: **M** = must (v1) · **S** = should (v1.1) · **C** = cou
 | RN-020 | Valores duplicados na planilha são um só campo no app (PA-03). | `F19-F21`,`B37` | M |
 | RN-021 | Parâmetros padrão (30, 15, 10, 450, 52%, 1,5%, 0,3%, R$ 2/kg, R$ 2,50) são editáveis por fazenda com "restaurar padrão da planilha". | planilhas | M |
 | RN-023 | Variantes de fórmula por fazenda (ADR-0008): `lotacaoInicial` = `fixa80`\|`areaPastavel`; `faturamentoBruto` = `pesoVivo`\|`carcaca`. Padrão = planilha. A simulação salva guarda a variante usada e o resultado a exibe. | decisão do pecuarista | M |
-| RN-022 | Divisão por zero / campo vazio não quebra a tela: resultado mostra "—" e dica de preenchimento. | UX | M |
+| RN-022 | Divisão por zero / campo vazio não quebra a tela: resultado mostra "—" e dica de preenchimento (inclui R$/cab. com quantidade 0 em compra e venda). | UX | M |
 
 ## 2. Requisitos funcionais (RF)
 
@@ -64,7 +64,7 @@ Legenda de prioridade: **M** = must (v1) · **S** = should (v1.1) · **C** = cou
 | RNF-004 | Isolamento multi-tenant (`fazendaId` em toda query). | teste de integração dedicado | M |
 | RNF-005 | Acessibilidade WCAG 2.2 AA; alvo de toque ≥ 44 px; teclado completo. | axe sem violações | M |
 | RNF-006 | Responsivo 360–1920 px; navegação lateral vira barra inferior em tela estreita. | verificação visual | M |
-| RNF-007 | Idioma pt-BR, moeda BRL, números `1.234,56`. | testes de formatação | M |
+| RNF-007 | Idioma pt-BR, moeda BRL, números `1.234,56`. Em campo de formulário só a vírgula é decimal; ponto só vale como milhar com vírgula decimal ou com 2+ grupos de 3 dígitos; `1.500`/`1.5` são rejeitados com dica para usar vírgula. | testes de formatação | M |
 | RNF-008 | Observabilidade: logs estruturados, id de requisição, erros sem PII. | revisão | S |
 | RNF-009 | LGPD: consentimento, exportação e exclusão de conta. | fluxo mínimo | S |
 | RNF-010 | Qualidade: TS estrito, lint, cobertura de domínio ≥ 95%, CI em todo PR. | CI | M |
