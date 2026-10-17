@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>App Novo lote</title>
+<script src="./support.js"></script>
+<script src="./calc.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Geist:wght@400..700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;color:#10231B;font-variant-numeric:tabular-nums}
+.disp{font-family:'Bricolage Grotesque','Geist',sans-serif}
+a{color:inherit;text-decoration:none}
+.th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#5F7367}
+.seg{display:flex;border-radius:14px;padding:4px;background:#E4EFE3}
+.seg button{flex:1;border:0;border-radius:11px;min-height:44px;font:600 14.5px 'Geist',sans-serif;cursor:pointer;color:#4A5F55;background:transparent}
+.inp{width:100%;min-height:48px;box-sizing:border-box;border:1px solid #CFE2CE;border-radius:12px;background:#fff;padding:0 14px;font:500 16px 'Geist',sans-serif;color:#10231B;font-variant-numeric:tabular-nums}
+.inp:focus{outline:2px solid #1F7A4F;outline-offset:1px;border-color:#1F7A4F}
+.lbl{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;min-width:0}
+.btn{display:flex;align-items:center;justify-content:center;min-height:52px;border-radius:14px;font:700 16px 'Geist',sans-serif;border:0;cursor:pointer;box-sizing:border-box}
+.lnk{background:none;border:0;padding:0;font:600 12.5px 'Geist',sans-serif;color:#1F7A4F;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;min-height:28px;text-align:left}
+</style>
+</helmet>
+
+<div style="width:390px;height:844px;box-sizing:border-box;background:#F2F7F1;position:relative;overflow:hidden">
+
+  <!-- fundo apagado -->
+  <div style="padding:20px 16px;display:flex;flex-direction:column;gap:14px;opacity:.55" aria-hidden="true">
+    <div class="disp" style="font-size:30px;font-weight:700;letter-spacing:-.03em">Compra e Venda</div>
+    <div style="height:64px;border-radius:16px;background:#0D3324"></div>
+    <div style="height:150px;border-radius:20px;background:#fff;border:1px solid #DCE7DC"></div>
+  </div>
+  <div style="position:absolute;inset:0;background:rgba(8,36,26,.45)"></div>
+
+  <!-- folha -->
+  <section aria-label="Novo lote" style="position:absolute;left:0;right:0;bottom:0;top:78px;background:#fff;border-radius:28px 28px 0 0;padding:10px 20px 24px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;overflow-y:auto">
+    <div style="width:44px;height:5px;border-radius:3px;background:#CFE2CE;align-self:center"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <h1 class="disp" style="margin:0;font-size:26px;letter-spacing:-.03em;font-weight:700">Novo lote</h1>
+      <a href="AppCompraVenda.dc.html" aria-label="Fechar" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A5F55" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
+    </div>
+
+    <div class="seg" role="group" aria-label="Tipo de negócio">
+      <button style="{{segC}}" onClick="{{setCompra}}">Compra</button>
+      <button style="{{segV}}" onClick="{{setVenda}}">Venda</button>
+    </div>
+
+    <label class="lbl">Categoria
+      <select class="inp" value="{{v.categoria}}" onChange="{{onCat}}"><sc-for list="{{cats}}" as="c" hint-placeholder-count="5"><option value="{{c.v}}">{{c.l}}</option></sc-for></select>
+    </label>
+
+    <sc-if value="{{notIndiv}}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;gap:12px">
+      <label class="lbl" style="flex:1">Quantidade
+        <input class="inp" inputmode="decimal" value="{{v.qtd}}" onChange="{{onQtd}}">
+      </label>
+      <label class="lbl" style="flex:1.3">{{pesoLabel}}
+        <input class="inp" inputmode="decimal" value="{{v.peso}}" onChange="{{onPeso}}">
+      </label>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0;margin-top:-6px">
+      <button class="lnk" onClick="{{toggleModo}}">{{modoLabel}}</button>
+      <sc-if value="{{podeIndiv}}" hint-placeholder-val="{{ true }}"><button class="lnk" onClick="{{entrarIndiv}}">Pesar animal a animal</button></sc-if>
+    </div>
+    </sc-if>
+    <sc-if value="{{indiv}}" hint-placeholder-val="{{ false }}">
+    <div style="border-radius:18px;border:1px solid #CFE2CE;padding:14px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="th">Peso animal a animal</span><span style="font-size:13px;font-weight:600">{{resumoIndiv}}</span></div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        <sc-for list="{{pesosList}}" as="p" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="width:22px;font-size:12px;font-weight:600;color:#5F7367;text-align:right">{{p.n}}</span>
+            <input class="inp" aria-label="Peso do animal em kg" inputmode="decimal" value="{{p.v}}" onChange="{{p.onChange}}" style="min-width:0">
+            <button aria-label="Remover animal" onClick="{{p.onDel}}" style="width:36px;height:48px;border:0;background:none;color:#5F7367;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+        </sc-for>
+      </div>
+      <button class="btn" onClick="{{addPeso}}" style="background:#E4EFE3;color:#134733;min-height:48px">+ Adicionar animal</button>
+      <button class="lnk" onClick="{{sairIndiv}}">Voltar ao peso do lote ⇄</button>
+    </div>
+    </sc-if>
+
+    <div style="display:flex;gap:12px">
+      <label class="lbl" style="flex:1">Preço por @ (R$)
+        <input class="inp" inputmode="decimal" value="{{v.preco}}" onChange="{{onPreco}}">
+      </label>
+      <label class="lbl" style="flex:1.3">Data
+        <input class="inp" type="date" value="{{v.data}}" onChange="{{onData}}">
+      </label>
+    </div>
+
+    <div style="border-radius:18px;background:#EAF3E9;padding:14px 16px;display:flex;flex-direction:column;gap:10px" aria-live="polite">
+      <div class="th" style="display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Calculado na hora</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;font-weight:500">Peso em arrobas</span><span style="font-size:17px;font-weight:700">{{arr}}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;font-weight:500">Por cabeça</span><span style="font-size:17px;font-weight:700">{{porCab}}</span></div>
+      <div style="height:1px;background:#CFE2CE"></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;font-weight:600">Total do lote</span><span class="disp" style="font-size:26px;font-weight:700;letter-spacing:-.02em">{{total}}</span></div>
+      <div style="font-size:12px;color:#4A5F55;line-height:1.4">{{regra}}</div>
+    </div>
+
+    <a class="btn" href="AppCompraVenda.dc.html" style="background:#1F7A4F;color:#fff;margin-top:4px">Salvar lote</a>
+    <a class="btn" href="AppCompraVenda.dc.html" style="background:transparent;color:#1F7A4F;min-height:44px">Cancelar</a>
+  </section>
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tipo: 'compra', v: { categoria: 'BEZERRAS', qtd: '60', modo: 'total', peso: '11311', preco: '325', data: '2026-07-11', pesos: [] } };
+  }
+  setV(k) { return (e) => { const val = e.target.value; this.setState((s) => ({ v: Object.assign({}, s.v, { [k]: val }) })); }; }
+  renderVals() {
+    const st = this.state, v = st.v, N = OGado.num, F = OGado.fmt, B = OGado.brl;
+    const isC = st.tipo === 'compra';
+    const ind = !isC && v.modo === 'individual';
+    const row = { qtd: v.qtd, modo: isC && v.modo === 'individual' ? 'total' : v.modo, peso: v.peso, preco: v.preco, pesos: v.pesos };
+    const upd = (fn) => this.setState((s) => ({ v: Object.assign({}, s.v, fn(s.v)) }));
+    const ps = (v.pesos || []).map(N).filter((x) => x > 0);
+    const res = OGado.compraVenda({ compras: isC ? [row] : [], vendas: isC ? [] : [row] });
+    const c = (isC ? res.compras : res.vendas)[0];
+    const opts = ['BEZERRAS', 'BEZERROS', 'NOVILHAS', 'GARROTES', 'VACAS', 'BOIS', 'TOUROS'];
+    const on = 'background:#fff;color:#10231B;box-shadow:0 1px 3px rgba(13,51,36,.15)', off = 'background:transparent;color:#4A5F55';
+    const empty = !c.qtd && !c.kg;
+    return {
+      indiv: ind, notIndiv: !ind, podeIndiv: !isC,
+      resumoIndiv: F(c.qtd, 0) + ' animais · ' + F(c.kg, 1) + ' kg',
+      pesosList: (v.pesos || []).map((p, k) => ({ n: k + 1, v: p,
+        onChange: (e) => { const val = e.target.value; upd((x) => ({ pesos: x.pesos.map((q, j) => (j === k ? val : q)) })); },
+        onDel: () => upd((x) => ({ pesos: x.pesos.filter((q, j) => j !== k) })) })),
+      addPeso: () => upd((x) => ({ pesos: (x.pesos || []).concat(['']) })),
+      entrarIndiv: () => upd((x) => ({ modo: 'individual', pesos: x.pesos && x.pesos.length ? x.pesos : [''] })),
+      sairIndiv: () => upd((x) => (ps.length ? { modo: 'total', qtd: String(ps.length), peso: String(Math.round(ps.reduce((a, b) => a + b, 0) * 100) / 100).replace('.', ',') } : { modo: 'total' })),
+      v, cats: opts.map((o) => ({ v: o, l: o.charAt(0) + o.slice(1).toLowerCase() })),
+      segC: isC ? on : off, segV: isC ? off : on,
+      pesoLabel: v.modo === 'total' ? 'Peso do lote (kg)' : 'Peso por cabeça (kg)',
+      modoLabel: v.modo === 'total' ? 'Informar peso médio por cabeça ⇄' : 'Informar peso total do lote ⇄',
+      arr: empty ? '—' : F(c.arrobas, 2) + ' @', porCab: c.qtd ? B(c.porCab) : '—', total: empty ? '—' : B(c.total),
+      regra: isC ? 'Compra: peso em kg ÷ 30 (arroba de peso vivo) × preço por @.' : 'Venda: (peso em kg − 10 kg por cabeça) ÷ 15 × preço por @.',
+      setCompra: () => this.setState({ tipo: 'compra', v: Object.assign({}, v, { categoria: v.categoria }) }),
+      setVenda: () => this.setState({ tipo: 'venda' }),
+      onCat: this.setV('categoria'), onQtd: this.setV('qtd'), onPeso: this.setV('peso'), onPreco: this.setV('preco'), onData: this.setV('data'),
+      toggleModo: () => {
+        const q = N(v.qtd), p = N(v.peso), r2 = (x) => String(Math.round(x * 100) / 100).replace('.', ',');
+        this.setState({ v: Object.assign({}, v, v.modo === 'total' ? { modo: 'medio', peso: q ? r2(p / q) : v.peso } : { modo: 'total', peso: r2(q * p) }) });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

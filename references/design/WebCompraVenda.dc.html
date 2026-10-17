@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Compra e Venda de Gado</title>
+<script src="./support.js"></script>
+<script src="./calc.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Geist:wght@400..700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;color:#10231B;font-variant-numeric:tabular-nums}
+.disp{font-family:'Bricolage Grotesque','Geist',sans-serif}
+a{color:inherit;text-decoration:none}
+.nav{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;color:#CFE2CE;font-size:15px;font-weight:500;min-height:44px;box-sizing:border-box}
+.nav:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav.on{background:#B5E05A;color:#0D3324}
+.nav.off{opacity:.55;pointer-events:none}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid transparent;font:600 14px 'Geist',sans-serif;cursor:pointer;box-sizing:border-box}
+.btn-p{background:#1F7A4F;color:#fff}.btn-p:hover{background:#17623F}
+.btn-g{background:#fff;color:#10231B;border-color:#CFE2CE}.btn-g:hover{background:#EAF3E9}
+.btn-s{min-height:36px;padding:0 12px;font-size:13px}
+.inp{width:100%;min-height:44px;box-sizing:border-box;border:1px solid #CFE2CE;border-radius:10px;background:#fff;padding:0 12px;font:500 15px 'Geist',sans-serif;color:#10231B;font-variant-numeric:tabular-nums}
+.inp:hover{border-color:#9DBFA3}
+.inp:focus{outline:2px solid #1F7A4F;outline-offset:1px;border-color:#1F7A4F}
+.calc{min-height:44px;box-sizing:border-box;border-radius:10px;background:#EAF3E9;padding:0 12px;display:flex;align-items:center;font-weight:600;font-size:15px;color:#10231B}
+.th{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#5F7367;display:flex;align-items:center;gap:5px}
+.row{display:grid;grid-template-columns:40px minmax(120px,1.1fr) 84px minmax(150px,1.3fr) 84px 96px minmax(110px,1fr) minmax(100px,.9fr) 132px 36px;column-gap:8px;align-items:start}
+.lnk{background:none;border:0;padding:0;margin-top:4px;font:500 12px 'Geist',sans-serif;color:#1F7A4F;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;min-height:20px}
+.ico{background:none;border:0;width:36px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:10px;color:#5F7367;cursor:pointer}
+.ico:hover{background:#FBEAE6;color:#B4412F}
+details>summary{cursor:pointer;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+code{font:500 13px 'Geist',sans-serif;background:#EAF3E9;border-radius:6px;padding:2px 6px}
+.mnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid #DCE7DC;padding:6px 8px 12px}
+.mt{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px;justify-content:center;font-size:11.5px;font-weight:600;color:#5F7367}
+.mt.on{color:#134733}
+@media (max-width:860px){.side{display:none!important}.mnav{display:flex!important}.main{padding:20px 16px 96px!important}}
+</style>
+</helmet>
+
+<div style="display:flex;flex-wrap:wrap;min-height:1280px;background:#F2F7F1">
+
+  <!-- MENU -->
+  <aside class="side" style="flex:0 0 264px;box-sizing:border-box;background:#0D3324;padding:24px 16px;display:flex;flex-direction:column;gap:28px;color:#fff">
+    <div style="display:flex;align-items:center;gap:12px;padding:0 8px">
+      <svg width="40" height="40" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#08241A"/><circle cx="32" cy="40" r="12" fill="none" stroke="#B5E05A" stroke-width="7"/><path d="M23.5 31.5C13 31 9 21 13 13" fill="none" stroke="#B5E05A" stroke-width="6" stroke-linecap="round"/><path d="M40.5 31.5C51 31 55 21 51 13" fill="none" stroke="#B5E05A" stroke-width="6" stroke-linecap="round"/></svg>
+      <span class="disp" style="font-size:24px;letter-spacing:-.02em"><span style="font-weight:400">O </span><span style="font-weight:800">Gado</span></span>
+    </div>
+    <nav aria-label="Principal" style="display:flex;flex-direction:column;gap:4px">
+      <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8FB39A;padding:0 14px 8px;font-weight:600">Operação</div>
+      <a class="nav" href="WebPainel.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>Painel</a>
+      <a class="nav on" href="WebCompraVenda.dc.html" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h13M16 3l4 4-4 4M17 17H4M8 13l-4 4 4 4"/></svg>Compra e Venda</a>
+      <a class="nav" href="WebRecria.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>Cálculos Recria</a>
+    </nav>
+    <nav aria-label="Em breve" style="display:flex;flex-direction:column;gap:4px">
+      <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8FB39A;padding:0 14px 8px;font-weight:600">Em breve</div>
+      <div class="nav off"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19c0-8 5-14 15-14 0 10-6 15-14 15M5 19c3-5 6-8 10-10"/></svg>Cria</div>
+      <div class="nav off"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-6 4 4 4-8 5 10"/></svg>Recria completa</div>
+    </nav>
+    <a class="nav" href="WebConfig.dc.html" style="margin-top:auto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Configurações</a>
+    <div style="margin-top:-12px;border-radius:14px;background:rgba(255,255,255,.07);padding:14px 16px">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8FB39A;font-weight:600">Fazenda</div>
+      <div style="font-size:15px;font-weight:600;margin-top:4px">[Nome da fazenda]</div>
+    </div>
+  </aside>
+
+  <!-- CONTEÚDO -->
+  <main class="main" style="flex:999 1 560px;min-width:0;padding:32px 40px 56px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+
+    <header style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px">
+      <div>
+        <div style="font-size:13px;color:#5F7367;font-weight:500">Operação / Compra e Venda</div>
+        <h1 class="disp" style="margin:4px 0 0;font-size:40px;line-height:1.05;letter-spacing:-.03em;font-weight:700">Compra e Venda de Gado</h1>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <button class="btn btn-g" onClick="{{toggleParams}}" aria-expanded="{{showParams}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Parâmetros de cálculo</button>
+        <button class="btn btn-g" onClick="{{addCompra}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nova compra</button>
+        <button class="btn btn-p" onClick="{{addVenda}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nova venda</button>
+      </div>
+    </header>
+
+    <!-- RESULTADO PRIMEIRO -->
+    <section aria-label="Resumo" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
+      <div style="border-radius:20px;background:#fff;border:1px solid #DCE7DC;padding:22px 24px">
+        <div class="th">Total comprado</div>
+        <div class="disp" style="font-size:34px;font-weight:700;letter-spacing:-.03em;margin-top:8px">{{totalCompras}}</div>
+        <div style="font-size:13.5px;color:#4A5F55;margin-top:6px">{{resumoCompras}}</div>
+      </div>
+      <div style="border-radius:20px;background:#fff;border:1px solid #DCE7DC;padding:22px 24px">
+        <div class="th">Total vendido</div>
+        <div class="disp" style="font-size:34px;font-weight:700;letter-spacing:-.03em;margin-top:8px">{{totalVendas}}</div>
+        <div style="font-size:13.5px;color:#4A5F55;margin-top:6px">{{resumoVendas}}</div>
+      </div>
+      <div style="border-radius:20px;background:#0D3324;color:#fff;padding:22px 24px;position:relative;overflow:hidden">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(100deg,rgba(181,224,90,.07) 0 2px,transparent 2px 24px)"></div>
+        <div style="position:relative">
+          <div class="th" style="color:#B5E05A">Saldo</div>
+          <div class="disp" style="font-size:34px;font-weight:700;letter-spacing:-.03em;margin-top:8px;color:{{saldoColor}}">{{saldo}}</div>
+          <div style="font-size:13.5px;color:#CFE2CE;margin-top:6px">{{saldoNota}}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PARÂMETROS -->
+    <sc-if value="{{showParams}}" hint-placeholder-val="{{ false }}">
+    <section aria-label="Parâmetros de cálculo" style="border-radius:20px;background:#fff;border:1px solid #DCE7DC;padding:22px 24px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px">
+        <div>
+          <h2 class="disp" style="margin:0;font-size:20px;letter-spacing:-.02em">Parâmetros de cálculo</h2>
+          <p style="margin:4px 0 0;font-size:14px;color:#4A5F55">Valores que a planilha original deixa fixos dentro das fórmulas. Já vêm preenchidos como na sua planilha.</p>
+        </div>
+        <button class="btn btn-g btn-s" onClick="{{resetParams}}">Voltar ao padrão da planilha</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">Arroba na compra (kg de peso vivo)
+          <input class="inp" inputmode="decimal" value="{{p.arrobaCompra}}" onChange="{{setArrobaCompra}}">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">Arroba na venda (kg)
+          <input class="inp" inputmode="decimal" value="{{p.arrobaVenda}}" onChange="{{setArrobaVenda}}">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">Desconto na venda (kg por cabeça)
+          <input class="inp" inputmode="decimal" value="{{p.desconto}}" onChange="{{setDesconto}}">
+        </label>
+      </div>
+    </section>
+    </sc-if>
+
+    <!-- LEGENDA -->
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:20px;font-size:13px;color:#4A5F55">
+      <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:22px;height:14px;border-radius:5px;border:1px solid #CFE2CE;background:#fff"></span>Você preenche</span>
+      <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:22px;height:14px;border-radius:5px;background:#EAF3E9"></span>Calculado pela fórmula da planilha (não edita)</span>
+    </div>
+
+    <!-- COMPRAS -->
+    <section aria-label="Compras" style="border-radius:20px;background:#fff;border:1px solid #DCE7DC;padding:24px 20px 20px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;padding:0 4px 16px">
+        <div>
+          <h2 class="disp" style="margin:0;font-size:24px;letter-spacing:-.02em;font-weight:700">Compras</h2>
+          <p style="margin:4px 0 0;font-size:14px;color:#4A5F55">{{notaCompra}}</p>
+        </div>
+        <button class="btn btn-g btn-s" onClick="{{addCompra}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Adicionar lote</button>
+      </div>
+      <div style="overflow-x:auto">
+        <div role="table" aria-label="Lotes de compra" style="min-width:1040px;display:flex;flex-direction:column;gap:10px;padding:0 4px 4px">
+          <div role="row" class="row" style="align-items:center">
+            <div role="columnheader" class="th">Lote</div>
+            <div role="columnheader" class="th">Categoria</div>
+            <div role="columnheader" class="th">Qtd.</div>
+            <div role="columnheader" class="th">Peso (kg)</div>
+            <div role="columnheader" class="th" title="Peso (kg) ÷ arroba da compra"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Peso (@)</div>
+            <div role="columnheader" class="th">Preço/@</div>
+            <div role="columnheader" class="th" title="Peso (@) × Preço/@"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Total</div>
+            <div role="columnheader" class="th" title="Total ÷ Quantidade"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>R$/cab.</div>
+            <div role="columnheader" class="th">Data</div>
+            <div></div>
+          </div>
+          <sc-for list="{{compras}}" as="r" hint-placeholder-count="2">
+          <div role="row" class="row">
+            <div role="cell" class="calc" style="justify-content:center;padding:0;color:#5F7367">{{r.n}}</div>
+            <div role="cell"><select class="inp" aria-label="Categoria" value="{{r.categoria}}" onChange="{{r.onCat}}"><sc-for list="{{r.options}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+            <div role="cell"><input class="inp" aria-label="Quantidade" inputmode="decimal" value="{{r.qtd}}" onChange="{{r.onQtd}}"></div>
+            <div role="cell"><input class="inp" aria-label="Peso" inputmode="decimal" value="{{r.peso}}" onChange="{{r.onPeso}}"><button class="lnk" onClick="{{r.onModo}}" title="Alternar entre peso total do lote e peso médio por cabeça">{{r.modoLabel}}</button></div>
+            <div role="cell" class="calc">{{r.arr}}</div>
+            <div role="cell"><input class="inp" aria-label="Preço por arroba" inputmode="decimal" value="{{r.preco}}" onChange="{{r.onPreco}}"></div>
+            <div role="cell" class="calc">{{r.total}}</div>
+            <div role="cell" class="calc">{{r.porCab}}</div>
+            <div role="cell"><input class="inp" type="date" aria-label="Data" value="{{r.data}}" onChange="{{r.onData}}"></div>
+            <div role="cell"><button class="ico" aria-label="Remover lote de compra" onClick="{{r.onDel}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div>
+          </div>
+          </sc-for>
+          <sc-if value="{{semCompras}}" hint-placeholder-val="{{ false }}"><div style="padding:18px;border-radius:12px;background:#F2F7F1;font-size:14px;color:#4A5F55">Nenhuma compra lançada. Use “Adicionar lote”.</div></sc-if>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:14px;padding:16px 8px 0;margin-top:8px;border-top:1px solid #DCE7DC">
+        <span class="th">Valor das compras</span>
+        <span class="disp" style="font-size:24px;font-weight:700;letter-spacing:-.02em">{{totalCompras}}</span>
+      </div>
+    </section>
+
+    <!-- VENDAS -->
+    <section aria-label="Vendas" style="border-radius:20px;background:#fff;border:1px solid #DCE7DC;padding:24px 20px 20px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;padding:0 4px 16px">
+        <div>
+          <h2 class="disp" style="margin:0;font-size:24px;letter-spacing:-.02em;font-weight:700">Vendas</h2>
+          <p style="margin:4px 0 0;font-size:14px;color:#4A5F55">{{notaVenda}}</p>
+        </div>
+        <button class="btn btn-g btn-s" onClick="{{addVenda}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Adicionar lote</button>
+      </div>
+      <div style="overflow-x:auto">
+        <div role="table" aria-label="Lotes de venda" style="min-width:1040px;display:flex;flex-direction:column;gap:10px;padding:0 4px 4px">
+          <div role="row" class="row" style="align-items:center">
+            <div role="columnheader" class="th">Lote</div>
+            <div role="columnheader" class="th">Categoria</div>
+            <div role="columnheader" class="th">Qtd.</div>
+            <div role="columnheader" class="th">Peso (kg)</div>
+            <div role="columnheader" class="th" title="(Peso kg − Qtd. × desconto) ÷ arroba da venda"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Peso (@)</div>
+            <div role="columnheader" class="th">Preço/@</div>
+            <div role="columnheader" class="th" title="Peso (@) × Preço/@"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Total</div>
+            <div role="columnheader" class="th" title="Total ÷ Quantidade"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>R$/cab.</div>
+            <div role="columnheader" class="th">Data</div>
+            <div></div>
+          </div>
+          <sc-for list="{{vendas}}" as="r" hint-placeholder-count="1">
+          <div role="row" class="row">
+            <div role="cell" class="calc" style="justify-content:center;padding:0;color:#5F7367">{{r.n}}</div>
+            <div role="cell"><select class="inp" aria-label="Categoria" value="{{r.categoria}}" onChange="{{r.onCat}}"><sc-for list="{{r.options}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+            <sc-if value="{{r.individual}}" hint-placeholder-val="{{ false }}">
+              <div role="cell"><div class="calc" title="Número de animais pesados">{{r.qtdCalc}}</div></div>
+              <div role="cell"><div class="calc" title="Soma dos pesos individuais">{{r.kgCalc}} kg</div><button class="lnk" onClick="{{r.onOpen}}" aria-expanded="{{r.open}}">{{r.openLabel}}</button></div>
+            </sc-if>
+            <sc-if value="{{r.notIndividual}}" hint-placeholder-val="{{ true }}">
+              <div role="cell"><input class="inp" aria-label="Quantidade" inputmode="decimal" value="{{r.qtd}}" onChange="{{r.onQtd}}"></div>
+              <div role="cell"><input class="inp" aria-label="Peso" inputmode="decimal" value="{{r.peso}}" onChange="{{r.onPeso}}"><button class="lnk" onClick="{{r.onModo}}" title="Alternar entre peso total do lote e peso médio por cabeça">{{r.modoLabel}}</button><br><button class="lnk" onClick="{{r.onIndiv}}" title="Digitar o peso de cada animal; o app soma">Pesar animal a animal</button></div>
+            </sc-if>
+            <div role="cell" class="calc">{{r.arr}}</div>
+            <div role="cell"><input class="inp" aria-label="Preço por arroba" inputmode="decimal" value="{{r.preco}}" onChange="{{r.onPreco}}"></div>
+            <div role="cell" class="calc">{{r.total}}</div>
+            <div role="cell" class="calc">{{r.porCab}}</div>
+            <div role="cell"><input class="inp" type="date" aria-label="Data" value="{{r.data}}" onChange="{{r.onData}}"></div>
+            <div role="cell"><button class="ico" aria-label="Remover lote de venda" onClick="{{r.onDel}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div>
+          </div>
+                    <sc-if value="{{r.painel}}" hint-placeholder-val="{{ false }}">
+          <div style="margin:-2px 0 6px 48px;border-radius:16px;background:#F2F7F1;border:1px solid #DCE7DC;padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px">
+              <div>
+                <div style="font-weight:700;font-size:15px">Peso animal a animal · Lote {{r.n}}</div>
+                <div style="font-size:13px;color:#4A5F55;margin-top:2px">Digite o peso de cada animal na balança. O app soma o lote e a quantidade de cabeças.</div>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <span style="background:#fff;border:1px solid #DCE7DC;border-radius:10px;padding:6px 12px;font-size:13px"><b>{{r.qtdCalc}}</b> animais</span>
+                <span style="background:#fff;border:1px solid #DCE7DC;border-radius:10px;padding:6px 12px;font-size:13px"><b>{{r.kgCalc}}</b> kg no total</span>
+                <span style="background:#fff;border:1px solid #DCE7DC;border-radius:10px;padding:6px 12px;font-size:13px"><b>{{r.media}}</b> kg de média</span>
+                <span style="background:#fff;border:1px solid #DCE7DC;border-radius:10px;padding:6px 12px;font-size:13px">menor <b>{{r.min}}</b> · maior <b>{{r.max}}</b></span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px">
+              <sc-for list="{{r.pesosList}}" as="p" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:4px">
+                  <span style="width:26px;font-size:12px;font-weight:600;color:#5F7367;text-align:right">{{p.n}}</span>
+                  <input class="inp" aria-label="Peso do animal" inputmode="decimal" value="{{p.v}}" onChange="{{p.onChange}}" style="min-width:0">
+                  <button class="ico" style="width:32px;height:44px" aria-label="Remover animal" onClick="{{p.onDel}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px">
+              <button class="btn btn-p btn-s" onClick="{{r.onAddPeso}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Adicionar animal</button>
+              <button class="btn btn-g btn-s" onClick="{{r.onSair}}">Voltar ao peso do lote</button>
+            </div>
+          </div>
+          </sc-if>
+          </sc-for>
+          <sc-if value="{{semVendas}}" hint-placeholder-val="{{ false }}"><div style="padding:18px;border-radius:12px;background:#F2F7F1;font-size:14px;color:#4A5F55">Nenhuma venda lançada. Use “Adicionar lote”.</div></sc-if>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:14px;padding:16px 8px 0;margin-top:8px;border-top:1px solid #DCE7DC">
+        <span class="th">Valor das vendas</span>
+        <span class="disp" style="font-size:24px;font-weight:700;letter-spacing:-.02em">{{totalVendas}}</span>
+      </div>
+    </section>
+
+    <!-- FÓRMULAS -->
+    <details style="border-radius:20px;background:#fff;border:1px solid #DCE7DC;padding:0">
+      <summary style="padding:20px 24px;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:15px;min-height:44px;box-sizing:border-box">Como cada número é calculado <span style="color:#1F7A4F;font-size:13px">ver fórmulas</span></summary>
+      <div style="padding:0 24px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px 32px;font-size:14px;line-height:1.7;color:#4A5F55">
+        <div><b style="color:#10231B">Compra</b><br>Peso (@) = <code>Peso (kg) ÷ 30</code><br>Total = <code>Peso (@) × Preço/@</code><br>R$/cab. = <code>Total ÷ Quantidade</code></div>
+        <div><b style="color:#10231B">Venda</b><br>Peso (@) = <code>(Peso kg − Qtd. × 10) ÷ 15</code><br>Total = <code>Peso (@) × Preço/@</code></div>
+        <div><b style="color:#10231B">Saldo</b><br><code>Total vendido − Total comprado</code><br>Negativo = você ainda tem dinheiro investido em animais.</div>
+      </div>
+    </details>
+  </main>
+  <nav class="mnav" aria-label="Principal">
+    <a class="mt" href="WebPainel.dc.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>Painel</a>
+    <a class="mt on" href="WebCompraVenda.dc.html" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h13M16 3l4 4-4 4M17 17H4M8 13l-4 4 4 4"/></svg>Negócios</a>
+    <a class="mt" href="WebRecria.dc.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>Recria</a>
+    <a class="mt" href="WebConfig.dc.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Conta</a>
+  </nav>
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1280}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const mk = (list, o, i) => ({ id: list + i, categoria: o.categoria, qtd: String(o.qtd).replace('.', ','), modo: o.modo, peso: String(o.peso).replace('.', ','), preco: String(o.preco).replace('.', ','), data: o.data });
+    const s = OGado.sample.compraVenda;
+    this.state = {
+      compras: s.compras.map((o, i) => mk('c', o, i)),
+      vendas: s.vendas.map((o, i) => mk('v', o, i)),
+      showParams: false,
+      p: { arrobaCompra: '30', arrobaVenda: '15', desconto: '10' },
+      seq: 10
+    };
+  }
+  r2(x) { return String(Math.round(x * 100) / 100).replace('.', ','); }
+  upd(list, id, field, val) {
+    this.setState((s) => ({ [list]: s[list].map((r) => (r.id === id ? Object.assign({}, r, { [field]: val }) : r)) }));
+  }
+  toggleModo(list, id) {
+    this.setState((s) => ({ [list]: s[list].map((r) => {
+      if (r.id !== id) return r;
+      const q = OGado.num(r.qtd), p = OGado.num(r.peso);
+      if (r.modo === 'total') return Object.assign({}, r, { modo: 'medio', peso: q ? this.r2(p / q) : r.peso });
+      return Object.assign({}, r, { modo: 'total', peso: this.r2(q * p) });
+    }) }));
+  }
+  add(list, categoria) {
+    this.setState((s) => {
+      const id = list + (s.seq + 1);
+      return { seq: s.seq + 1, [list]: s[list].concat([{ id, categoria, qtd: '', modo: 'total', peso: '', preco: '', data: '' }]) };
+    });
+  }
+  patch(list, id, fn) { this.setState((s) => ({ [list]: s[list].map((r) => (r.id === id ? Object.assign({}, r, fn(r)) : r)) })); }
+  remove(list, id) { this.setState((s) => ({ [list]: s[list].filter((r) => r.id !== id) })); }
+  setP(k) { return (e) => { const v = e.target.value; this.setState((s) => ({ p: Object.assign({}, s.p, { [k]: v }) })); }; }
+
+  renderVals() {
+    const st = this.state, N = OGado.num, F = OGado.fmt, B = OGado.brl;
+    const params = { arrobaCompraKg: N(st.p.arrobaCompra) || 30, arrobaVendaKg: N(st.p.arrobaVenda) || 15, descontoVendaKgCab: N(st.p.desconto) };
+    const res = OGado.compraVenda({ compras: st.compras, vendas: st.vendas }, params);
+    const opts = ['BEZERRAS', 'BEZERROS', 'NOVILHAS', 'GARROTES', 'VACAS', 'BOIS', 'TOUROS'];
+    const mkOpts = (cur) => (opts.indexOf(cur) < 0 && cur ? [cur] : []).concat(opts).map((c) => ({ v: c, l: c.charAt(0) + c.slice(1).toLowerCase() }));
+    const rows = (list, calc) => st[list].map((r, i) => {
+      const c = calc[i], empty = !c.qtd && !c.kg && !c.preco;
+      const ind = r.modo === 'individual', ps = (r.pesos || []).map(N).filter((x) => x > 0);
+      return {
+        individual: ind, notIndividual: !ind, open: !!r.open, painel: ind && !!r.open,
+        qtdCalc: F(c.qtd, 0), kgCalc: F(c.kg, 2), media: ps.length ? F(c.kg / ps.length, 2) : '—',
+        min: ps.length ? F(Math.min.apply(null, ps), 1) : '—', max: ps.length ? F(Math.max.apply(null, ps), 1) : '—',
+        openLabel: r.open ? 'recolher pesos ▴' : 'ver e editar pesos ▾',
+        pesosList: (r.pesos || []).map((p, k) => ({ n: k + 1, v: p,
+          onChange: (e) => { const val = e.target.value; this.patch(list, r.id, (x) => ({ pesos: x.pesos.map((q, j) => (j === k ? val : q)) })); },
+          onDel: () => this.patch(list, r.id, (x) => ({ pesos: x.pesos.filter((q, j) => j !== k) })) })),
+        onOpen: () => this.patch(list, r.id, (x) => ({ open: !x.open })),
+        onAddPeso: () => this.patch(list, r.id, (x) => ({ pesos: (x.pesos || []).concat(['']) })),
+        onIndiv: () => this.patch(list, r.id, (x) => ({ modo: 'individual', open: true, pesos: x.pesos && x.pesos.length ? x.pesos : [''] })),
+        onSair: () => this.patch(list, r.id, (x) => {
+          const v = (x.pesos || []).map(N).filter((q) => q > 0);
+          return v.length ? { modo: 'total', open: false, qtd: String(v.length), peso: this.r2(v.reduce((a, b) => a + b, 0)) } : { modo: 'total', open: false };
+        }),
+        n: i + 1, categoria: r.categoria, qtd: r.qtd, peso: r.peso, preco: r.preco, data: r.data,
+        options: mkOpts(r.categoria),
+        modoLabel: r.modo === 'total' ? 'kg do lote · usar média/cab. ⇄' : 'kg por cabeça · usar total ⇄',
+        arr: empty ? '—' : F(c.arrobas, 2),
+        total: empty ? '—' : B(c.total),
+        porCab: c.qtd ? B(c.porCab) : '—',
+        onCat: (e) => this.upd(list, r.id, 'categoria', e.target.value),
+        onQtd: (e) => this.upd(list, r.id, 'qtd', e.target.value),
+        onPeso: (e) => this.upd(list, r.id, 'peso', e.target.value),
+        onPreco: (e) => this.upd(list, r.id, 'preco', e.target.value),
+        onData: (e) => this.upd(list, r.id, 'data', e.target.value),
+        onModo: () => this.toggleModo(list, r.id),
+        onDel: () => this.remove(list, r.id)
+      };
+    });
+    const sinal = res.saldo < 0 ? '−' : res.saldo > 0 ? '+' : '';
+    return {
+      compras: rows('compras', res.compras), vendas: rows('vendas', res.vendas),
+      semCompras: st.compras.length === 0, semVendas: st.vendas.length === 0,
+      totalCompras: B(res.totalCompras), totalVendas: B(res.totalVendas),
+      resumoCompras: F(res.cabCompra, 0) + ' cab. · ' + F(res.arrCompra, 2) + ' @',
+      resumoVendas: F(res.cabVenda, 0) + ' cab. · ' + F(res.arrVenda, 2) + ' @',
+      saldo: sinal + B(Math.abs(res.saldo)),
+      saldoColor: res.saldo < 0 ? '#FF9C8A' : '#B5E05A',
+      saldoNota: res.saldo < 0 ? 'Comprou mais do que vendeu: dinheiro ainda investido no gado.' : res.saldo > 0 ? 'Vendeu mais do que comprou no período.' : 'Compras e vendas empatadas.',
+      notaCompra: 'Arroba de ' + F(params.arrobaCompraKg, 0) + ' kg sobre o peso vivo.',
+      notaVenda: 'Arroba de ' + F(params.arrobaVendaKg, 0) + ' kg, com desconto de ' + F(params.descontoVendaKgCab, 0) + ' kg por cabeça.',
+      showParams: st.showParams, p: st.p,
+      toggleParams: () => this.setState((s) => ({ showParams: !s.showParams })),
+      resetParams: () => this.setState({ p: { arrobaCompra: '30', arrobaVenda: '15', desconto: '10' } }),
+      setArrobaCompra: this.setP('arrobaCompra'), setArrobaVenda: this.setP('arrobaVenda'), setDesconto: this.setP('desconto'),
+      addCompra: () => this.add('compras', 'BEZERRAS'),
+      addVenda: () => this.add('vendas', 'NOVILHAS')
+    };
+  }
+}
+</script>
+</body>
+</html>

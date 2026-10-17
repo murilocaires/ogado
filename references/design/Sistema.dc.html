@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Sistema de design</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Geist:wght@400..700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;color:#10231B;font-variant-numeric:tabular-nums}
+.disp{font-family:'Bricolage Grotesque','Geist',sans-serif}
+.panel{border-radius:24px;background:#fff;border:1px solid #DCE7DC;padding:26px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:#5F7367}
+.tok{display:flex;align-items:center;gap:12px;font-size:14px}
+.tok i{width:36px;height:36px;border-radius:10px;border:1px solid rgba(16,35,27,.12);flex:0 0 auto}
+.tok b{font-weight:600;display:block}
+.tok span{color:#5F7367;font-size:12.5px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid transparent;font:600 14px 'Geist',sans-serif;box-sizing:border-box}
+.fld{display:flex;align-items:center;gap:6px;border:1px solid #CFE2CE;border-radius:10px;background:#fff;min-height:44px;padding:0 12px;box-sizing:border-box;font-weight:500;font-size:15px}
+.fld span{color:#5F7367;font-size:13px}
+.lab{font-size:12.5px;font-weight:600;margin-bottom:6px;display:block}
+.chip{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:5px 11px;letter-spacing:.04em}
+</style>
+</helmet>
+<div style="width:1440px;height:1260px;box-sizing:border-box;padding:48px;background:#F2F7F1;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px;align-content:start">
+
+  <div style="grid-column:span 12;display:flex;justify-content:space-between;align-items:flex-end">
+    <div>
+      <div class="eyebrow">Sistema de design · web e app</div>
+      <h1 class="disp" style="margin:6px 0 0;font-size:56px;line-height:1;letter-spacing:-.035em;font-weight:700">Um só visual, do computador ao curral</h1>
+    </div>
+    <p style="margin:0;max-width:420px;font-size:15px;line-height:1.55;color:#4A5F55">Os mesmos componentes servem ao site e ao aplicativo. O que muda é a quantidade por tela, não a linguagem.</p>
+  </div>
+
+  <!-- CORES -->
+  <div class="panel" style="grid-column:span 7">
+    <div class="eyebrow">Cores com função</div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 28px">
+      <div class="tok"><i style="background:#F2F7F1"></i><div><b>Fundo</b><span>#F2F7F1 · fundo das telas</span></div></div>
+      <div class="tok"><i style="background:#0D3324"></i><div><b>Marca</b><span>#0D3324 · menu, capas, saldo</span></div></div>
+      <div class="tok"><i style="background:#fff"></i><div><b>Superfície</b><span>#FFFFFF · cartões</span></div></div>
+      <div class="tok"><i style="background:#1F7A4F"></i><div><b>Primária</b><span>#1F7A4F · ação (5,3:1 sobre branco)</span></div></div>
+      <div class="tok"><i style="background:#EAF3E9"></i><div><b>Calculado</b><span>#EAF3E9 · célula que não se edita</span></div></div>
+      <div class="tok"><i style="background:#B5E05A"></i><div><b>Destaque</b><span>#B5E05A · ganho sobre fundo escuro</span></div></div>
+      <div class="tok"><i style="background:#DCE7DC"></i><div><b>Linha</b><span>#DCE7DC · bordas finas</span></div></div>
+      <div class="tok"><i style="background:#B4412F"></i><div><b>Negativo</b><span>#B4412F · saldo e erros (#FF9C8A no escuro)</span></div></div>
+      <div class="tok"><i style="background:#10231B"></i><div><b>Tinta</b><span>#10231B · texto (#4A5F55 e #5F7367 apoio)</span></div></div>
+      <div class="tok"><i style="background:#E8C45A"></i><div><b>Atenção</b><span>#E8C45A · avisos (fundo #FFF6DC)</span></div></div>
+    </div>
+    <div style="height:1px;background:#DCE7DC"></div>
+    <div class="eyebrow">Estações do ano safra</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <span class="chip" style="background:#F3DB93;color:#4A3A0B;font-size:13px;padding:8px 16px">Seca</span>
+      <span class="chip" style="background:#D9E6A3;color:#2F4A12;font-size:13px;padding:8px 16px">Transição</span>
+      <span class="chip" style="background:#2E8F5E;color:#fff;font-size:13px;padding:8px 16px">Chuva</span>
+      <span style="font-size:13px;color:#5F7367;align-self:center">Três tons de luminosidade diferente: dá para distinguir mesmo sem ver cor.</span>
+    </div>
+  </div>
+
+  <!-- TIPOGRAFIA -->
+  <div class="panel" style="grid-column:span 5">
+    <div class="eyebrow">Tipografia</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:16px"><span class="disp" style="font-size:48px;font-weight:700;letter-spacing:-.035em;line-height:1">R$ 102.408,05</span></div>
+      <div style="font-size:12.5px;color:#5F7367">Display número · Bricolage Grotesque 700 · 34–56 px</div>
+      <div class="disp" style="font-size:28px;font-weight:700;letter-spacing:-.03em">Compra e Venda de Gado</div>
+      <div style="font-size:12.5px;color:#5F7367">Título de tela · 28–40 px</div>
+      <div class="disp" style="font-size:20px;font-weight:700;letter-spacing:-.02em">Custo operacional</div>
+      <div style="font-size:12.5px;color:#5F7367">Título de bloco · 20 px</div>
+      <div style="font-size:15px;line-height:1.5">Texto e campos · Geist 400–600 · 15 px</div>
+      <div style="font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#5F7367">Rótulo de coluna · 11,5 px caixa alta</div>
+      <div style="font-size:13px;color:#4A5F55;line-height:1.5">Números sempre com algarismos tabulares, para as colunas alinharem.</div>
+    </div>
+  </div>
+
+  <!-- BOTÕES E CAMPOS -->
+  <div class="panel" style="grid-column:span 6">
+    <div class="eyebrow">Botões</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <span class="btn" style="background:#1F7A4F;color:#fff">Salvar lote</span>
+      <span class="btn" style="background:#fff;color:#10231B;border-color:#CFE2CE">Nova compra</span>
+      <span class="btn" style="background:transparent;color:#1F7A4F">Cancelar</span>
+      <span class="btn" style="background:#B5E05A;color:#0D3324">Ver resultado</span>
+    </div>
+    <div style="font-size:12.5px;color:#5F7367">Altura mínima 44 px na web e 52 px no app. Uma ação primária por tela.</div>
+    <div style="height:1px;background:#DCE7DC"></div>
+    <div class="eyebrow">Campos</div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+      <div><span class="lab">Quantidade</span><div class="fld">60</div></div>
+      <div><span class="lab">Peso (kg)</span><div class="fld" style="outline:2px solid #1F7A4F;outline-offset:1px;border-color:#1F7A4F">11.311<span style="margin-left:auto">kg</span></div></div>
+      <div><span class="lab">Preço por @</span><div class="fld"><span>R$</span>325<span style="margin-left:auto">/@</span></div></div>
+      <div><span class="lab">Quantidade (erro)</span><div class="fld" style="border-color:#B4412F;color:#B4412F">0</div><div style="font-size:12.5px;color:#B4412F;margin-top:4px">Informe quantas cabeças.</div></div>
+    </div>
+  </div>
+
+  <!-- CONVENÇÃO -->
+  <div class="panel" style="grid-column:span 6">
+    <div class="eyebrow">Regra de ouro: preencher × calculado</div>
+    <p style="margin:0;font-size:14.5px;line-height:1.55;color:#4A5F55">Na planilha, algumas células o produtor digita e outras são fórmulas. No app, essa diferença fica visível em todo lugar.</p>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+      <div style="border-radius:14px;border:1px solid #CFE2CE;padding:14px 16px"><div class="eyebrow" style="margin-bottom:8px">Você preenche</div><div class="fld">325</div><div style="font-size:12.5px;color:#5F7367;margin-top:8px">Fundo branco, borda fina, cursor de texto.</div></div>
+      <div style="border-radius:14px;background:#EAF3E9;padding:14px 16px"><div class="eyebrow" style="margin-bottom:8px;display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Calculado</div><div class="fld" style="background:transparent;border-color:transparent;padding:0;font-weight:700">R$ 122.535,83</div><div style="font-size:12.5px;color:#5F7367;margin-top:8px">Fundo verde-névoa, sem borda, com cadeado no rótulo. Mostra a fórmula ao passar o mouse.</div></div>
+    </div>
+    <div style="height:1px;background:#DCE7DC"></div>
+    <div class="eyebrow">Etiquetas</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <span class="chip" style="background:#E4EFE3;color:#134733">COMPRA</span>
+      <span class="chip" style="background:#0D3324;color:#B5E05A">VENDA</span>
+      <span class="chip" style="background:#EAEFEA;color:#4A5F55">EM BREVE</span>
+      <span class="chip" style="background:#FBEAE6;color:#B4412F">−R$ 89.475,83</span>
+      <span class="chip" style="background:#E4F3C8;color:#2F4A12">+R$ 102.408,05</span>
+    </div>
+    <div style="font-size:12.5px;color:#5F7367">Sinal (+ ou −) sempre escrito junto da cor, nunca a cor sozinha.</div>
+  </div>
+
+  <!-- KPI e LISTA -->
+  <div class="panel" style="grid-column:span 5">
+    <div class="eyebrow">Cartão de resultado</div>
+    <div style="display:flex;gap:14px">
+      <div style="flex:1;border-radius:20px;background:#fff;border:1px solid #DCE7DC;padding:18px 20px;box-shadow:0 0 0 1px #F2F7F1"><div class="eyebrow" style="font-size:11px">Total vendido</div><div class="disp" style="font-size:28px;font-weight:700;letter-spacing:-.03em;margin-top:6px">R$ 53.360,00</div><div style="font-size:12.5px;color:#4A5F55;margin-top:4px">16 cab. · 184,00 @</div></div>
+      <div style="flex:1;border-radius:20px;background:#0D3324;color:#fff;padding:18px 20px;position:relative;overflow:hidden"><div style="position:absolute;inset:0;background:repeating-linear-gradient(100deg,rgba(181,224,90,.08) 0 2px,transparent 2px 22px)"></div><div style="position:relative"><div class="eyebrow" style="font-size:11px;color:#B5E05A">Saldo</div><div class="disp" style="font-size:28px;font-weight:700;letter-spacing:-.03em;margin-top:6px;color:#FF9C8A">−R$ 89.475,83</div><div style="font-size:12.5px;color:#CFE2CE;margin-top:4px">Comprou mais do que vendeu.</div></div></div>
+    </div>
+    <div style="font-size:12.5px;color:#5F7367">O número grande vem primeiro; a explicação em uma linha vem logo abaixo.</div>
+  </div>
+
+  <div class="panel" style="grid-column:span 7">
+    <div class="eyebrow">Composição de custo</div>
+    <div style="display:flex;height:18px;border-radius:9px;overflow:hidden;gap:2px">
+      <div style="flex:29437 1 0;background:#0D3324"></div><div style="flex:1345 1 0;background:#1F7A4F"></div><div style="flex:4243 1 0;background:#6BBF8C"></div><div style="flex:3000 1 0;background:#B5E05A"></div><div style="flex:9000 1 0;background:#E8C45A"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;font-size:13px">
+      <div><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#0D3324;margin-right:6px"></i>Suplemento</div>
+      <div><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#1F7A4F;margin-right:6px"></i>Sanidade</div>
+      <div><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#6BBF8C;margin-right:6px"></i>Imposto</div>
+      <div><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#B5E05A;margin-right:6px"></i>Frete</div>
+      <div><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#E8C45A;margin-right:6px"></i>Funcionário</div>
+    </div>
+    <div style="font-size:12.5px;color:#5F7367">Cinco categorias, cinco tons de luminosidade diferente, sempre com legenda e valor ao lado.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1260}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

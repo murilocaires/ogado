@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Estados da aplicação</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Geist:wght@400..700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;color:#10231B;font-variant-numeric:tabular-nums}
+.disp{font-family:'Bricolage Grotesque','Geist',sans-serif}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:#5F7367}
+.panel{border-radius:24px;background:#fff;border:1px solid #DCE7DC;padding:24px 26px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid transparent;font:600 14px 'Geist',sans-serif;box-sizing:border-box}
+.sk{border-radius:10px;background:linear-gradient(90deg,#E4EFE3 0%,#F2F7F1 50%,#E4EFE3 100%);background-size:200% 100%;animation:sh 1.4s ease-in-out infinite}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.note{font-size:12.5px;color:#5F7367;line-height:1.5}
+</style>
+</helmet>
+<div style="width:1440px;height:1400px;box-sizing:border-box;padding:48px;background:#F2F7F1;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px;align-content:start">
+
+  <div style="grid-column:span 12">
+    <div class="eyebrow">Estados da aplicação · web e app</div>
+    <h1 class="disp" style="margin:6px 0 0;font-size:56px;line-height:1;letter-spacing:-.035em;font-weight:700">Quando algo não é o caminho feliz</h1>
+  </div>
+
+  <!-- VAZIO -->
+  <div class="panel" style="grid-column:span 6;min-height:330px">
+    <div class="eyebrow">Vazio · nenhuma compra lançada</div>
+    <div style="flex:1;display:flex;align-items:center;gap:28px">
+      <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true"><circle cx="75" cy="75" r="70" fill="#EAF3E9"/><path d="M20 105c25-10 45-10 65-4s40 4 45-2" fill="none" stroke="#B5E05A" stroke-width="5" stroke-linecap="round"/><path d="M26 120c24-9 44-9 62-4s34 3 38-2" fill="none" stroke="#6BBF8C" stroke-width="5" stroke-linecap="round"/><circle cx="75" cy="68" r="17" fill="none" stroke="#0D3324" stroke-width="9"/><path d="M62 58C48 57 43 44 49 33" fill="none" stroke="#0D3324" stroke-width="8" stroke-linecap="round"/><path d="M88 58C102 57 107 44 101 33" fill="none" stroke="#0D3324" stroke-width="8" stroke-linecap="round"/></svg>
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start">
+        <div class="disp" style="font-size:26px;font-weight:700;letter-spacing:-.02em">Nenhuma compra ainda</div>
+        <div style="font-size:15px;line-height:1.5;color:#4A5F55">Lance o primeiro lote para ver arrobas, total e saldo. Ou traga o que já está na sua planilha.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px"><span class="btn" style="background:#1F7A4F;color:#fff">Lançar primeiro lote</span><span class="btn" style="background:#fff;color:#10231B;border-color:#CFE2CE">Importar planilha</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARREGANDO -->
+  <div class="panel" style="grid-column:span 6;min-height:330px">
+    <div class="eyebrow">Carregando · estrutura antes do dado</div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+      <div class="sk" style="height:84px"></div><div class="sk" style="height:84px"></div><div class="sk" style="height:84px"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:10px"><div class="sk" style="height:44px;width:40px"></div><div class="sk" style="height:44px;flex:1"></div><div class="sk" style="height:44px;width:90px"></div><div class="sk" style="height:44px;flex:1"></div></div>
+      <div style="display:flex;gap:10px"><div class="sk" style="height:44px;width:40px"></div><div class="sk" style="height:44px;flex:1"></div><div class="sk" style="height:44px;width:90px"></div><div class="sk" style="height:44px;flex:1"></div></div>
+    </div>
+    <div class="note">Os blocos já ocupam o lugar dos números, então a tela não pula quando os dados chegam.</div>
+  </div>
+
+  <!-- ERRO -->
+  <div class="panel" style="grid-column:span 4">
+    <div class="eyebrow">Erro ao salvar</div>
+    <div role="alert" style="border-radius:14px;background:#FBEAE6;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:12px;align-items:flex-start"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B4412F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <div><div style="font-weight:700;color:#8E2F20">Não foi possível salvar o lote 3</div><div style="font-size:14px;line-height:1.5;color:#6B2A1F;margin-top:2px">Seus dados continuam na tela. Verifique a conexão e tente de novo.</div></div></div>
+      <div style="display:flex;gap:10px"><span class="btn" style="background:#B4412F;color:#fff">Tentar de novo</span><span class="btn" style="color:#8E2F20">Dispensar</span></div>
+    </div>
+    <div class="note">Nunca apaga o que o usuário digitou. O erro diz o que aconteceu e o que fazer.</div>
+  </div>
+
+  <!-- OFFLINE -->
+  <div class="panel" style="grid-column:span 4">
+    <div class="eyebrow">Sem conexão</div>
+    <div style="border-radius:14px;background:#FFF6DC;border:1px solid #E8C45A;padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:12px;align-items:flex-start"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A5A0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto;margin-top:1px"><path d="M2 8c5-4 15-4 20 0M5 12c4-3 10-3 14 0M9 16c2-1.500 4-1.500 6 0M12 20h.01M3 3l18 18"/></svg>
+        <div><div style="font-weight:700;color:#4A3A0B">Você está sem internet</div><div style="font-size:14px;line-height:1.5;color:#5C4810;margin-top:2px">Pode continuar lançando. Tudo fica salvo neste aparelho e sobe quando a conexão voltar.</div></div></div>
+      <span style="align-self:flex-start;font-size:12px;font-weight:700;border-radius:999px;padding:5px 11px;background:#fff;color:#4A3A0B;border:1px solid #E8C45A">2 lançamentos pendentes</span>
+    </div>
+    <div class="note">Essencial no curral, onde o sinal falha. O app trabalha primeiro no aparelho.</div>
+  </div>
+
+  <!-- SUCESSO -->
+  <div class="panel" style="grid-column:span 4">
+    <div class="eyebrow">Sucesso · aviso rápido</div>
+    <div role="status" style="border-radius:14px;background:#0D3324;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <span style="width:28px;height:28px;border-radius:50%;background:#B5E05A;display:flex;align-items:center;justify-content:center;flex:0 0 auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D3324" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>
+      <span style="flex:1;font-size:14.5px;font-weight:600">Lote 3 salvo</span>
+      <span style="font-size:14px;font-weight:700;color:#B5E05A;min-height:44px;display:inline-flex;align-items:center">Desfazer</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:12.5px;font-weight:600;color:#4A5F55;display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#E8C45A"></span>Salvando…</span>
+      <span style="font-size:12.5px;font-weight:600;color:#4A5F55;display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#1F7A4F"></span>Salvo</span>
+      <span style="font-size:12.5px;font-weight:600;color:#4A5F55;display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#B4412F"></span>Falhou</span>
+    </div>
+    <div class="note">Some em 5 segundos e oferece desfazer. O indicador de salvamento fica no topo da tela.</div>
+  </div>
+
+  <!-- CONFIRMAÇÃO -->
+  <div class="panel" style="grid-column:span 6;background:#DDE8DC;border-color:#DDE8DC;position:relative;min-height:330px">
+    <div class="eyebrow">Confirmação · ação que não se desfaz</div>
+    <div role="dialog" aria-label="Excluir lote" style="align-self:center;width:100%;max-width:440px;border-radius:20px;background:#fff;padding:24px;display:flex;flex-direction:column;gap:14px;box-shadow:0 18px 40px rgba(13,51,36,.22)">
+      <div class="disp" style="font-size:24px;font-weight:700;letter-spacing:-.02em">Excluir o lote 2 de compra?</div>
+      <div style="font-size:14.5px;line-height:1.5;color:#4A5F55">10 bezerras · R$ 20.300,00. O saldo muda de <b style="color:#10231B">−R$ 89.475,83</b> para <b style="color:#10231B">−R$ 69.175,83</b>.</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><span class="btn" style="background:#fff;color:#10231B;border-color:#CFE2CE">Cancelar</span><span class="btn" style="background:#B4412F;color:#fff">Excluir lote</span></div>
+    </div>
+  </div>
+
+  <!-- VALIDAÇÃO -->
+  <div class="panel" style="grid-column:span 6;min-height:330px">
+    <div class="eyebrow">Validação no formulário</div>
+    <div style="border-radius:12px;background:#FFF6DC;border:1px solid #E8C45A;padding:12px 14px;font-size:14px;color:#4A3A0B;font-weight:600">Revise 2 campos antes de salvar</div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+      <div><span style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Quantidade</span><div style="display:flex;align-items:center;border:1px solid #B4412F;background:#FFF9F8;border-radius:10px;min-height:44px;padding:0 12px;font-weight:500;color:#B4412F">0</div><div style="font-size:12.5px;color:#B4412F;margin-top:4px">Informe quantas cabeças.</div></div>
+      <div><span style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Preço por @</span><div style="display:flex;align-items:center;border:1px solid #B4412F;background:#FFF9F8;border-radius:10px;min-height:44px;padding:0 12px;font-weight:500;color:#B4412F">abc</div><div style="font-size:12.5px;color:#B4412F;margin-top:4px">Use só números. Ex.: 325 ou 325,50.</div></div>
+    </div>
+    <div class="note">Erro aparece junto do campo, com a correção. Não bloqueia a digitação: o aviso vem ao sair do campo.</div>
+  </div>
+
+  <!-- RESULTADO NEGATIVO -->
+  <div class="panel" style="grid-column:span 12">
+    <div class="eyebrow">Resultado negativo · Cálculos Recria</div>
+    <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:center">
+      <div style="flex:1 1 360px;border-radius:20px;background:#0D3324;color:#fff;padding:22px 24px">
+        <div class="eyebrow" style="color:#B5E05A">Faturamento líquido</div>
+        <div class="disp" style="font-size:44px;font-weight:700;letter-spacing:-.035em;color:#FF9C8A;margin-top:6px">−R$ 18.420,00</div>
+        <div style="font-size:14px;color:#CFE2CE;margin-top:4px">Os custos passam do faturamento.</div>
+      </div>
+      <div style="flex:1 1 360px;border-radius:14px;background:#FFF6DC;border:1px solid #E8C45A;padding:16px 18px;font-size:14.5px;line-height:1.55;color:#4A3A0B">
+        <b>Com estes números a recria dá prejuízo.</b> Teste um preço de venda maior, um custo de suplemento menor ou menos dias de recria. O sinal “−” e a cor aparecem juntos. Valor ilustrativo.
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

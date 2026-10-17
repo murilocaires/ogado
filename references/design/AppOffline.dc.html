@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>App Sem conexão</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Geist:wght@400..700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;color:#10231B;font-variant-numeric:tabular-nums}
+.disp{font-family:'Bricolage Grotesque','Geist',sans-serif}
+a{color:inherit;text-decoration:none}
+.th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#5F7367}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:48px;justify-content:center;font-size:11.5px;font-weight:600;color:#5F7367}
+.tab .pill{width:56px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center}
+.tab.on{color:#134733}.tab.on .pill{background:#CFE9D2}
+.calc{border-radius:12px;background:#EAF3E9;padding:10px 12px}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#F2F7F1;position:relative;overflow:hidden;display:flex;flex-direction:column">
+
+  <div role="status" style="flex:0 0 auto;background:#FFF6DC;border-bottom:1px solid #E8C45A;padding:12px 16px;display:flex;gap:10px;align-items:flex-start">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7A5A0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto;margin-top:1px"><path d="M2 8c5-4 15-4 20 0M5 12c4-3 10-3 14 0M9 16c2-1.500 4-1.500 6 0M12 20h.01M3 3l18 18"/></svg>
+    <div style="font-size:13.5px;line-height:1.45;color:#4A3A0B"><b>Sem internet.</b> Pode continuar lançando: tudo fica salvo no aparelho e sobe quando o sinal voltar.</div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding:16px 16px 96px;display:flex;flex-direction:column;gap:14px">
+    <h1 class="disp" style="margin:0;font-size:30px;line-height:1.05;letter-spacing:-.03em;font-weight:700">Compra e Venda</h1>
+    <div style="border-radius:16px;background:#0D3324;color:#fff;padding:14px 16px">
+      <div class="th" style="color:#B5E05A">Saldo</div>
+      <div class="disp" style="font-size:22px;font-weight:700;letter-spacing:-.02em;margin-top:2px;color:#FF9C8A">−R$ 89.475,83</div>
+    </div>
+
+    <article style="border-radius:20px;background:#fff;border:1.5px solid #E8C45A;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div><div style="font-size:12px;color:#5F7367;font-weight:600">Lote 2 · Venda</div><div class="disp" style="font-size:20px;font-weight:700;letter-spacing:-.02em;margin-top:2px">Novilhas</div></div>
+        <span style="font-size:11.5px;font-weight:700;border-radius:999px;padding:5px 10px;background:#FFF6DC;color:#4A3A0B;border:1px solid #E8C45A;display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#E8C45A"></span>Aguardando sinal</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+        <div class="calc"><div class="th">Cabeças</div><div style="font-size:15px;font-weight:700;margin-top:2px">8</div></div>
+        <div class="calc"><div class="th">Peso</div><div style="font-size:15px;font-weight:700;margin-top:2px">92,00 @</div></div>
+        <div class="calc"><div class="th">R$/@</div><div style="font-size:15px;font-weight:700;margin-top:2px">R$ 290</div></div>
+      </div>
+      <div style="font-size:13px;color:#4A5F55">Pesado animal a animal · 8 pesos</div>
+    </article>
+
+    <article style="border-radius:20px;background:#fff;border:1px solid #DCE7DC;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div><div style="font-size:12px;color:#5F7367;font-weight:600">Lote 1 · Compra · 11/07/2026</div><div class="disp" style="font-size:20px;font-weight:700;letter-spacing:-.02em;margin-top:2px">Bezerras</div></div>
+        <span style="font-size:11.5px;font-weight:700;border-radius:999px;padding:5px 10px;background:#E4EFE3;color:#134733;display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#1F7A4F"></span>Sincronizado</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+        <div class="calc"><div class="th">Cabeças</div><div style="font-size:15px;font-weight:700;margin-top:2px">60</div></div>
+        <div class="calc"><div class="th">Peso</div><div style="font-size:15px;font-weight:700;margin-top:2px">377,03 @</div></div>
+        <div class="calc"><div class="th">R$/@</div><div style="font-size:15px;font-weight:700;margin-top:2px">R$ 325</div></div>
+      </div>
+    </article>
+  </div>
+
+  <div role="status" style="position:absolute;left:16px;right:16px;bottom:96px;border-radius:14px;background:#0D3324;color:#fff;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 20px rgba(13,51,36,.28)">
+    <span style="width:28px;height:28px;border-radius:50%;background:#B5E05A;display:flex;align-items:center;justify-content:center;flex:0 0 auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D3324" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>
+    <span style="flex:1;font-size:14px;font-weight:600">Lote 2 salvo no aparelho</span>
+    <span style="font-size:14px;font-weight:700;color:#B5E05A;min-height:44px;display:inline-flex;align-items:center">Desfazer</span>
+  </div>
+
+  <nav aria-label="Principal" style="position:absolute;left:0;right:0;bottom:0;display:flex;border-top:1px solid #DCE7DC;background:#fff;padding:8px 8px 22px">
+    <a class="tab" href="AppPainel.dc.html"><span class="pill"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg></span>Painel</a>
+    <a class="tab on" href="AppOffline.dc.html" aria-current="page"><span class="pill"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h13M16 3l4 4-4 4M17 17H4M8 13l-4 4 4 4"/></svg></span>Negócios</a>
+    <a class="tab" href="AppRecria.dc.html"><span class="pill"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg></span>Recria</a>
+    <a class="tab" href="AppAjustes.dc.html"><span class="pill"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg></span>Conta</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

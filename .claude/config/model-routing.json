@@ -1,0 +1,72 @@
+{
+  "$schema": "./model-routing.schema.json",
+  "version": "1.0.0",
+  "description": "Roteador de modelos orientado a custo do projeto O Gado. Cada tarefa do fluxo SDD tem um tier; o tier resolve para um modelo. Comece sempre no tier mais barato que resolve a tarefa e só suba por evidência (gate falhou), nunca por intuição.",
+  "policy": {
+    "default_tier": "standard",
+    "principle": "cheapest-model-that-passes-the-gate",
+    "escalate_on": ["gate_failed_twice", "ambiguity_detected", "context_overflow", "cross_module_impact"],
+    "max_escalations_per_task": 1,
+    "downgrade_when": ["task_is_mechanical", "output_is_machine_verifiable"],
+    "never_downgrade": ["spec", "architecture", "security_review", "migration_review", "calc_parity"],
+    "note": "Gate = typecheck + lint + testes + paridade com as planilhas. Um modelo barato com gate verde vale mais que um caro sem gate."
+  },
+  "models": {
+    "claude-haiku-5-5":  { "tier": "economy",  "cost_index": 1,  "use": "mecânico, volumoso, verificável por máquina" },
+    "claude-sonnet-5-5": { "tier": "standard", "cost_index": 4,  "use": "implementação, testes, revisão, a maior parte do trabalho" },
+    "claude-opus-5-5":   { "tier": "premium",  "cost_index": 12, "use": "especificação, arquitetura, depuração difícil, revisão de segurança" },
+    "claude-fable-5-1":  { "tier": "frontier", "cost_index": 30, "use": "somente por aprovação humana explícita", "enabled": false }
+  },
+  "cost_index_note": "Índices RELATIVOS (haiku=1) apenas para planejar. Preencha preços reais em USD/1M tokens do seu plano em 'pricing_usd_per_mtok' se quiser relatórios exatos.",
+  "pricing_usd_per_mtok": { "claude-haiku-5-5": null, "claude-sonnet-5-5": null, "claude-opus-5-5": null, "claude-fable-5-1": null },
+  "tiers": {
+    "economy":  { "model": "claude-haiku-5-5",  "fallback": "claude-sonnet-5-5", "effort": "low" },
+    "standard": { "model": "claude-sonnet-5-5", "fallback": "claude-opus-5-5",   "effort": "medium" },
+    "premium":  { "model": "claude-opus-5-5",   "fallback": null,                "effort": "high" },
+    "frontier": { "model": "claude-fable-5-1",  "fallback": "claude-opus-5-5",   "effort": "high", "requires_human_approval": true }
+  },
+  "tasks": {
+    "grill":              { "tier": "premium",  "phase": "especificar", "agent": "spec-architect", "skill": "grill-with-docs", "why": "Decisão errada aqui custa 10x depois." },
+    "domain_modeling":    { "tier": "premium",  "phase": "especificar", "agent": "spec-architect", "skill": "domain-modeling" },
+    "spec_write":         { "tier": "premium",  "phase": "especificar", "agent": "spec-architect", "skill": "to-spec" },
+    "plan_architecture":  { "tier": "premium",  "phase": "planejar",    "agent": "spec-architect", "skill": "codebase-design" },
+    "tickets":            { "tier": "standard", "phase": "planejar",    "agent": "spec-architect", "skill": "to-tickets" },
+    "db_schema_migration":{ "tier": "standard", "phase": "implementar", "agent": "backend-engineer", "review_tier": "premium" },
+    "domain_calc_port":   { "tier": "standard", "phase": "implementar", "agent": "backend-engineer", "skill": "spreadsheet-parity", "gate": "parity" },
+    "api_endpoint":       { "tier": "standard", "phase": "implementar", "agent": "backend-engineer", "skill": "tdd" },
+    "zod_contracts":      { "tier": "economy",  "phase": "implementar", "agent": "backend-engineer", "skill": "zod-contracts" },
+    "ui_component":       { "tier": "standard", "phase": "implementar", "agent": "frontend-engineer", "skill": "design-to-code" },
+    "ui_boilerplate":     { "tier": "economy",  "phase": "implementar", "agent": "frontend-engineer" },
+    "write_tests":        { "tier": "standard", "phase": "implementar", "agent": "test-engineer", "skill": "tdd" },
+    "fixtures_seed":      { "tier": "economy",  "phase": "implementar", "agent": "test-engineer" },
+    "code_review":        { "tier": "standard", "phase": "revisar",     "agent": "code-reviewer", "skill": "code-review" },
+    "security_review":    { "tier": "premium",  "phase": "revisar",     "agent": "code-reviewer" },
+    "bug_triage":         { "tier": "economy",  "phase": "depurar",     "agent": "debugger" },
+    "bug_diagnosis":      { "tier": "standard", "phase": "depurar",     "agent": "debugger", "skill": "diagnosing-bugs", "escalate_to": "premium" },
+    "refactor_mechanical":{ "tier": "economy",  "phase": "refatorar" },
+    "refactor_architecture":{ "tier": "premium","phase": "refatorar",   "skill": "improve-codebase-architecture" },
+    "docs_update":        { "tier": "economy",  "phase": "documentar",  "agent": "docs-keeper" },
+    "commit_pr_text":     { "tier": "economy",  "phase": "entregar",    "skill": "pr" },
+    "explore_codebase":   { "tier": "economy",  "phase": "qualquer",    "agent": "explorer" },
+    "handoff":            { "tier": "economy",  "phase": "qualquer",    "skill": "handoff" }
+  },
+  "budgets": {
+    "unit": "cost_index_points",
+    "per_ticket":  { "soft": 60,  "hard": 150, "on_hard": "stop_and_report" },
+    "per_session": { "soft": 400, "hard": 900, "on_hard": "stop_and_handoff" },
+    "loop":        { "max_iterations": 5, "max_same_failure": 2, "on_exceed": "escalate_once_then_stop" }
+  },
+  "context_rules": {
+    "prefer_subagents_for": ["explore_codebase", "bug_triage", "docs_update"],
+    "max_files_read_before_planning": 12,
+    "compact_when_context_pct": 60,
+    "use_prompt_caching": true,
+    "stable_prefix_files": ["CLAUDE.md", "GLOSSARY.md", "docs/sdd/constitution.md"],
+    "avoid": ["colar arquivos grandes na conversa", "reler arquivos já lidos", "rodar a suíte completa a cada edição"]
+  },
+  "overrides": {
+    "env_var": "OGADO_MODEL_TIER",
+    "cli": "node scripts/route-model.mjs <task> [--tier economy|standard|premium]",
+    "human_can_force": true
+  }
+}

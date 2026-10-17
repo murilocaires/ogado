@@ -1,0 +1,45 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-17T15:50:00Z" },
+  "title": "O Gado — Marca e Telas v1",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 1060, "title": "Marca — O Gado" },
+    "Sistema.dc.html": { "x": 1520, "y": 0, "w": 1440, "h": 1260, "title": "Sistema de design" },
+    "Produto.dc.html": { "x": 3040, "y": 0, "w": 1440, "h": 1260, "title": "Mapa do produto" },
+    "WebPainel.dc.html": { "x": 0, "y": 1700, "w": 1440, "h": 1000, "expand": "fill", "title": "Web — Painel", "is_interactive": true },
+    "WebCompraVenda.dc.html": { "x": 1520, "y": 1700, "w": 1440, "h": 1280, "expand": "fill", "title": "Web — Compra e Venda (v1)", "is_interactive": true },
+    "WebRecria.dc.html": { "x": 3040, "y": 1700, "w": 1440, "h": 1640, "expand": "fill", "title": "Web — Cálculos Recria (v1)", "is_interactive": true },
+    "AppPainel.dc.html": { "x": 0, "y": 3760, "w": 390, "h": 844, "title": "App — Painel" },
+    "AppCompraVenda.dc.html": { "x": 470, "y": 3760, "w": 390, "h": 844, "title": "App — Compra e Venda", "is_interactive": true },
+    "AppNovoLote.dc.html": { "x": 940, "y": 3760, "w": 390, "h": 844, "title": "App — Novo lote", "is_interactive": true },
+    "AppRecria.dc.html": { "x": 1410, "y": 3760, "w": 390, "h": 844, "title": "App — Simular recria", "is_interactive": true },
+    "AppResultado.dc.html": { "x": 1880, "y": 3760, "w": 390, "h": 844, "title": "App — Resultado da recria" },
+    "WebLogin.dc.html": { "x": 0, "y": 5000, "w": 1440, "h": 900, "expand": "fill", "title": "Web — Entrar", "is_interactive": true },
+    "WebPrimeirosPassos.dc.html": { "x": 1520, "y": 5000, "w": 1440, "h": 900, "expand": "fill", "title": "Web — Primeiros passos", "is_interactive": true },
+    "WebEstados.dc.html": { "x": 3040, "y": 5000, "w": 1440, "h": 1400, "title": "Web — Estados da aplicação" },
+    "WebConfig.dc.html": { "x": 4560, "y": 5000, "w": 1440, "h": 1300, "expand": "fill", "title": "Web — Configurações" },
+    "AppBoasVindas.dc.html": { "x": 0, "y": 6820, "w": 390, "h": 844, "title": "App — Boas-vindas" },
+    "AppLogin.dc.html": { "x": 470, "y": 6820, "w": 390, "h": 844, "title": "App — Entrar" },
+    "AppVazio.dc.html": { "x": 940, "y": 6820, "w": 390, "h": 844, "title": "App — Estado vazio" },
+    "AppOffline.dc.html": { "x": 1410, "y": 6820, "w": 390, "h": 844, "title": "App — Sem conexão" },
+    "AppExcluir.dc.html": { "x": 1880, "y": 6820, "w": 390, "h": 844, "title": "App — Confirmar exclusão" },
+    "AppAjustes.dc.html": { "x": 2350, "y": 6820, "w": 390, "h": 844, "title": "App — Conta e ajustes" }
+  },
+  "order": [
+    "Main.dc.html", "Sistema.dc.html", "Produto.dc.html",
+    "WebPainel.dc.html", "WebCompraVenda.dc.html", "WebRecria.dc.html",
+    "AppPainel.dc.html", "AppCompraVenda.dc.html", "AppNovoLote.dc.html", "AppRecria.dc.html", "AppResultado.dc.html",
+    "WebLogin.dc.html", "WebPrimeirosPassos.dc.html", "WebEstados.dc.html", "WebConfig.dc.html",
+    "AppBoasVindas.dc.html", "AppLogin.dc.html", "AppVazio.dc.html", "AppOffline.dc.html", "AppExcluir.dc.html", "AppAjustes.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -300, "text": "Marca e produto", "kind": "title1", "maxW": 4480 },
+    "t2": { "x": 0, "y": 1400, "text": "Web — versão 1 (Compra e Venda + Recria)", "kind": "title1", "maxW": 4480 },
+    "t3": { "x": 0, "y": 3460, "text": "App — mesmo design, versão celular", "kind": "title1", "maxW": 2270 },
+    "t4": { "x": 0, "y": 4700, "text": "Web — acesso, estados e configurações", "kind": "title1", "maxW": 6000 },
+    "t5": { "x": 0, "y": 6520, "text": "App — entrada, estados e conta", "kind": "title1", "maxW": 2740 }
+  },
+  "designSystems": []
+}

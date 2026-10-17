@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Entrar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Geist:wght@400..700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;color:#10231B}
+.disp{font-family:'Bricolage Grotesque','Geist',sans-serif}
+a{color:inherit;text-decoration:none}
+.fld{display:flex;align-items:center;gap:6px;border:1px solid #CFE2CE;border-radius:12px;background:#fff;min-height:52px;padding:0 14px;box-sizing:border-box}
+.fld:hover{border-color:#9DBFA3}
+.fld:focus-within{outline:2px solid #1F7A4F;outline-offset:1px;border-color:#1F7A4F}
+.fld input{border:0;outline:0;flex:1;min-width:0;background:transparent;font:500 16px 'Geist',sans-serif;color:#10231B;height:50px;padding:0}
+.lbl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:52px;border-radius:14px;font:700 16px 'Geist',sans-serif;border:1px solid transparent;cursor:pointer;box-sizing:border-box;width:100%}
+.err{font-size:13px;color:#B4412F;font-weight:500}
+.spin{width:18px;height:18px;border-radius:50%;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (max-width:860px){.hero{display:none!important}}
+</style>
+</helmet>
+
+<div style="display:flex;flex-wrap:wrap;min-height:900px;background:#F2F7F1">
+
+  <section class="hero" style="flex:1 1 560px;min-width:0;background:linear-gradient(135deg,#0D3324 0%,#1B6B47 100%);color:#fff;position:relative;overflow:hidden;padding:48px 56px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;min-height:900px">
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(100deg,rgba(181,224,90,.08) 0 2px,transparent 2px 26px)"></div>
+    <div style="position:absolute;right:-160px;bottom:-180px;width:560px;height:560px;border-radius:50%;border:2px solid rgba(181,224,90,.25)"></div>
+    <div style="position:absolute;right:-90px;bottom:-110px;width:420px;height:420px;border-radius:50%;border:2px solid rgba(181,224,90,.18)"></div>
+    <div style="position:relative;display:flex;align-items:center;gap:14px">
+      <svg width="48" height="48" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#08241A"/><circle cx="32" cy="40" r="12" fill="none" stroke="#B5E05A" stroke-width="7"/><path d="M23.5 31.5C13 31 9 21 13 13" fill="none" stroke="#B5E05A" stroke-width="6" stroke-linecap="round"/><path d="M40.5 31.5C51 31 55 21 51 13" fill="none" stroke="#B5E05A" stroke-width="6" stroke-linecap="round"/></svg>
+      <span class="disp" style="font-size:30px;letter-spacing:-.02em"><span style="font-weight:400">O </span><span style="font-weight:800">Gado</span></span>
+    </div>
+    <div style="position:relative;max-width:560px">
+      <h2 class="disp" style="margin:0;font-size:68px;line-height:.98;letter-spacing:-.035em;font-weight:700">Cada arroba na ponta do lápis.</h2>
+      <p style="margin:20px 0 0;font-size:18px;line-height:1.55;color:#CFE2CE;max-width:460px">Suas planilhas de compra, venda, cria e recria, agora no computador e no celular.</p>
+    </div>
+    <div style="position:relative;font-size:13px;color:#9DBFA3">Cria · Recria · Compra e Venda</div>
+  </section>
+
+  <section style="flex:1 1 480px;min-width:0;display:flex;align-items:center;justify-content:center;padding:40px 24px;box-sizing:border-box">
+    <div style="width:100%;max-width:400px;display:flex;flex-direction:column;gap:20px">
+      <div>
+        <h1 class="disp" style="margin:0;font-size:40px;letter-spacing:-.03em;font-weight:700">Entrar</h1>
+        <p style="margin:6px 0 0;font-size:15px;color:#4A5F55">Bem-vindo de volta ao seu gado.</p>
+      </div>
+
+      <sc-if value="{{falhou}}" hint-placeholder-val="{{ false }}">
+        <div role="alert" style="border-radius:12px;background:#FBEAE6;color:#8E2F20;padding:12px 14px;font-size:14px;line-height:1.45">E-mail ou senha incorretos. Confira e tente de novo.</div>
+      </sc-if>
+
+      <label class="lbl">E-mail
+        <div class="fld" style="{{emailBorda}}"><input type="email" autocomplete="email" placeholder="voce@fazenda.com" value="{{email}}" onChange="{{setEmail}}"></div>
+        <sc-if value="{{erroEmail}}" hint-placeholder-val="{{ false }}"><span class="err">Digite um e-mail válido.</span></sc-if>
+      </label>
+
+      <label class="lbl">
+        <span style="display:flex;justify-content:space-between;align-items:baseline">Senha <a href="WebLogin.dc.html" style="font-size:13px;font-weight:600;color:#1F7A4F">Esqueci a senha</a></span>
+        <div class="fld" style="{{senhaBorda}}"><input type="{{tipoSenha}}" autocomplete="current-password" placeholder="Sua senha" value="{{senha}}" onChange="{{setSenha}}"><button onClick="{{toggleVer}}" aria-label="{{verLabel}}" style="border:0;background:none;color:#1F7A4F;font:600 13px 'Geist',sans-serif;cursor:pointer;min-height:44px;padding:0 4px">{{verTexto}}</button></div>
+        <sc-if value="{{erroSenha}}" hint-placeholder-val="{{ false }}"><span class="err">A senha precisa ter ao menos 6 caracteres.</span></sc-if>
+      </label>
+
+      <sc-if value="{{ok}}" hint-placeholder-val="{{ false }}">
+        <a class="btn" href="WebPainel.dc.html" style="background:#B5E05A;color:#0D3324">Tudo certo · abrir meu painel</a>
+      </sc-if>
+      <sc-if value="{{naoOk}}" hint-placeholder-val="{{ true }}">
+        <button class="btn" onClick="{{entrar}}" style="background:#1F7A4F;color:#fff">
+          <sc-if value="{{carregando}}" hint-placeholder-val="{{ false }}"><span class="spin"></span></sc-if>{{btnTexto}}
+        </button>
+      </sc-if>
+
+      <div style="display:flex;align-items:center;gap:12px;color:#5F7367;font-size:13px"><span style="flex:1;height:1px;background:#CFE2CE"></span>ou<span style="flex:1;height:1px;background:#CFE2CE"></span></div>
+
+      <button class="btn" style="background:#fff;color:#10231B;border-color:#CFE2CE">
+        <span aria-hidden="true" style="width:22px;height:22px;border-radius:50%;border:2px solid #10231B;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px">G</span>Continuar com Google</button>
+
+      <p style="margin:0;text-align:center;font-size:14.5px;color:#4A5F55">Ainda não tem conta? <a href="WebPrimeirosPassos.dc.html" style="font-weight:700;color:#1F7A4F">Criar conta</a></p>
+    </div>
+  </section>
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { email: '', senha: '', ver: false, tentou: false, fase: 'idle' };
+  }
+  componentWillUnmount() { if (this.t) clearTimeout(this.t); }
+  renderVals() {
+    const s = this.state;
+    const emailOk = /^\S+@\S+\.\S+$/.test(s.email.trim()), senhaOk = s.senha.length >= 6;
+    const bad = 'border-color:#B4412F;background:#FFF9F8';
+    return {
+      email: s.email, senha: s.senha,
+      erroEmail: s.tentou && !emailOk, erroSenha: s.tentou && !senhaOk,
+      emailBorda: s.tentou && !emailOk ? bad : '', senhaBorda: s.tentou && !senhaOk ? bad : '',
+      tipoSenha: s.ver ? 'text' : 'password', verTexto: s.ver ? 'Ocultar' : 'Mostrar', verLabel: s.ver ? 'Ocultar senha' : 'Mostrar senha',
+      carregando: s.fase === 'loading', ok: s.fase === 'ok', naoOk: s.fase !== 'ok', falhou: s.fase === 'falha',
+      btnTexto: s.fase === 'loading' ? 'Entrando…' : 'Entrar',
+      setEmail: (e) => this.setState({ email: e.target.value }), setSenha: (e) => this.setState({ senha: e.target.value }),
+      toggleVer: () => this.setState((x) => ({ ver: !x.ver })),
+      entrar: () => {
+        if (s.fase === 'loading') return;
+        this.setState({ tentou: true });
+        if (!(emailOk && senhaOk)) return;
+        this.setState({ fase: 'loading' });
+        this.t = setTimeout(() => this.setState({ fase: /erro/i.test(s.email) ? 'falha' : 'ok' }), 1200);
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

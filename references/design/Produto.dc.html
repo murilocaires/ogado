@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Mapa do produto</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Geist:wght@400..700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;color:#10231B}
+.disp{font-family:'Bricolage Grotesque','Geist',sans-serif}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+.col{border-radius:24px;padding:28px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
+.mod{border-radius:14px;padding:12px 14px;font-size:14.5px;line-height:1.35}
+.mod small{display:block;font-size:12px;opacity:.75;margin-top:2px}
+.panel{border-radius:24px;background:#fff;border:1px solid #DCE7DC;padding:26px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
+.ent{display:inline-block;border-radius:999px;background:#E4EFE3;color:#134733;font-size:13.5px;font-weight:600;padding:7px 14px}
+</style>
+</helmet>
+<div style="width:1440px;height:1260px;box-sizing:border-box;padding:48px;background:#F2F7F1;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px;align-content:start">
+
+  <div style="grid-column:span 12;display:flex;justify-content:space-between;align-items:flex-end;gap:32px">
+    <div>
+      <div class="eyebrow" style="color:#5F7367">Mapa do produto</div>
+      <h1 class="disp" style="margin:6px 0 0;font-size:56px;line-height:1;letter-spacing:-.035em;font-weight:700">Da planilha ao app, em três etapas</h1>
+    </div>
+    <p style="margin:0;max-width:460px;font-size:15px;line-height:1.55;color:#4A5F55">Cada módulo nasce de uma aba das suas planilhas. A primeira versão copia as contas exatamente; só depois o app ganha recursos novos.</p>
+  </div>
+
+  <!-- V1 -->
+  <div class="col" style="grid-column:span 4;background:#0D3324;color:#fff;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(100deg,rgba(181,224,90,.07) 0 2px,transparent 2px 26px)"></div>
+    <div style="position:relative;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow" style="color:#B5E05A">Versão 1 · agora</span><span style="font-size:12px;font-weight:700;background:#B5E05A;color:#0D3324;border-radius:999px;padding:4px 10px">Desenhada</span></div>
+      <div class="disp" style="font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1.05">Compra, venda e recria</div>
+      <div class="mod" style="background:rgba(255,255,255,.1)"><b>Compra e Venda</b><small>Planilha “Compra e Venda de Gado”: arrobas, total do lote, saldo</small></div>
+      <div class="mod" style="background:rgba(255,255,255,.1)"><b>Cálculos Recria</b><small>Planilha “Cálculos Recria 11-07-2026”: suplemento, imposto, sanidade, resultado</small></div>
+      <div class="mod" style="background:rgba(255,255,255,.1)"><b>Painel</b><small>Saldo, resultado da recria e últimas operações</small></div>
+      <div style="font-size:13.5px;color:#CFE2CE;line-height:1.5;margin-top:4px">Meta: os números do app batem com a planilha até o último centavo. Conferido em 32 células.</div>
+    </div>
+  </div>
+
+  <!-- V2 -->
+  <div class="col" style="grid-column:span 4;background:#fff;border:1px solid #DCE7DC">
+    <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow" style="color:#1F7A4F">Versão 2 · recria completa</span></div>
+    <div class="disp" style="font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1.05">Planilha “RECRIA”</div>
+    <div class="mod" style="background:#F2F7F1"><b>Metas</b><small>Planejamento de metas, lotação de entrada, média e saída</small></div>
+    <div class="mod" style="background:#F2F7F1"><b>Suplementação</b><small>Formulação, relatório e resumo</small></div>
+    <div class="mod" style="background:#F2F7F1"><b>Vamos ver e Fechamento</b><small>Rentabilidade ao mês, anos para pagar o investimento</small></div>
+    <div class="mod" style="background:#F2F7F1"><b>Acompanhamento de lotação</b><small>Lotação e suplementação ao longo do ciclo</small></div>
+  </div>
+
+  <!-- V3 -->
+  <div class="col" style="grid-column:span 4;background:#fff;border:1px solid #DCE7DC">
+    <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow" style="color:#1F7A4F">Versão 3 · cria</span></div>
+    <div class="disp" style="font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1.05">Planilha “CRIA”</div>
+    <div class="mod" style="background:#F2F7F1"><b>Reprodutivo</b><small>Lançamento por matriz, ficha para imprimir, IATF e touro</small></div>
+    <div class="mod" style="background:#F2F7F1"><b>Indicadores</b><small>Taxa de prenhez, taxa de desmame, kg desmamado por vaca e por ha</small></div>
+    <div class="mod" style="background:#F2F7F1"><b>Planejamento e lotação</b><small>Cadastro de pastos, potencial, evolução dos anos</small></div>
+    <div class="mod" style="background:#F2F7F1"><b>Planejamento</b><small>Aba com mais de 7 mil fórmulas, a mapear na versão 3</small></div>
+  </div>
+
+  <!-- COMPARTILHADO -->
+  <div class="panel" style="grid-column:span 7">
+    <div class="eyebrow" style="color:#5F7367">Módulos que servem à cria e à recria</div>
+    <p style="margin:0;font-size:14.5px;line-height:1.55;color:#4A5F55">Quatro abas aparecem iguais nas duas planilhas. No app viram um módulo só, usado pelos dois sistemas, sem digitar duas vezes.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <span class="ent">Chuvas</span><span class="ent">Adubação</span><span class="ent">Dimensionamento de água</span><span class="ent">Resumo de materiais</span>
+    </div>
+    <div style="height:1px;background:#DCE7DC"></div>
+    <div class="eyebrow" style="color:#5F7367">O que o app guarda</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <span class="ent" style="background:#F2F7F1;border:1px solid #DCE7DC">Fazenda</span><span class="ent" style="background:#F2F7F1;border:1px solid #DCE7DC">Lote</span><span class="ent" style="background:#F2F7F1;border:1px solid #DCE7DC">Negócio (compra ou venda)</span><span class="ent" style="background:#F2F7F1;border:1px solid #DCE7DC">Simulação de recria</span><span class="ent" style="background:#F2F7F1;border:1px solid #DCE7DC">Pasto</span><span class="ent" style="background:#F2F7F1;border:1px solid #DCE7DC">Matriz</span><span class="ent" style="background:#F2F7F1;border:1px solid #DCE7DC">Registro de chuva</span>
+    </div>
+  </div>
+
+  <!-- REGRAS -->
+  <div class="panel" style="grid-column:span 5">
+    <div class="eyebrow" style="color:#5F7367">Como lemos as planilhas</div>
+    <div style="display:flex;flex-direction:column;gap:12px;font-size:14.5px;line-height:1.5;color:#4A5F55">
+      <div><b style="color:#10231B">Célula travada vira número calculado.</b> A maioria das abas é protegida, e só as células destravadas aceitam digitação. No app, são os campos brancos.</div>
+      <div><b style="color:#10231B">Aba oculta vira tela de indicadores.</b> A cria tem uma aba oculta com as contas de prenhez e desmame.</div>
+      <div><b style="color:#10231B">Valor escondido na fórmula vira parâmetro.</b> Ex.: arroba de 30 kg, desconto de 10 kg, 80 ha fixos.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1260}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

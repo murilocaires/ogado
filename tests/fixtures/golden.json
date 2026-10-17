@@ -1,0 +1,211 @@
+{
+  "_nota": "Gerado de references/calculo/calc.js (verificado 32/32 contra as células). Valores esperados = ouro; não recalcular no teste.",
+  "compraVenda": {
+    "entrada": {
+      "compras": [
+        {
+          "lote": 1,
+          "categoria": "BEZERRAS",
+          "qtd": 60,
+          "modo": "total",
+          "peso": 11311,
+          "preco": 325,
+          "data": "2026-07-11"
+        },
+        {
+          "lote": 2,
+          "categoria": "BEZERRAS",
+          "qtd": 10,
+          "modo": "medio",
+          "peso": 210,
+          "preco": 290,
+          "data": ""
+        }
+      ],
+      "vendas": [
+        {
+          "lote": 1,
+          "categoria": "NOVILHAS",
+          "qtd": 16,
+          "modo": "total",
+          "peso": 2920,
+          "preco": 290,
+          "data": "2026-07-24"
+        }
+      ]
+    },
+    "esperado": {
+      "compras": [
+        {
+          "qtd": 60,
+          "kg": 11311,
+          "arrobas": 377.03333333333336,
+          "preco": 325,
+          "total": 122535.83333333334,
+          "porCab": 2042.2638888888891
+        },
+        {
+          "qtd": 10,
+          "kg": 2100,
+          "arrobas": 70,
+          "preco": 290,
+          "total": 20300,
+          "porCab": 2030
+        }
+      ],
+      "vendas": [
+        {
+          "qtd": 16,
+          "kg": 2920,
+          "arrobas": 184,
+          "preco": 290,
+          "total": 53360,
+          "porCab": 3335
+        }
+      ],
+      "totalCompras": 142835.83333333334,
+      "totalVendas": 53360,
+      "saldo": -89475.83333333334,
+      "cabCompra": 70,
+      "cabVenda": 16,
+      "arrCompra": 447.03333333333336,
+      "arrVenda": 184,
+      "params": {
+        "arrobaCompraKg": 30,
+        "arrobaVendaKg": 15,
+        "descontoVendaKgCab": 10
+      }
+    }
+  },
+  "compraVendaIndividual": {
+    "entrada": {
+      "compras": [
+        {
+          "lote": 1,
+          "categoria": "A",
+          "qtd": 3,
+          "modo": "individual",
+          "pesos": [
+            200,
+            210,
+            220
+          ],
+          "preco": 300
+        }
+      ],
+      "vendas": []
+    },
+    "esperado": {
+      "compras": [
+        {
+          "qtd": 3,
+          "kg": 630,
+          "arrobas": 21,
+          "preco": 300,
+          "total": 6300,
+          "porCab": 2100
+        }
+      ],
+      "vendas": [],
+      "totalCompras": 6300,
+      "totalVendas": 0,
+      "saldo": -6300,
+      "cabCompra": 3,
+      "cabVenda": 0,
+      "arrCompra": 21,
+      "arrVenda": 0,
+      "params": {
+        "arrobaCompraKg": 30,
+        "arrobaVendaKg": 15,
+        "descontoVendaKgCab": 10
+      }
+    }
+  },
+  "recria": {
+    "entrada": {
+      "area": 102,
+      "dias": 270,
+      "investimento": 122534.8,
+      "rsCabCompra": 2050,
+      "pesoIni": 188,
+      "pesoFin": 420,
+      "precoVenda": 325,
+      "consumoPct": 0.003,
+      "precoSuplKg": 2,
+      "rendCarcaca": 0.52,
+      "imposto": 0.015,
+      "sanidadeCabMes": 2.5,
+      "funcionario": 9000,
+      "frete": 3000,
+      "areaLotacaoInicial": "fixa80"
+    },
+    "esperado": {
+      "cabecas": 59.773073170731706,
+      "lotacaoTotalUA": 24.9718616802168,
+      "lotacaoHaInicial": 0.31214827100271003,
+      "pesoMedio": 304,
+      "lotacaoFinal": 0.39588266326584837,
+      "arrobasProduzidas": 836.8230243902439,
+      "consumoKgDia": 0.912,
+      "suplCabDia": 1.824,
+      "suplDia": 109.02608546341463,
+      "suplTotal": 29437.04307512195,
+      "arrobasCarcacaCab": 14.56,
+      "vendaCab": 4732,
+      "impostoCab": 70.98,
+      "impostoTotal": 4242.692733658537,
+      "sanidadeTotal": 1344.8941463414633,
+      "custos": [
+        {
+          "id": "supl",
+          "nome": "Suplemento",
+          "valor": 29437.04307512195
+        },
+        {
+          "id": "san",
+          "nome": "Sanidade",
+          "valor": 1344.8941463414633
+        },
+        {
+          "id": "imp",
+          "nome": "Imposto",
+          "valor": 4242.692733658537
+        },
+        {
+          "id": "frete",
+          "nome": "Transporte (frete)",
+          "valor": 3000
+        },
+        {
+          "id": "func",
+          "nome": "Funcionário",
+          "valor": 9000
+        }
+      ],
+      "custoTotal": 47024.62995512195,
+      "faturamentoBruto": 271967.48292682925,
+      "faturamentoLiquido": 102408.0529717073,
+      "totalEmCaixa": 224942.8529717073,
+      "liquidoMes": 11378.672552411921,
+      "liquidoHa": 1004.0005193304637,
+      "gmdImplicito": 0.8592592592592593,
+      "inputs": {
+        "area": 102,
+        "dias": 270,
+        "investimento": 122534.8,
+        "rsCabCompra": 2050,
+        "pesoIni": 188,
+        "pesoFin": 420,
+        "precoVenda": 325,
+        "consumoPct": 0.003,
+        "precoSuplKg": 2,
+        "rendCarcaca": 0.52,
+        "imposto": 0.015,
+        "sanidadeCabMes": 2.5,
+        "funcionario": 9000,
+        "frete": 3000,
+        "areaLotacaoInicial": "fixa80"
+      }
+    }
+  }
+}
