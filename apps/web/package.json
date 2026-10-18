@@ -9,10 +9,12 @@
     "start": "next start -p 3000",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:local": "playwright test -c playwright.local.config.ts"
   },
   "dependencies": {
     "@ogado/contracts": "workspace:*",
+    "@ogado/domain": "workspace:*",
     "next": "^16.4.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"

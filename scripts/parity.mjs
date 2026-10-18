@@ -68,6 +68,13 @@ function plain(v) {
 }
 
 // Funções de packages/domain validadas contra o mesmo golden (além do oráculo calc.js).
+// ADR-0012: a VENDA do domínio segue a regra revisada do protótipo (base vivo/carcaça + desconto %),
+// que difere da planilha ((kg - qtd*10) / 15). Por isso só as COMPRAS (e seus totais) do domínio são
+// comparadas ao golden; a venda tem ouro próprio (origem 'nao-planilha') em compra-venda.test.ts.
+// O oráculo calc.js continua comparado por inteiro (é a planilha, referência histórica).
+const CAMPOS_COMPRA = ['compras', 'totalCompras', 'cabCompra', 'arrCompra'];
+const soCompras = (esperado) =>
+  Object.fromEntries(CAMPOS_COMPRA.filter((k) => k in esperado).map((k) => [k, esperado[k]]));
 const domainRunners = {
   compraVenda: (entrada) => plain(domainCV.calcularCompraVenda(entrada)),
   compraVendaIndividual: (entrada) => plain(domainCV.calcularCompraVenda(entrada)),
@@ -80,7 +87,8 @@ for (const [name, run] of Object.entries(runners)) {
     continue;
   }
   compare(name, run(caso.entrada), caso.esperado);
-  if (domainRunners[name]) compare(`domain.${name}`, domainRunners[name](caso.entrada), caso.esperado);
+  if (domainRunners[name])
+    compare(`domain.${name}`, domainRunners[name](caso.entrada), soCompras(caso.esperado));
 }
 // --- T-03: recria de packages/domain contra o golden (variantes padrão, ADR-0008) ---
 // Carrega recria.ts direto via Node strip-types (só depende de decimal.js).

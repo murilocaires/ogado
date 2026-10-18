@@ -74,7 +74,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Criar conta' }).click();
-    await expect(page).toHaveURL(/\/painel$/);
+    await expect(page).toHaveURL(/\/conta$/);
     await expect(page.getByText(email)).toBeVisible();
 
     const first = await sessionCookie(context);
@@ -103,7 +103,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Entrar' }).click();
-    await expect(page).toHaveURL(/\/painel$/);
+    await expect(page).toHaveURL(/\/conta$/);
     await expect(page.getByText(email)).toBeVisible();
 
     await expectOnlyUuidIdentity(page);
@@ -150,7 +150,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Criar conta' }).click();
-    await expect(page).toHaveURL(/\/painel$/);
+    await expect(page).toHaveURL(/\/conta$/);
 
     // Dado local do aparelho (simula a fila do T-14) que nenhum 401 pode apagar.
     await page.evaluate(() => window.localStorage.setItem('fila-teste', 'lancamento-pendente'));
@@ -173,7 +173,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Entrar' }).click();
-    await expect(page).toHaveURL(/\/painel$/);
+    await expect(page).toHaveURL(/\/conta$/);
     expect(await page.evaluate(() => window.localStorage.getItem('fila-teste'))).toBe(
       'lancamento-pendente',
     );
@@ -187,7 +187,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Criar conta' }).click();
-    await expect(page).toHaveURL(/\/painel$/);
+    await expect(page).toHaveURL(/\/conta$/);
     await page.evaluate(() => window.localStorage.setItem('fila-teste', 'lancamento-pendente'));
     const identidade = await page.evaluate(() => window.localStorage.getItem('ogado.identidade'));
 
@@ -203,7 +203,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.evaluate(() => window.dispatchEvent(new Event('online')));
 
     await expect(page.getByText('Entre de novo')).toBeVisible();
-    await expect(page).toHaveURL(/\/painel$/);
+    await expect(page).toHaveURL(/\/conta$/);
     expect(await page.evaluate(() => window.localStorage.getItem('fila-teste'))).toBe(
       'lancamento-pendente',
     );

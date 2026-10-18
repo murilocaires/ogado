@@ -65,13 +65,13 @@ beforeEach(() => {
 afterEach(() => setOnline(true));
 
 describe('RF-001 tela de entrar (CA-20)', () => {
-  it('RF-001 credenciais válidas levam ao painel', async () => {
+  it('RF-001 credenciais válidas levam à sessão (/conta)', async () => {
     const { api, user } = setup('entrar');
     await user.type(await screen.findByLabelText('E-mail'), 'Ana@Fazenda.com');
     await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
     await user.click(screen.getByRole('button', { name: 'Entrar' }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/painel'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/conta'));
     expect(api.login).toHaveBeenCalledWith({ email: 'ana@fazenda.com', senha: SENHA_BOA });
   });
 
@@ -119,7 +119,7 @@ describe('RF-001 tela de entrar (CA-20)', () => {
     await user.click(busy);
     expect(login).toHaveBeenCalledTimes(1);
     resolve({ ok: true, data: sessionBody });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/painel'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/conta'));
   });
 
   it('RNF-003 sem internet avisa que entrar exige conexão e não chama a API', async () => {
@@ -211,13 +211,13 @@ describe('RF-001 tela de cadastro (CA-06, parte de tela)', () => {
     expect(senha).toHaveFocus();
   });
 
-  it('RF-001 cadastro válido chama a API e vai ao painel', async () => {
+  it('RF-001 cadastro válido chama a API e vai à sessão (/conta, provisória até a E3)', async () => {
     const { api, user } = setup('cadastrar');
     await user.type(await screen.findByLabelText('E-mail'), ' Ana@Fazenda.com ');
     await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/painel'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/conta'));
     expect(api.signup).toHaveBeenCalledWith({ email: 'ana@fazenda.com', senha: SENHA_BOA });
   });
 

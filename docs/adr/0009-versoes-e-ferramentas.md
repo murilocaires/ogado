@@ -6,7 +6,7 @@ Versões resolvidas na instalação do T-01 (travadas em `pnpm-lock.yaml`; faixa
 
 | Área | Escolha | Versão |
 |---|---|---|
-| Runtime / gerenciador | Node, pnpm | 22 LTS (22.23), pnpm 11.13 (`packageManager`) |
+| Runtime / gerenciador | Node, pnpm | 22 LTS (22.23), pnpm 11.13.1 (`packageManager`; o 11.13.0 foi publicado sem binário e quebra o install na Vercel) |
 | Linguagem | TypeScript | **~6.0.3** (ver nota) |
 | Web | Next.js (App Router, Turbopack), React | 16.4.2, 19.3.1 |
 | API | Fastify, `fastify-type-provider-zod`, `@fastify/cors` | 5.12.7, 7.0.0, 11.3.1 |

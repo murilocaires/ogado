@@ -16,6 +16,8 @@ const channel = process.env['E2E_CHANNEL'] ?? 'msedge';
 
 export default defineConfig({
   testDir: './e2e',
+  // Jornadas da E1 não dependem de API/Postgres: rodam pelo playwright.local.config.ts.
+  testIgnore: /e1-.*\.spec\.ts/,
   timeout: 90_000,
   expect: { timeout: 15_000 },
   globalSetup: './e2e/warmup.ts',
