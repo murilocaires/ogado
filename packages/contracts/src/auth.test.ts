@@ -32,6 +32,21 @@ describe('signupRequestSchema', () => {
     expect(failedRules(senha)).toEqual(regras);
   });
 
+  it.each(['_', '@', '!', '#', '$', '%', '-', '.', '+', '~'])(
+    'RF-001 CA-06: aceita "%s" como símbolo',
+    (simbolo) => {
+      expect(failedRules(`Boi2026ab${simbolo}`)).toEqual([]);
+    },
+  );
+
+  it.each([
+    ['emoji', 'Boi2026ab🐂'],
+    ['espaço', 'Boi 2026ab'],
+    ['acento', 'Boi2026abé'],
+  ])('RF-001 CA-06: %s não conta como símbolo', (_nome, senha) => {
+    expect(failedRules(senha)).toEqual(['simbolo']);
+  });
+
   it('RF-001 CA-06: mensagens em pt-BR não ecoam a senha', () => {
     const senha = 'segredosecreto';
     const r = signupRequestSchema.safeParse({ email: ok.email, senha });

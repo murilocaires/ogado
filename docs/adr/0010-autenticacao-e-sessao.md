@@ -2,7 +2,7 @@
 
 **Status:** aceito (aprovado pelo pecuarista em 2026-10-17; respostas Q1–Q4, Q6 e Q7 abaixo) · **Data:** 2026-10-17
 
-> **Decisões do humano:** **Q1** senha com **no mínimo 8 caracteres e obrigatoriamente ao menos 1 letra maiúscula, 1 número e 1 símbolo** (divergiu da recomendação de 12 caracteres sem regra de composição; máximo continua 128). **Q2** sessão de 30 dias sem uso, teto de 90. **Q3** sem verificação de e-mail na v1. **Q4** mensagem "Não foi possível criar a conta com este e-mail. Já tem conta? Entrar". **Q6** sem bloqueio de conta, só rate limit. **Q7** sem "Sair de todos os aparelhos" na v1.
+> **Decisões do humano:** **Q1** senha com **no mínimo 8 caracteres e obrigatoriamente ao menos 1 letra maiúscula, 1 número e 1 símbolo (caractere especial ASCII do teclado: _ @ ! # $ % etc.; emoji, espaço e acento não contam)** (divergiu da recomendação de 12 caracteres sem regra de composição; máximo continua 128). **Q2** sessão de 30 dias sem uso, teto de 90. **Q3** sem verificação de e-mail na v1. **Q4** mensagem "Não foi possível criar a conta com este e-mail. Já tem conta? Entrar". **Q6** sem bloqueio de conta, só rate limit. **Q7** sem "Sair de todos os aparelhos" na v1.
 **Requisitos:** RF-001 (e-mail/senha), RF-002 (sessão/logout), RF-010, RNF-003, RNF-004, RF-078, RF-080 · **Relacionados:** ADR-0002, ADR-0003, ADR-0007, ADR-0009
 
 ## Contexto

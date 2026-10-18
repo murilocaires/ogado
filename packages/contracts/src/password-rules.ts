@@ -1,7 +1,8 @@
 /**
  * Regras de senha (RF-001, ADR-0010 Q1). Fonte única: a API valida com elas e a tela as lista
  * antes do envio. Mínimo 8, máximo 128; ao menos 1 maiúscula, 1 número e 1 símbolo.
- * Símbolo = pontuação ou símbolo Unicode (\p{P}, \p{S}); espaço não conta como símbolo.
+ * Símbolo = caractere especial ASCII imprimível (pontuação e símbolos do teclado, como _ @ ! # $ %);
+ * letras, números, espaço, acentos e emojis não contam (decisão do humano em 2026-10-17).
  */
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
@@ -39,7 +40,7 @@ export const PASSWORD_RULES: readonly PasswordRule[] = [
   {
     id: 'simbolo',
     mensagem: 'A senha deve ter pelo menos um símbolo (por exemplo ! ? # @ $ %).',
-    ok: (senha) => /[\p{P}\p{S}]/u.test(senha),
+    ok: (senha) => /[!-/:-@[-`{-~]/.test(senha),
   },
 ];
 
