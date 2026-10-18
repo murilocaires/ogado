@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
+import { decimalDe, ultimoCenario } from '../lib/cenarios';
 import { brl, brlComSinal, capitalizar, dataBR, ehNegativo, num } from '../lib/format';
 import { ordenarPorData, resumirNegocios } from '../lib/negocios';
 import { calcularRecriaEntidade } from '../lib/recria';
@@ -15,6 +16,7 @@ export function PainelScreen() {
   const dados = useRepoState();
   const lotes = dados.status === 'pronto' ? dados.lotes : null;
   const recria = dados.status === 'pronto' ? dados.recria : null;
+  const cenarios = dados.status === 'pronto' ? dados.cenarios : null;
 
   const resumo = useMemo(() => (lotes ? resumirNegocios(lotes) : null), [lotes]);
   const calculada = useMemo(() => (recria ? calcularRecriaEntidade(recria) : null), [recria]);
@@ -30,6 +32,11 @@ export function PainelScreen() {
 
   const { resultado: cv, itens } = resumo;
   const r = calculada.resultado;
+  // RF-040: com cenário salvo, o cartão mostra o último (snapshot); senão, a simulação atual.
+  const ultimo = cenarios ? ultimoCenario(cenarios) : null;
+  const liquido = ultimo ? decimalDe(ultimo.resultado.faturamentoLiquido) : r.faturamentoLiquido;
+  const porMes = ultimo ? decimalDe(ultimo.resultado.liquidoMes) : r.liquidoMes;
+  const porHa = ultimo ? decimalDe(ultimo.resultado.liquidoHa) : r.liquidoHa;
   const recentes = ordenarPorData(itens).slice(0, 6);
   const vazio = itens.length === 0;
   const saldoNeg = ehNegativo(cv.saldo);
@@ -76,8 +83,20 @@ export function PainelScreen() {
           </div>
         </section>
 
-        <section className="card" aria-label="Recria, simulação atual">
-          <div className="th">Recria · simulação atual</div>
+        <section
+          className="card"
+          aria-label={
+            ultimo ? `Recria, último cenário salvo: ${ultimo.nome}` : 'Recria, simulação atual'
+          }
+        >
+          <div className="th">
+            {ultimo ? 'Recria · último cenário' : 'Recria · simulação atual'}
+          </div>
+          {ultimo && (
+            <div style={{ marginTop: 6, fontWeight: 700, overflowWrap: 'anywhere' }}>
+              {ultimo.nome}
+            </div>
+          )}
           <div style={{ marginTop: 10, color: 'var(--tinta-2)', fontSize: 14 }}>
             Faturamento líquido
             <InfoPopover k="recLiq" />
@@ -86,10 +105,10 @@ export function PainelScreen() {
             className="big"
             style={{
               fontSize: 34,
-              color: ehNegativo(r.faturamentoLiquido) ? 'var(--barro-600)' : 'var(--folha-600)',
+              color: ehNegativo(liquido) ? 'var(--barro-600)' : 'var(--folha-600)',
             }}
           >
-            {brl(r.faturamentoLiquido)}
+            {brl(liquido)}
           </div>
           <div className="grid g2 keep2" style={{ marginTop: 14, gap: 10 }}>
             <div>
@@ -97,19 +116,24 @@ export function PainelScreen() {
                 Por mês
                 <InfoPopover k="mes" />
               </div>
-              <b>{brl(r.liquidoMes, 0)}</b>
+              <b>{brl(porMes, 0)}</b>
             </div>
             <div>
               <div className="th">
                 Por hectare
                 <InfoPopover k="ha" />
               </div>
-              <b>{brl(r.liquidoHa, 0)}</b>
+              <b>{brl(porHa, 0)}</b>
             </div>
           </div>
-          <p style={{ margin: '14px 0 0' }}>
+          <p style={{ margin: '14px 0 0', display: 'flex', gap: 18, flexWrap: 'wrap' }}>
+            {ultimo && (
+              <Link href="/recria?aba=cenarios" className="link">
+                Ver cenários →
+              </Link>
+            )}
             <Link href="/recria" className="link">
-              Ver detalhes da recria →
+              {ultimo ? 'Abrir o simulador →' : 'Ver detalhes da recria →'}
             </Link>
           </p>
         </section>

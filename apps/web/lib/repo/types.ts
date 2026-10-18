@@ -1,7 +1,7 @@
 // Entidades e interface do repositório de dados da web (ADR-0007, seam de dados).
 // As telas só falam com `OGadoRepo`. Na E1 a implementação é o localStorage; na E3/E4 troca-se por
 // API/IndexedDB sem mexer nas telas. Valores de dinheiro/peso ficam como STRING (pt-BR digitado).
-import type { ModoPeso, VarianteLotacaoInicial } from '@ogado/domain';
+import type { ModoPeso, VarianteFaturamentoBruto, VarianteLotacaoInicial } from '@ogado/domain';
 
 export type LoteTipo = 'compra' | 'venda';
 export type BaseArroba = 'vivo' | 'carcaca';
@@ -74,6 +74,68 @@ export interface RecriaAtualizacao {
   lotacaoInicial?: VarianteLotacaoInicial;
 }
 
+/** Campos `Valor` do resultado do domínio guardados no snapshot do cenário (ADR-0003, RN-023). */
+export const CENARIO_RESULTADO_CAMPOS = [
+  'cabecas',
+  'lotacaoTotalUA',
+  'lotacaoHaInicial',
+  'pesoMedio',
+  'lotacaoFinal',
+  'arrobasProduzidas',
+  'consumoKgDia',
+  'arrobasCarcacaCab',
+  'vendaCab',
+  'custoTotal',
+  'faturamentoBruto',
+  'faturamentoLiquido',
+  'totalEmCaixa',
+  'liquidoMes',
+  'liquidoHa',
+  'gmdImplicito',
+] as const;
+
+export type CenarioResultadoCampo = (typeof CENARIO_RESULTADO_CAMPOS)[number];
+
+/** Resultado do domínio como string decimal SEM arredondar; `null` = indefinido (RN-022). */
+export type CenarioResultado = Record<CenarioResultadoCampo, string | null> & {
+  custos: { id: string; nome: string; valor: string | null }[];
+};
+
+/** Parâmetros efetivamente usados no cálculo (RN-021), como string decimal. */
+export interface CenarioParametros {
+  arrobaVivoKg: string;
+  arrobaCarcacaKg: string;
+  uaKg: string;
+  lotacaoFixaHa: string;
+}
+
+export interface CenarioVariantes {
+  lotacaoInicial: VarianteLotacaoInicial;
+  faturamentoBruto: VarianteFaturamentoBruto;
+}
+
+/**
+ * Cenário salvo (RF-032, RN-023): SNAPSHOT imutável das entradas, variantes, parâmetros e do
+ * resultado. Mudar o simulador ou a configuração depois não altera o que foi salvo.
+ */
+export interface CenarioEntity extends EntityMeta {
+  /** Nome livre, até 80 caracteres. */
+  nome: string;
+  /** Data de criação (ISO). */
+  criadoEm: string;
+  form: RecriaForm;
+  variantes: CenarioVariantes;
+  parametros: CenarioParametros;
+  resultado: CenarioResultado;
+}
+
+export type CenarioSalvar = Pick<
+  CenarioEntity,
+  'nome' | 'form' | 'variantes' | 'parametros' | 'resultado'
+>;
+
+export const CENARIO_NOME_MAX = 80;
+
 export type PersistenciaStatus = 'ok' | 'indisponivel';
 
 export type RepoSnapshot =
@@ -83,6 +145,8 @@ export type RepoSnapshot =
       /** Só os não excluídos, na ordem de criação. */
       lotes: readonly LoteEntity[];
       recria: RecriaEntity;
+      /** Cenários salvos não excluídos, na ordem de criação (RF-032). */
+      cenarios: readonly CenarioEntity[];
       /** `indisponivel`: o navegador não deixa gravar; os dados valem só até fechar a aba. */
       persistencia: PersistenciaStatus;
     };
@@ -96,4 +160,11 @@ export interface OGadoRepo {
   atualizarRecria(atualizacao: RecriaAtualizacao): void;
   /** `padrao` = valores da planilha (ENTRADA_PADRAO); `vazio` = todos os campos em branco. */
   redefinirRecria(modo: 'padrao' | 'vazio'): void;
+  /** Guarda o snapshot de um cenário (RF-032). Nome vazio vira "Cenário N". */
+  salvarCenario(cenario: CenarioSalvar): CenarioEntity;
+  /** Altera só o nome (o snapshot nunca muda). */
+  renomearCenario(id: string, nome: string): void;
+  /** Copia o snapshot como "<nome> (cópia)"; `null` se o cenário não existe. */
+  duplicarCenario(id: string): CenarioEntity | null;
+  excluirCenario(id: string): void;
 }
