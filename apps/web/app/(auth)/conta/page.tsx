@@ -1,7 +1,8 @@
-import { PainelPlaceholder } from '../../components/PainelPlaceholder';
+import { PainelPlaceholder } from '../../../components/PainelPlaceholder';
 
-export const metadata = { title: 'Painel · O Gado' };
+export const metadata = { title: 'Sessão · O Gado' };
 
-export default function PainelPage() {
+/** Provisória até a E3 (Conta): prova a sessão e o logout. Fora da navegação da E1. */
+export default function SessaoPage() {
   return <PainelPlaceholder />;
 }

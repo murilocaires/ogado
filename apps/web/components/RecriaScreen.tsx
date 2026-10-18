@@ -1,0 +1,361 @@
+'use client';
+
+import type { AlertaRecria, Decimal } from '@ogado/domain';
+import { useMemo, useState } from 'react';
+import { brl, dicaCampo, ehNegativo, lerCampo, num, TRACO } from '../lib/format';
+import { calcularRecriaEntidade } from '../lib/recria';
+import { useRepo, useRepoState } from '../lib/repo/repo-provider';
+import type { RecriaCampo } from '../lib/repo/types';
+import { Carregando, PageHeader } from './AppShell';
+import { ConfirmDialog } from './Dialog';
+import { CampoCalculado, CampoNumero } from './Fields';
+import { InfoPopover } from './InfoPopover';
+import { useToast } from './Toast';
+
+interface CampoDef {
+  id: RecriaCampo;
+  rotulo: string;
+  prefixo?: string;
+  sufixo?: string;
+}
+
+const GRUPOS: { titulo: string; campos: CampoDef[] }[] = [
+  {
+    titulo: 'Lote e área',
+    campos: [
+      { id: 'area', rotulo: 'Área pastável', sufixo: 'ha' },
+      { id: 'dias', rotulo: 'Dias de recria', sufixo: 'dias' },
+      { id: 'investimento', rotulo: 'Investimento', prefixo: 'R$' },
+      { id: 'rsCabCompra', rotulo: 'R$ por cabeça (compra)', prefixo: 'R$' },
+      { id: 'pesoIni', rotulo: 'Peso inicial', sufixo: 'kg' },
+      { id: 'pesoFin', rotulo: 'Peso final', sufixo: 'kg' },
+      { id: 'precoVenda', rotulo: 'Preço de venda', prefixo: 'R$', sufixo: '/@' },
+    ],
+  },
+  {
+    titulo: 'Suplemento',
+    campos: [
+      { id: 'consumoPct', rotulo: 'Consumo (% do peso vivo)', sufixo: '%' },
+      { id: 'precoSuplKg', rotulo: 'Proteinado', prefixo: 'R$', sufixo: '/kg' },
+    ],
+  },
+  {
+    titulo: 'Imposto e sanidade',
+    campos: [
+      { id: 'rendCarcaca', rotulo: 'Rendimento de carcaça', sufixo: '%' },
+      { id: 'imposto', rotulo: 'Imposto sobre a venda', sufixo: '%' },
+      { id: 'sanidadeCabMes', rotulo: 'Sanidade', prefixo: 'R$', sufixo: '/cab./mês' },
+    ],
+  },
+  {
+    titulo: 'Outros custos',
+    campos: [
+      { id: 'funcionario', rotulo: 'Funcionário', prefixo: 'R$' },
+      { id: 'frete', rotulo: 'Frete', prefixo: 'R$' },
+    ],
+  },
+];
+
+const CUSTO_CORES = ['var(--custo-1)', 'var(--custo-2)', 'var(--custo-3)', 'var(--custo-4)', 'var(--custo-5)'];
+const CUSTO_INFO = { supl: 'supl', san: 'san', imp: 'imp', frete: 'frete', func: 'func' } as const;
+
+function mensagemAlerta(a: AlertaRecria): string {
+  switch (a.codigo) {
+    case 'cabecas_fracionadas':
+      return `O investimento compra ${num(a.cabecas, 2)} cabeças (≈ ${num(a.cabecasArredondadas, 0)}). O cálculo usa o valor exato.`;
+    case 'lotacao_entrada_alta':
+      return `Lotação de entrada acima de ${a.limite} UA/ha.`;
+    case 'lotacao_saida_alta':
+      return `Lotação de saída acima de ${a.limite} UA/ha.`;
+    case 'muitas_cabecas':
+      return `Mais de ${a.limite} cabeças por lote.`;
+  }
+}
+
+/** Percentual de um custo no total, como string para a largura da barra (só apresentação). */
+function percentual(valor: Decimal | null, total: Decimal | null): Decimal | null {
+  if (!valor || !total || total.isZero()) return null;
+  return valor.div(total).times(100);
+}
+
+function corLiquido(v: Decimal | null): string {
+  return ehNegativo(v) ? 'neg' : 'pos';
+}
+
+/** Simulador de recria (RF-030/031): entradas agrupadas e resultado fixo ao lado. */
+export function RecriaScreen() {
+  const dados = useRepoState();
+  const repo = useRepo();
+  const toast = useToast();
+  const [confirmar, setConfirmar] = useState<'padrao' | 'vazio' | null>(null);
+
+  const recria = dados.status === 'pronto' ? dados.recria : null;
+  const calculada = useMemo(() => (recria ? calcularRecriaEntidade(recria) : null), [recria]);
+
+  if (!recria || !calculada) {
+    return (
+      <>
+        <PageHeader titulo="Cálculos Recria" />
+        <Carregando />
+      </>
+    );
+  }
+
+  const { resultado: r, alertas } = calculada;
+  const total = r.custoTotal;
+  const vazios = (Object.keys(recria.form) as RecriaCampo[]).filter(
+    (c) => lerCampo(recria.form[c]).tipo !== 'ok',
+  );
+
+  return (
+    <>
+      <PageHeader
+        titulo="Cálculos Recria"
+        sub="Mude os números e veja o resultado na hora."
+        acoes={
+          <>
+            <button type="button" className="btn sec sm" onClick={() => setConfirmar('padrao')}>
+              Restaurar padrões
+            </button>
+            <button type="button" className="btn sec sm" onClick={() => setConfirmar('vazio')}>
+              Limpar campos
+            </button>
+          </>
+        }
+      />
+
+      <div className="rgrid">
+        <div className="stack">
+          {GRUPOS.map((g) => (
+            <section className="card" key={g.titulo} aria-labelledby={`g-${g.titulo}`}>
+              <h2 id={`g-${g.titulo}`}>{g.titulo}</h2>
+              <div className="row">
+                {g.campos.map((c) => {
+                  const leitura = lerCampo(recria.form[c.id]);
+                  return (
+                    <CampoNumero
+                      key={c.id}
+                      inputId={`r-${c.id}`}
+                      label={c.rotulo}
+                      prefixo={c.prefixo}
+                      sufixo={c.sufixo}
+                      dataK={c.id}
+                      value={recria.form[c.id]}
+                      onChange={(v) => repo.atualizarRecria({ form: { [c.id]: v } })}
+                      dica={dicaCampo(recria.form[c.id])}
+                      invalido={leitura.tipo === 'invalido'}
+                    />
+                  );
+                })}
+              </div>
+              {g.titulo === 'Lote e área' && (
+                <div className="lbl" style={{ marginTop: 14 }}>
+                  <label htmlFor="r-lotacao">Lotação inicial (UA/ha) calculada sobre</label>
+                  <div className="fld select-fld">
+                    <select
+                      id="r-lotacao"
+                      value={recria.lotacaoInicial}
+                      onChange={(e) =>
+                        repo.atualizarRecria({
+                          lotacaoInicial: e.target.value === 'areaPastavel' ? 'areaPastavel' : 'fixa80',
+                        })
+                      }
+                    >
+                      <option value="fixa80">80 ha de referência</option>
+                      <option value="areaPastavel">a área pastável informada</option>
+                    </select>
+                  </div>
+                  <span className="hint">
+                    Escolha a base da lotação inicial. Isto só altera a lotação inicial, não o
+                    resultado financeiro.
+                  </span>
+                </div>
+              )}
+            </section>
+          ))}
+        </div>
+
+        <div className="stack rres" aria-label="Resultado da recria" role="region">
+          <div className="hero">
+            <div className="th">
+              Faturamento líquido
+              <InfoPopover k="recLiq" />
+            </div>
+            <div className={`big ${corLiquido(r.faturamentoLiquido)}`} aria-live="polite" aria-atomic="true">
+              {brl(r.faturamentoLiquido)}
+            </div>
+            <div className="grid g3 keep3" style={{ marginTop: 16, gap: 10 }}>
+              <div className="mini">
+                <span className="th">
+                  Por mês
+                  <InfoPopover k="mes" />
+                </span>
+                <b aria-live="polite">{brl(r.liquidoMes, 0)}</b>
+              </div>
+              <div className="mini">
+                <span className="th">
+                  Por hectare
+                  <InfoPopover k="ha" />
+                </span>
+                <b aria-live="polite">{brl(r.liquidoHa, 0)}</b>
+              </div>
+              <div className="mini">
+                <span className="th">
+                  Total em caixa
+                  <InfoPopover k="caixa" />
+                </span>
+                <b aria-live="polite">{brl(r.totalEmCaixa, 0)}</b>
+              </div>
+            </div>
+            {vazios.length > 0 && (
+              <p className="hint" style={{ color: 'var(--nevoa-200)', margin: '12px 0 0' }}>
+                Preencha todos os campos com números válidos para ver o resultado completo
+                (faltam {vazios.length}).
+              </p>
+            )}
+          </div>
+
+          {alertas.length > 0 && (
+            <div className="alert" role="status">
+              {alertas.map((a) => (
+                <p key={a.codigo}>{mensagemAlerta(a)}</p>
+              ))}
+            </div>
+          )}
+
+          <section className="card" aria-labelledby="r-custo">
+            <h2 id="r-custo">
+              Custo operacional
+              <InfoPopover k="custo" />
+            </h2>
+            <div className="big" style={{ fontSize: 30 }} aria-live="polite">
+              {brl(r.custoTotal)}
+            </div>
+            <div className="cbar" style={{ marginTop: 12 }} aria-hidden="true">
+              {r.custos.map((c, k) => {
+                const p = percentual(c.valor, total);
+                return (
+                  <div
+                    key={c.id}
+                    style={{
+                      width: `${p && p.gt(0) ? p.toFixed(2) : '0'}%`,
+                      background: CUSTO_CORES[k],
+                    }}
+                    title={c.nome}
+                  />
+                );
+              })}
+            </div>
+            <div className="legend">
+              {r.custos.map((c, k) => {
+                const p = percentual(c.valor, total);
+                return (
+                  <div key={c.id}>
+                    <i style={{ background: CUSTO_CORES[k] }} aria-hidden="true" />
+                    <span>
+                      {c.nome}
+                      <InfoPopover k={CUSTO_INFO[c.id]} />
+                    </span>
+                    <em>{p ? `${num(p, 1)}%` : TRACO}</em>
+                    <b>{brl(c.valor)}</b>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="card" aria-labelledby="r-venda">
+            <h2 id="r-venda">Da venda ao líquido</h2>
+            <table>
+              <tbody>
+                <tr>
+                  <td>
+                    Faturamento bruto
+                    <InfoPopover k="bruto" />
+                  </td>
+                  <td>
+                    <b>{brl(r.faturamentoBruto)}</b>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    (−) Custo operacional
+                    <InfoPopover k="custo" />
+                  </td>
+                  <td>{brl(r.custoTotal)}</td>
+                </tr>
+                <tr>
+                  <td>
+                    (−) Investimento
+                    <InfoPopover k="invest" />
+                  </td>
+                  <td>{brl(recriaInvestimento(recria.form.investimento))}</td>
+                </tr>
+                <tr className="tot">
+                  <td>
+                    Faturamento líquido
+                    <InfoPopover k="recLiq" />
+                  </td>
+                  <td>{brl(r.faturamentoLiquido)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section className="card" aria-labelledby="r-numeros">
+            <h2 id="r-numeros">Números do lote</h2>
+            <div className="grid g2" style={{ gap: 12 }}>
+              <CampoCalculado
+                label="Cabeças"
+                info="cabecas"
+                valor={num(r.cabecas, 2)}
+                pequeno={r.cabecas ? `≈ ${num(r.cabecas, 0)}` : undefined}
+              />
+              <CampoCalculado label="Lotação total" info="lotTot" valor={comUnidade(r.lotacaoTotalUA, 2, 'UA')} />
+              <CampoCalculado label="Lotação inicial" info="lotIni" valor={comUnidade(r.lotacaoHaInicial, 2, 'UA/ha')} />
+              <CampoCalculado label="Lotação final" info="lotFin" valor={comUnidade(r.lotacaoFinal, 2, 'UA/ha')} />
+              <CampoCalculado label="Peso médio" info="pesoMed" valor={comUnidade(r.pesoMedio, 0, 'kg')} />
+              <CampoCalculado label="GMD implícito" info="gmd" valor={comUnidade(r.gmdImplicito, 3, 'kg/dia')} />
+              <CampoCalculado label="@ na venda (peso vivo)" info="arrVivo" valor={comUnidade(r.arrobasProduzidas, 2, '@')} />
+              <CampoCalculado label="@ de carcaça por cabeça" info="arrCarc" valor={comUnidade(r.arrobasCarcacaCab, 2, '@')} />
+              <CampoCalculado label="Consumo por cabeça" info="consumo" valor={comUnidade(r.consumoKgDia, 3, 'kg/dia')} />
+              <CampoCalculado label="Venda por cabeça" info="vendaCab" valor={brl(r.vendaCab)} />
+            </div>
+            <p className="hint" style={{ margin: '12px 0 0' }}>
+              Campos com cadeado são calculados e não podem ser editados.
+            </p>
+          </section>
+        </div>
+      </div>
+
+      {confirmar && (
+        <ConfirmDialog
+          titulo={confirmar === 'padrao' ? 'Restaurar os padrões?' : 'Limpar todos os campos?'}
+          texto={
+            confirmar === 'padrao'
+              ? 'Os campos voltam aos valores de exemplo da planilha. O que você digitou será substituído.'
+              : 'Todos os campos ficam em branco e o resultado aparece como "—" até você preencher de novo.'
+          }
+          confirmar={confirmar === 'padrao' ? 'Restaurar' : 'Limpar'}
+          perigo
+          onCancel={() => setConfirmar(null)}
+          onConfirm={() => {
+            repo.redefinirRecria(confirmar);
+            toast(confirmar === 'padrao' ? 'Padrões restaurados.' : 'Campos limpos.');
+            setConfirmar(null);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function comUnidade(valor: Decimal | null, casas: number, unidade: string): string {
+  return valor ? `${num(valor, casas)} ${unidade}` : TRACO;
+}
+
+/** Investimento digitado (ou "—"): mesma leitura estrita dos demais campos. */
+function recriaInvestimento(texto: string): Decimal | null {
+  const l = lerCampo(texto);
+  return l.tipo === 'ok' ? l.valor : null;
+}

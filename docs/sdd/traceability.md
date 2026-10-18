@@ -16,9 +16,10 @@ Atualizada pelo `docs-keeper` com a skill `traceability`. Rode `node scripts/tra
 | RF-070, RF-071, RF-072, RNF-012, RNF-016 | T-13 | — | — | Pendente |
 | RF-073, RF-074, RF-076, RF-079, RF-080, RNF-013, RNF-017 | T-14 | — | — | Pendente |
 | RF-075, RF-077, RF-078, RNF-014, RNF-015 | T-15 | — | — | Pendente |
-| RN-024, RN-025, RN-027, RF-024…RF-026 (revisão pós-protótipo) | T-02 (nova rodada), T-06, T-17 | — | — | Pendente; ADR-0012 aguardando aprovação (Q-A, Q-B) |
-| RN-026, RF-031 (completo), RF-030 | T-07 | — | — | Pendente |
+| RN-024, RN-025, RN-027 (domínio); RF-024…RF-026 | T-02 (nova rodada), T-06, T-17 | `packages/domain/src/compra-venda.test.ts`, `configuracao.test.ts` | `packages/domain/src/compra-venda.ts` (`calcularVenda`, `categoriaFeminina`); UI (T-06/T-17) pendente; ADR-0012 aprovado |
+| RN-026, RF-031 (completo), RF-030 | T-07 | `packages/domain/src/alertas-recria.test.ts` | `packages/domain/src/alertas-recria.ts` (`alertasRecria`); UI pendente |
 | RF-032, RF-033…RF-036 | T-08, T-19 | — | — | Pendente (RF-033 promovido de S para M) |
 | RF-004…RF-007 | T-18 | — | — | Pendente |
 | RF-052, RF-053 | T-10 | — | — | Pendente |
+| RF-024…RF-026, RF-030, RF-031, RF-040, RF-051…RF-053, RN-024…RN-027 (versão local) | E1 (T-06 + T-17 + T-07 locais) | `apps/web/components/{NegociosScreen,RecriaScreen,PainelScreen,InfoPopover}.test.tsx`, `apps/web/lib/repo/local-repo.test.ts`, `apps/web/e2e/e1-jornadas.spec.ts` (`pnpm --filter @ogado/web test:e2e:local`, sem API) | `apps/web/app/(app)/**`, `apps/web/components/{AppShell,NegociosScreen,LoteModal,RecriaScreen,PainelScreen,InfoPopover,Dialog,Fields,Toast}.tsx`, `apps/web/lib/{negocios,lote-draft,recria,format,info}.ts`, `apps/web/lib/repo/**`, `apps/web/styles/app.css` | Implementado, dados só no localStorage (ADR-0007: telas só falam com `lib/repo`); cálculo 100% via `@ogado/domain`; fora da E1: login, cenários, comparação, PWA/offline, sync, primeiros passos, parâmetros. Aguardando revisão humana |$
 | (preencher por ticket) | | | | |

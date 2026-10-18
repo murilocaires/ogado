@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { SessionProvider } from '../lib/auth/session-provider';
 import '../styles/tokens.css';
 import '../styles/globals.css';
 
@@ -20,7 +19,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body>
-        <SessionProvider>{children}</SessionProvider>
+        {children}
       </body>
     </html>
   );

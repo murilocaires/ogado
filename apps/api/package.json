@@ -24,6 +24,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@ogado/domain": "workspace:*",
     "tsup": "^9.0.0",
     "tsx": "^4.23.15"
   }
