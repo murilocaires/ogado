@@ -9,3 +9,5 @@ coverage
 packages/db/src/generated
 !.env.example
 *.tsbuildinfo
+test-results
+playwright-report

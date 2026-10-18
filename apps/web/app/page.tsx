@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 export default async function HomePage() {
   const result = await fetchHealth();
   return (
-    <main>
+    <main className="shell">
       <h1>O Gado</h1>
       <p>Verificação ponta a ponta (web, API, banco):</p>
       {result.ok ? (
@@ -17,6 +17,11 @@ export default async function HomePage() {
           Falha: {result.reason}
         </p>
       )}
+      <p>
+        <a className="link" href="/entrar">
+          Entrar
+        </a>
+      </p>
     </main>
   );
 }

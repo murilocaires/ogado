@@ -1,0 +1,483 @@
+/* Estilos globais da web. Cores e medidas vêm de tokens.css (nada hardcoded fora dos tokens). */
+/* Tom do logo (WebLogin), sem token próprio em tokens.css. */
+:root {
+  --floresta-950: #08241a;
+  --nevoa-300: #9dbfa3;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--nevoa-50);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.disp {
+  font-family: var(--font-display);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--folha-600);
+  outline-offset: 2px;
+}
+
+/* ---------- Campos: branco = entrada (WebLogin .fld) ---------- */
+.lbl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fld {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--nevoa-200);
+  border-radius: var(--raio-campo);
+  background: #fff;
+  min-height: 52px;
+  padding: 0 14px;
+}
+
+.fld:hover {
+  border-color: var(--nevoa-300);
+}
+
+.fld:focus-within {
+  outline: 2px solid var(--folha-600);
+  outline-offset: 1px;
+  border-color: var(--folha-600);
+}
+
+.fld[data-invalid='true'] {
+  border-color: var(--barro-600);
+  background: #fff9f8;
+}
+
+.fld input {
+  border: 0;
+  outline: 0;
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  font: 500 16px var(--font-ui);
+  color: var(--tinta);
+  height: 50px;
+  padding: 0;
+}
+
+.fld input::placeholder {
+  color: var(--tinta-3);
+}
+
+.err {
+  font-size: 13px;
+  color: var(--barro-600);
+  font-weight: 500;
+}
+
+/* ---------- Botões ---------- */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  border-radius: var(--raio-botao);
+  font: 700 16px var(--font-ui);
+  border: 1px solid transparent;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn-primary {
+  background: var(--folha-600);
+  color: #fff;
+}
+
+.btn-primary:hover:not([aria-disabled='true']) {
+  background: var(--folha-700);
+}
+
+.btn[aria-disabled='true'] {
+  cursor: progress;
+  opacity: 0.85;
+}
+
+.btn-quiet {
+  background: #fff;
+  color: var(--tinta);
+  border-color: var(--nevoa-200);
+}
+
+.btn-danger {
+  background: var(--barro-600);
+  color: #fff;
+}
+
+.link {
+  color: var(--folha-600);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.spin {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  animation: sp 0.8s linear infinite;
+}
+
+@keyframes sp {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation-duration: 2.4s;
+  }
+}
+
+/* ---------- Avisos ---------- */
+.notice {
+  border-radius: var(--raio-campo);
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.notice-error {
+  background: #fbeae6;
+  color: #8e2f20;
+}
+
+.notice-warn {
+  background: var(--palha-bg);
+  border: 1px solid var(--palha);
+  color: #4a3a0b;
+}
+
+.notice:focus {
+  outline: 2px solid var(--folha-600);
+  outline-offset: 2px;
+}
+
+/* ---------- Tela de entrar / cadastrar (WebLogin e AppLogin) ---------- */
+.auth-page {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 100vh;
+  background: var(--nevoa-50);
+}
+
+.auth-hero {
+  flex: 1 1 560px;
+  min-width: 0;
+  background: linear-gradient(135deg, var(--floresta-900) 0%, #1b6b47 100%);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  padding: 48px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
+}
+
+.auth-hero .stripes {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(100deg, rgba(181, 224, 90, 0.08) 0 2px, transparent 2px 26px);
+}
+
+.auth-hero .ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(181, 224, 90, 0.25);
+}
+
+.auth-hero .ring-1 {
+  right: -160px;
+  bottom: -180px;
+  width: 560px;
+  height: 560px;
+}
+
+.auth-hero .ring-2 {
+  right: -90px;
+  bottom: -110px;
+  width: 420px;
+  height: 420px;
+  border-color: rgba(181, 224, 90, 0.18);
+}
+
+.auth-hero h2 {
+  margin: 0;
+  font-size: clamp(44px, 4.8vw, 68px);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+}
+
+.auth-hero p {
+  margin: 20px 0 0;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--nevoa-200);
+  max-width: 460px;
+}
+
+.auth-main {
+  flex: 1 1 480px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.auth-card h1 {
+  margin: 0;
+  font-size: 40px;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+.auth-card .sub {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--tinta-2);
+}
+
+.auth-mobile-head {
+  display: none;
+}
+
+.pw-rules {
+  list-style: none;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--raio-campo);
+  background: var(--nevoa-100);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tinta-2);
+}
+
+.pw-rules li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.pw-rules li[data-ok='true'] {
+  color: var(--tinta);
+}
+
+.pw-rules .mark {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--tinta-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.pw-rules li[data-ok='true'] .mark {
+  background: var(--folha-600);
+  border-color: var(--folha-600);
+  color: #fff;
+}
+
+.pw-rules .title {
+  font-weight: 700;
+  color: var(--tinta);
+}
+
+@media (max-width: 860px) {
+  .auth-hero {
+    display: none;
+  }
+}
+
+/* Celular (AppLogin): cabeçalho escuro e folha branca com topo arredondado. */
+@media (max-width: 560px) {
+  .auth-page {
+    background: var(--floresta-900);
+    flex-direction: column;
+    flex-wrap: nowrap;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .auth-page::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(100deg, rgba(181, 224, 90, 0.08) 0 2px, transparent 2px 26px);
+    pointer-events: none;
+  }
+
+  .auth-mobile-head {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    color: #fff;
+    padding: 64px 24px 0;
+    height: 210px;
+    position: relative;
+  }
+
+  .auth-mobile-head .title {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .auth-main {
+    flex: 1 1 auto;
+    align-items: flex-start;
+    background: #fff;
+    border-radius: 28px 28px 0 0;
+    padding: 28px 24px;
+    position: relative;
+  }
+
+  .auth-card {
+    gap: 16px;
+  }
+
+  .auth-card .desktop-title {
+    /* O título visual é o do cabeçalho escuro; o h1 segue para leitor de tela. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .fld {
+    border-radius: 14px;
+    min-height: 56px;
+    padding: 0 16px;
+  }
+
+  .fld input {
+    height: 54px;
+  }
+
+  .btn {
+    min-height: 56px;
+    border-radius: 16px;
+  }
+}
+
+/* ---------- Painel placeholder e diálogo ---------- */
+.shell {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.shell h1 {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: -0.03em;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio-cartao);
+  padding: 20px;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 51, 36, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: var(--raio-cartao);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 18px 40px rgba(13, 51, 36, 0.22);
+}
+
+.dialog h2 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.row .btn {
+  width: auto;
+  flex: 1 1 140px;
+}

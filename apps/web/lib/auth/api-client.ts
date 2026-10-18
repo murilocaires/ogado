@@ -1,0 +1,115 @@
+import {
+  errorEnvelopeSchema,
+  sessionResponseSchema,
+  type FieldError,
+  type LoginRequest,
+  type SessionResponse,
+  type SignupRequest,
+} from '@ogado/contracts';
+
+/** Por que uma chamada falhou. A tela decide o texto; a API nunca dita a mensagem mostrada. */
+export type ApiFailure =
+  | { ok: false; kind: 'credenciais' }
+  | { ok: false; kind: 'validacao'; campos: FieldError[] }
+  | { ok: false; kind: 'conflito' }
+  | { ok: false; kind: 'nao-autenticado' }
+  | { ok: false; kind: 'sessao-expirada' }
+  | { ok: false; kind: 'muitas-tentativas'; retryAfterSeconds: number | null }
+  | { ok: false; kind: 'bloqueada' }
+  | { ok: false; kind: 'rede' }
+  | { ok: false; kind: 'servidor' }
+  | { ok: false; kind: 'contrato' };
+
+export type ApiResult<T> = { ok: true; data: T } | ApiFailure;
+
+export interface ApiClient {
+  signup(body: SignupRequest): Promise<ApiResult<SessionResponse>>;
+  login(body: LoginRequest): Promise<ApiResult<SessionResponse>>;
+  /** Só é sucesso com 204 (o chamador limpa o aparelho depois disso, e só depois). */
+  logout(): Promise<ApiResult<void>>;
+  getSession(): Promise<ApiResult<SessionResponse>>;
+}
+
+export interface ApiClientOptions {
+  /** Mesma origem: o Next repassa `/api/*` para a API (ADR-0010 a.5). */
+  baseUrl?: string;
+  fetch?: typeof fetch;
+}
+
+async function readFailure(res: Response): Promise<ApiFailure> {
+  if (res.status >= 500) return { ok: false, kind: 'servidor' };
+  let parsed: ReturnType<typeof errorEnvelopeSchema.safeParse> | undefined;
+  try {
+    parsed = errorEnvelopeSchema.safeParse(await res.json());
+  } catch {
+    parsed = undefined;
+  }
+  const erro = parsed?.success ? parsed.data.erro : undefined;
+  switch (erro?.codigo) {
+    case 'credenciais_invalidas':
+      return { ok: false, kind: 'credenciais' };
+    case 'validacao_invalida':
+      return { ok: false, kind: 'validacao', campos: erro.campos ?? [] };
+    case 'conflito':
+      return { ok: false, kind: 'conflito' };
+    case 'nao_autenticado':
+      return { ok: false, kind: 'nao-autenticado' };
+    case 'sessao_expirada':
+      return { ok: false, kind: 'sessao-expirada' };
+    case 'requisicao_bloqueada':
+      return { ok: false, kind: 'bloqueada' };
+    case 'muitas_tentativas': {
+      const raw = Number(res.headers.get('retry-after'));
+      return {
+        ok: false,
+        kind: 'muitas-tentativas',
+        retryAfterSeconds: Number.isFinite(raw) && raw > 0 ? raw : null,
+      };
+    }
+    default:
+      return { ok: false, kind: 'contrato' };
+  }
+}
+
+export function createApiClient(options: ApiClientOptions = {}): ApiClient {
+  const baseUrl = options.baseUrl ?? '/api';
+  // Resolvido a cada chamada: permite trocar o fetch global nos testes e evita "Illegal invocation".
+  const doFetch: typeof fetch = (input, init) => (options.fetch ?? fetch)(input, init);
+
+  async function call(path: string, init: RequestInit): Promise<Response | null> {
+    try {
+      return await doFetch(`${baseUrl}${path}`, {
+        ...init,
+        credentials: 'include',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  async function sessionCall(path: string, init: RequestInit): Promise<ApiResult<SessionResponse>> {
+    const res = await call(path, init);
+    if (!res) return { ok: false, kind: 'rede' };
+    if (!res.ok) return readFailure(res);
+    try {
+      const parsed = sessionResponseSchema.safeParse(await res.json());
+      return parsed.success ? { ok: true, data: parsed.data } : { ok: false, kind: 'contrato' };
+    } catch {
+      return { ok: false, kind: 'contrato' };
+    }
+  }
+
+  return {
+    signup: (body) => sessionCall('/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
+    login: (body) => sessionCall('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+    getSession: () => sessionCall('/auth/session', { method: 'GET' }),
+    async logout() {
+      const res = await call('/auth/logout', { method: 'POST', body: '{}' });
+      if (!res) return { ok: false, kind: 'rede' };
+      if (res.status === 204) return { ok: true, data: undefined };
+      return readFailure(res);
+    },
+  };
+}

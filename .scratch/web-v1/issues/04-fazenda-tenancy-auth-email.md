@@ -40,9 +40,9 @@
 - [x] **CA-19** Dado qualquer resposta da API, quando inspeciono os headers, então há CSP `default-src 'none'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` e (em produção) HSTS; o CORS só aceita as origens configuradas, com credenciais.
 
 **Front (tela de login e estados)**
-- [ ] **CA-20** Dado a tela de entrar, quando envio credenciais válidas, então chego ao painel (ou ao onboarding do T-05); com credenciais inválidas, vejo a mensagem genérica e o foco vai para o erro (teclado e leitor de tela).
-- [ ] **CA-21** Dado uma sessão que expira, quando a API responde 401, então o app mostra "Entre de novo" e **não** apaga dados locais; o logout explícito é a única ação que limpa o aparelho (contrato usado pelo T-14/RF-080).
-- [ ] **CA-22** (e2e) Dado um navegador limpo, quando cadastro, saio e entro de novo, então a jornada completa funciona e nenhum token aparece em localStorage ou IndexedDB.
+- [x] **CA-20** Dado a tela de entrar, quando envio credenciais válidas, então chego ao painel (ou ao onboarding do T-05); com credenciais inválidas, vejo a mensagem genérica e o foco vai para o erro (teclado e leitor de tela).
+- [x] **CA-21** Dado uma sessão que expira, quando a API responde 401, então o app mostra "Entre de novo" e **não** apaga dados locais; o logout explícito é a única ação que limpa o aparelho (contrato usado pelo T-14/RF-080).
+- [x] **CA-22** (e2e) Dado um navegador limpo, quando cadastro, saio e entro de novo, então a jornada completa funciona e nenhum token aparece em localStorage ou IndexedDB.
 
 - [x] ADR-0010 aprovado pelo humano, com Q1–Q4, Q6 e Q7 respondidas.
 
@@ -54,6 +54,12 @@
 5. **RNF-003 / CA-16**: a 6ª tentativa de login em 1 minuto, para o mesmo IP e e-mail, responde 429. Força o rate limit por chave composta.
 
 Em seguida: CA-12 (guardião de rotas), CA-14/15 (convenção), CA-17/18/19 (CSRF, erros, headers) e por fim a UI e o e2e (CA-20…22).
+
+## Etapa 2 (front) entregue
+Provas: `apps/web/components/AuthScreen.test.tsx` e `PainelPlaceholder.test.tsx` (CA-06 tela, CA-20, CA-21, diálogo de saída), `apps/web/lib/auth/*.test.ts` (cliente HTTP e máquina de estados), `apps/web/e2e/auth.spec.ts` (CA-20, CA-21, CA-22 contra API real + Postgres, Edge via `E2E_CHANNEL`). Capturas 1440/390 em `.scratch/web-v1/evidence/`. Rodar e2e: `docker compose up -d postgres` e `pnpm --filter @ogado/web test:e2e`.
+Desvios do design: sem "Esqueci a senha", "Continuar com Google" e "digital/rosto" (T-16/v3); cadastro só com e-mail e senha (o nome fica no onboarding T-05); mínimo de senha vem do ADR (8 + composição), não os 6 do mock; rotas `/entrar` e `/cadastrar`.
+
+**Dívida do T-14 (troca de usuário, RF-078):** o controlador já detecta login de `usuarioId` diferente da identidade guardada (`getAccountMismatch()` e `onAccountMismatch`), sem apagar nem sobrescrever nada. Falta, no T-14: contar os lançamentos pendentes, mostrar "N lançamentos de outra conta ainda não foram enviados" e só apagar o banco local com confirmação; e decidir a identidade guardada depois da confirmação.
 
 ## Dívida técnica registrada (revisão de segurança da etapa 1)
 - **Limpeza de sessões expiradas**: nada apaga as linhas de Sessão vencidas. Criar job/rotina de limpeza e um índice em `expiraEm` (migração aditiva).
