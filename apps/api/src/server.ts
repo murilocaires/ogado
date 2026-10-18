@@ -1,10 +1,16 @@
 import { createPrisma } from '@ogado/db';
 import { buildApp } from './app.js';
+import { configFromEnv } from './config.js';
 import { loadEnv, parseOrigins } from './env.js';
 
 const env = loadEnv();
 const prisma = createPrisma(env.DATABASE_URL);
-const app = buildApp({ prisma, corsOrigins: parseOrigins(env.WEB_ORIGIN), logger: true });
+const app = buildApp({
+  prisma,
+  corsOrigins: parseOrigins(env.WEB_ORIGIN),
+  logger: true,
+  config: configFromEnv(env),
+});
 
 const shutdown = async (): Promise<void> => {
   await app.close();

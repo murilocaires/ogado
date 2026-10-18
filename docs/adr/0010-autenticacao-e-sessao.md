@@ -76,7 +76,9 @@ Estado das bibliotecas pesquisado em 2026-10-17 (npm registry e sites oficiais):
   - `POST /auth/logout`: 204, idempotente.
   - `GET /auth/session`: 200 com usuário e fazenda, ou 401.
 - **Envelope único de erro** `{ erro: { codigo, mensagem } }` via `setErrorHandler`:
-  - Validação Zod → 400 com o caminho dos campos, nunca os valores.
+  - Validação Zod → 400 `validacao_invalida`, com o caminho dos campos, nunca os valores.
+  - Requisição malformada (JSON inválido, corpo grande demais, outros 4xx do Fastify) → 4xx `requisicao_invalida`.
+  - CSRF (Origin, Sec-Fetch-Site ou Content-Type fora das regras) → 403 `requisicao_bloqueada`.
   - 401 `nao_autenticado` / `sessao_expirada`.
   - 404 `nao_encontrado`.
   - 409 `conflito`.

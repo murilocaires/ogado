@@ -1,4 +1,6 @@
-// T-01: sem modelos de negócio. Tabelas entram nos tickets seguintes (ver skill prisma-migrations).
+// T-04 (ADR-0010): contas, sessões e fazenda (tenant).
+// Convenção de entidade sincronizável (ADR-0007) aplicada à Fazenda: id UUID, version, updatedAt
+// do servidor, deletedAt (tombstone). Entidades de negócio futuras repetem a convenção + fazendaId.
 generator client {
   provider = "prisma-client"
   output   = "../src/generated"
@@ -6,4 +8,48 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model Usuario {
+  id           String   @id @default(uuid()) @db.Uuid
+  // normalizado (trim + minúsculas) na borda; único
+  email        String   @unique
+  // string PHC argon2id; nulo quando o usuário só entra com Google (T-16)
+  senhaHash    String?
+  criadoEm     DateTime @default(now()) @db.Timestamptz(3)
+  atualizadoEm DateTime @default(now()) @updatedAt @db.Timestamptz(3)
+
+  sessoes Sessao[]
+  fazenda Fazenda?
+}
+
+model Sessao {
+  // parte pública do token (id.segredo); o segredo nunca é guardado, só o SHA-256 dele (hex)
+  id                  String   @id
+  segredoHash         String
+  usuarioId           String   @db.Uuid
+  criadaEm            DateTime @default(now()) @db.Timestamptz(3)
+  ultimaVerificacaoEm DateTime @default(now()) @db.Timestamptz(3)
+  // teto absoluto
+  expiraEm            DateTime @db.Timestamptz(3)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+}
+
+model Fazenda {
+  id        String    @id @default(uuid()) @db.Uuid
+  // único = 1 fazenda por conta na v1 (v1.1: remover a unicidade)
+  donoId    String    @unique @db.Uuid
+  // opcional até o onboarding (T-05)
+  nome      String?
+  version   Int       @default(1)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @default(now()) @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
+
+  dono Usuario @relation(fields: [donoId], references: [id], onDelete: Restrict)
+
+  @@index([updatedAt])
 }
