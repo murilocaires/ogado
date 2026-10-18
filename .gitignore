@@ -11,3 +11,6 @@ packages/db/src/generated
 *.tsbuildinfo
 test-results
 playwright-report
+
+.vercel
+.env*

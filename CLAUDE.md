@@ -23,7 +23,7 @@ Escolha o modelo pela tarefa: `.claude/config/model-routing.json` (`node scripts
 - Decimal em dinheiro/peso; arredondar só na exibição.
 - Toda query com `fazendaId`; Zod nas bordas; sem `any`.
 - Campo branco = entrada; menta + cadeado = calculado.
-- Nunca faça `git push`, `reset --hard`, `clean -f` (hook bloqueia). Humano faz merge.
+- Git é feito pelo agente, por autorização do humano (2026-10-18): branch por entrega, commit, push, PR e merge. Nunca `reset --hard` nem `clean -f` (hook bloqueia).
 - Pergunte ao humano quando for regra de negócio; não invente fórmula.
 
 ## Agent skills
