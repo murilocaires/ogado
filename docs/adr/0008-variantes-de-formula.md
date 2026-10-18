@@ -2,6 +2,8 @@
 
 **Status:** aceito (decisão do pecuarista, grill de 2026-10-17) · **Data:** 2026-10-17
 
+> **Atualização (ADR-0012, proposta):** o protótipo move o seletor de `lotacaoInicial` para dentro da simulação e não expõe a variante `carcaca`. Ver ADR-0012 §B.
+
 ## Contexto
 Duas divergências entre a planilha e o texto do curso/documentos: a lotação inicial (PA-01, divide por 80 ha fixos) e o faturamento bruto (a planilha usa **peso vivo ÷ 30**; o texto antigo da RN-017 dizia **@ de carcaça**). A constituição exige paridade; o usuário quer poder escolher.
 

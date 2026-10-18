@@ -1,5 +1,7 @@
 # O Gado — Requisitos (v1 web)
 
+> **Revisão de 2026-10-18 (ADR-0012):** o protótipo `docs/prototipo/ogado-prototipo.html` passou a ser a referência de comportamento e de UX. Itens alterados ou novos: RN-002, RN-009, RN-019, RN-021, RN-023, RN-024…RN-027, RF-004…RF-007, RF-011, RF-020…RF-026, RF-030…RF-036, RF-040, RF-052, RF-053, RNF-009. Pontos que dependem de decisão humana estão em "Em aberto" no ADR-0012 (Q-A…Q-G).
+
 Legenda de prioridade: **M** = must (v1) · **S** = should (v1.1) · **C** = could/futuro. Todo ID abaixo deve ter ao menos um teste com o ID no nome (`node scripts/trace-check.mjs`). Critérios no formato Dado/Quando/Então.
 
 ## 1. Regras de negócio (RN) — paridade com as planilhas
@@ -7,14 +9,14 @@ Legenda de prioridade: **M** = must (v1) · **S** = should (v1.1) · **C** = cou
 | ID | Regra | Origem | Pri. |
 |---|---|---|---|
 | RN-001 | Na compra, 1 @ = 30 kg de peso vivo. | Compra e Venda `F4` | M |
-| RN-002 | Na venda, 1 @ = 15 kg; antes da conversão desconta-se 10 kg × cabeças: @ = (kg − qtd×10) ÷ 15. | `F11` | M |
+| RN-002 | **Revisada (ADR-0012, protótipo):** na venda, @ = kg líquido ÷ kg por @, onde kg líquido = kg × (1 − desconto%) (RN-025) e kg por @ depende da base do lote (RN-024). *Fórmula original da planilha, só como referência histórica:* @ = (kg − qtd×10) ÷ 15 (`F11`). Aguarda aprovação (Q-A). | planilha → protótipo | M |
 | RN-003 | Peso do lote em 3 modos: total informado, médio × qtd, ou individual (soma dos pesos). Vale para compra e venda. | `E5`; pedido do cliente | M |
 | RN-004 | Compra: total = @ × R$/@; R$/cab. = total ÷ qtd (calculado em todas as linhas). | `H4`,`I5` | M |
 | RN-005 | Venda: total = @ × R$/@. | `H11` | M |
 | RN-006 | Saldo = total de vendas − total de compras. | `H19` | M |
 | RN-007 | Recria: cabeças = investimento ÷ R$/cab. de compra, sem arredondar (exibe arredondado). | Recria `B21` | M |
 | RN-008 | UA total = cab × peso inicial ÷ 450. | `B23` | M |
-| RN-009 | Lotação inicial (UA/ha) = UA total ÷ 80 (padrão da planilha); opção "pela área pastável" usa a área informada. | `B24` | M |
+| RN-009 | Lotação inicial (UA/ha) = UA total ÷ 80 (padrão da planilha); opção "pela área pastável" usa a área informada. **A escolha é feita na própria simulação** (seletor "Lotação inicial calculada sobre…") e fica salva em cada cenário (ADR-0012 §5); só altera a lotação inicial, nunca o resultado financeiro. | `B24` | M |
 | RN-010 | Peso médio = (inicial + final) ÷ 2; lotação final = cab × peso médio ÷ 450 ÷ área. | `B26`,`B27` | M |
 | RN-011 | @ produzidas (na venda) = peso final ÷ 30 × cab. | `B29` | M |
 | RN-012 | Consumo de suplemento (kg/cab/dia) = peso médio × 0,3%; por dia do lote = × cab; custo total = × R$/kg × dias. | `F24`–`F27` | M |
@@ -24,11 +26,15 @@ Legenda de prioridade: **M** = must (v1) · **S** = should (v1.1) · **C** = cou
 | RN-016 | Custo operacional = suplemento + sanidade + imposto + frete + funcionário. | `B38` | M |
 | RN-017 | Faturamento bruto (variante padrão `pesoVivo`, igual à planilha) = peso final ÷ 30 × cab × R$/@ de venda (`B29` × R$/@); variante `carcaca` (RN-023) = @ de carcaça/cab × cab × R$/@; **líquido = bruto − custo operacional − investimento**; total em caixa = investimento + líquido. | `E33`,`E35`,`E38` | M |
 | RN-018 | Líquido/mês = líquido ÷ (dias ÷ 30); líquido/ha = líquido ÷ área. | `F33`,`F35` | M |
-| RN-019 | GMD implícito = (peso final − inicial) ÷ dias (informativo). | derivado | S |
+| RN-019 | GMD implícito = (peso final − inicial) ÷ dias (informativo; aparece em "Números do lote"). | derivado | M |
 | RN-020 | Valores duplicados na planilha são um só campo no app (PA-03). | `F19-F21`,`B37` | M |
-| RN-021 | Parâmetros padrão (30, 15, 10, 450, 52%, 1,5%, 0,3%, R$ 2/kg, R$ 2,50) são editáveis por fazenda com "restaurar padrão da planilha". | planilhas | M |
-| RN-023 | Variantes de fórmula por fazenda (ADR-0008): `lotacaoInicial` = `fixa80`\|`areaPastavel`; `faturamentoBruto` = `pesoVivo`\|`carcaca`. Padrão = planilha. A simulação salva guarda a variante usada e o resultado a exibe. | decisão do pecuarista | M |
+| RN-021 | Parâmetros padrão (30 kg, 15 kg, desconto de venda **10%** (era 10 kg/cab, RN-025), 450, 52%, 1,5%, 0,3%, R$ 2/kg, R$ 2,50) são editáveis por fazenda com "restaurar padrão da planilha". O protótipo só edita rendimento, imposto, consumo, proteinado e sanidade (dentro da simulação) e o desconto (no lote); a tela de parâmetros da fazenda segue em aberto (Q-D). | planilhas | M |
+| RN-023 | Variantes de fórmula (ADR-0008, revisado pelo ADR-0012): `lotacaoInicial` = `fixa80`\|`areaPastavel` (escolhida na simulação); `faturamentoBruto` = `pesoVivo`\|`carcaca` (a variante `carcaca` **não está no protótipo**; adiada, Q-C). Padrão = planilha. A simulação salva guarda a variante usada e o resultado a exibe. | decisão do pecuarista | M |
 | RN-022 | Divisão por zero / campo vazio não quebra a tela: resultado mostra "—" e dica de preenchimento (inclui R$/cab. com quantidade 0 em compra e venda). | UX | M |
+| RN-024 | **Base do preço da @ na venda, por lote:** `vivo` (padrão) → 1 @ = `arrobaVivoKg` (30 kg); `carcaca` → 1 @ = `arrobaCarcacaKg` (15 kg). Compra é sempre peso vivo ÷ 30. | protótipo | M |
+| RN-025 | **Desconto percentual na venda, por lote:** kg líquido = kg × (1 − desconto%); padrão 10%; opcional (pode ser desligado = 0%). Só existe na venda. Ligado automaticamente se a categoria for feminina (bezerra, novilha, vaca, fêmea, matriz, garrota) e desligado nas demais, até o usuário alterar a opção no lote. Substitui o desconto de 10 kg × cab. | protótipo | M |
+| RN-026 | Alertas não bloqueantes no resultado da recria: cabeças fracionárias ("compra X cab. ≈ Y; o cálculo usa o valor exato"), lotação inicial > 4 UA/ha, lotação final > 6 UA/ha, mais de 250 cabeças. Não impedem salvar nem calcular. | protótipo (antes v2/Metas) | M |
+| RN-027 | Modos de peso (RN-003): só o modo ativo entra no cálculo; o que foi digitado nos outros modos fica guardado enquanto o lote está aberto e não se perde ao alternar. O modo escolhido é gravado com o lote. | protótipo | M |
 
 ## 2. Requisitos funcionais (RF)
 
@@ -36,22 +42,34 @@ Legenda de prioridade: **M** = must (v1) · **S** = should (v1.1) · **C** = cou
 |---|---|---|---|
 | RF-001 | Cadastro e login com e-mail/senha; entrada com Google. | Dado e-mail novo, quando cadastro, então conta criada e sessão iniciada. | M |
 | RF-002 | Sessão segura, logout e recuperação de senha. | Senha reset por link expirável. | M |
-| RF-003 | Primeiros passos: nome da fazenda, área pastável, confirmação dos parâmetros. | Fluxo de 3 passos conclui e leva ao painel. | M |
+| RF-003 | Primeiros passos: nome da fazenda, área pastável, confirmação dos parâmetros. **Não existe no protótipo** (o login leva direto ao painel e a fazenda é preenchida em Conta); mantido até decisão (Q-D). | Fluxo de 3 passos conclui e leva ao painel. | M |
+| RF-004 | Conta · Perfil: editar nome e e-mail, com confirmação ("Salvar alterações?"); nome obrigatório, e-mail válido. | Dado nome vazio ou e-mail inválido, então avisa e não salva. | M |
+| RF-005 | Conta · Senha: definir (conta sem senha) ou alterar (exige a senha atual); nova senha + confirmação iguais. Regras de senha do ADR-0010 (o protótipo só pede 8 caracteres; Q-F). | Dado senha atual errada ou confirmação diferente, então avisa e não altera. | M |
+| RF-006 | Conta · Google: vincular e desvincular; **não permite desvincular sem senha definida**. Selos "Senha definida" / "Google vinculado" no cabeçalho da Conta. | Dado conta só com Google, quando desvincula, então pede para definir senha antes. | M |
+| RF-007 | Conta · Apagar minha conta: remove perfil, fazenda, lotes e cenários de forma permanente; só habilita o botão depois de digitar "deletar". | Dado texto diferente de "deletar", então o botão fica desabilitado. | M |
 | RF-010 | Uma conta pode ter uma fazenda (v1); dados isolados por fazenda. | Usuário A nunca lê dados da fazenda B. | M |
-| RF-011 | Configurações da fazenda: nome, área, parâmetros de cálculo e variantes de fórmula (RN-023), com "restaurar padrão da planilha". | Alteração reflete nos novos cálculos; cenários salvos não mudam. | M |
-| RF-020 | CRUD de lotes de **compra** (categoria, qtd, modo de peso, R$/@, data). | Cria, edita, exclui (com confirmação). | M |
-| RF-021 | CRUD de lotes de **venda**. | idem | M |
-| RF-022 | Modo de peso individual: lista de pesos animal a animal; qtd = nº de pesos; peso = soma. | Colar lista, editar, remover pesos. | M |
-| RF-023 | Resumo: cabeças, @, total por aba, **saldo** com sinal e cor. | Bate com o exemplo de ouro (−R$ 89.475,83). | M |
-| RF-030 | Simulador de recria com todos os campos de entrada da planilha; recalcula ao digitar. | Resultado igual ao exemplo de ouro. | M |
-| RF-031 | Resultado completo: custos (composição), bruto, líquido, caixa, por mês e por ha. | Valores e rótulos corretos (PA-02). | M |
-| RF-032 | Salvar simulações por ano safra, duplicar e renomear. | Lista de cenários com data. | M |
-| RF-033 | Comparar dois cenários lado a lado. | Diferenças destacadas. | S |
-| RF-040 | Painel: saldo, últimas operações, atalhos, resumo da recria. | Reflete dados reais. | M |
+| RF-011 | Configurações da fazenda: nome e área (no protótipo, em **Conta · Fazenda**, com confirmação; a área também preenche a "Área pastável" do simulador), parâmetros de cálculo e variantes de fórmula (RN-023), com "restaurar padrão da planilha" (parâmetros/variantes: Q-D). | Alteração reflete nos novos cálculos; cenários salvos não mudam. | M |
+| RF-020 | CRUD de lotes de **compra** (número do lote sequencial, categoria, qtd, modo de peso, R$/@, data). | Cria, edita, exclui (com confirmação). | M |
+| RF-021 | CRUD de lotes de **venda** (inclui base da @ e desconto, RN-024/025). | idem | M |
+| RF-022 | Modo de peso individual: lista de pesos animal a animal (um por linha, `;` ou vírgula seguida de espaço); qtd = nº de pesos; peso = soma; mostra os pesos como etiquetas. | Colar lista, editar, remover pesos. | M |
+| RF-023 | Resumo: cabeças, @, total por aba, **saldo** com sinal e cor; faixa Saldo · Comprado · Vendido no topo. | Bate com o exemplo de ouro revisado (RN-002, Q-A). | M |
+| RF-024 | Tela **Negócios** unificada: abas Todas · Compras · Vendas; "Todas" ordena por data decrescente (sem data por último) com etiqueta COMPRA/VENDA; tabela (Lote, Cab., Peso, @, R$/@, Total, R$/cab.) no desktop e cartões no celular; resumo da aba (cab. · @ · total). | Dado lançamentos de compra e venda, quando abro "Todas", então vejo ambos intercalados por data. | M |
+| RF-025 | Modal de lote: alternância Compra/Venda apenas em lote novo; categoria em texto livre com sugestões (BEZERROS, BEZERRAS, GARROTES, NOVILHAS, BOIS, VACAS), gravada em maiúsculas; pré-visualização calculada (cabeças, @, total) em campos menta + cadeado; **pede confirmação** ao salvar ("Salvar novo lote?" / "Salvar alterações?"); exige quantidade/peso e preço da @. | Dado preço vazio, então avisa "Informe o preço da arroba" e não salva. | M |
+| RF-026 | Venda: escolher base da @ (peso vivo · carcaça) e aplicar/ajustar o desconto % do lote; dica "em vendas de fêmeas é comum descontar 10% do peso" na aba Vendas. | Dado categoria "NOVILHAS" em lote novo, então o desconto de 10% vem ligado. | M |
+| RF-030 | Simulador de recria com todos os campos de entrada da planilha, agrupados (Lote e área · Suplemento · Imposto e sanidade · Outros custos); recalcula ao digitar. | Resultado igual ao exemplo de ouro. | M |
+| RF-031 | Resultado completo: faturamento líquido (destaque) com por mês, por ha e total em caixa; custo operacional com barra de composição e % de cada item; "Da venda ao líquido" (bruto − custo − investimento); "Números do lote" (cabeças, lotação total/inicial/final, peso médio, GMD, @ vendidas, @ de carcaça/cab., consumo/cab., venda/cab.); alertas RN-026. | Valores e rótulos corretos (PA-02). | M |
+| RF-032 | Salvar a simulação como **cenário**: nome livre (padrão "Cenário N") + data (sem campo de ano safra; o ano safra vai no nome, Q-G); duplicar ("… (cópia)"), renomear, excluir (com confirmação). | Lista de cenários com data. | M |
+| RF-033 | Comparar **2 a 3 cenários** lado a lado (marcar nas caixas; barra "N selecionados · Comparar · Limpar"): indicadores com diferença em relação ao primeiro marcado, verde = melhor, vermelho = pior. Promovido de S/v1.1 (ADR-0012). | Dado 3 marcados, quando marco o 4º, então avisa "Compare até 3 cenários". | M |
+| RF-034 | Cenários: busca por nome, ordenação (mais recentes · maior líquido · nome A–Z) e visão em lista ou grade; estados "Nenhum cenário salvo" e "Nada encontrado". | Dado busca sem resultado, então mostra "Nada encontrado". | M |
+| RF-035 | Cenários: "Abrir no simulador" carrega as entradas do cenário no simulador (substitui as atuais). | Entradas do simulador = entradas do cenário. | M |
+| RF-036 | ★ marca o cenário de maior faturamento líquido na lista e na comparação (só com 2+ cenários). | Dado 2 cenários, então o de maior líquido tem ★. | M |
+| RF-040 | Painel: saudação com nome da pessoa e da fazenda; saldo (Comprado/Vendido); cartão "Recria · simulação atual" (líquido, por mês, por ha); atalhos (nova compra, nova venda, simular recria); **últimas 6 operações** por data decrescente. | Reflete dados reais; conta nova mostra "Nenhuma operação ainda" + "Cadastrar primeiro lote". | M |
 | RF-041 | Exportar compras/vendas/simulações em CSV (e XLSX). | Arquivo abre no Excel com pt-BR. | S |
 | RF-042 | Importar planilha Excel no formato do curso. | Pré-visualiza e confirma antes de gravar. | S |
 | RF-050 | Estados: carregando, vazio, erro, offline, sucesso, confirmação destrutiva em todas as telas. | Conforme `WebEstados` (offline detalhado em RF-070…RF-080). | M |
 | RF-051 | Campo calculado é somente leitura e visualmente distinto (menta + cadeado). | Não aceita digitação. | M |
+| RF-052 | **Ajuda contextual:** botão "i" ao lado de cada indicador calculado (saldo, comprado, vendido, @, total, R$/cab., líquido, por mês, por ha, caixa, custos, lotação, GMD…) abre um balão com nome, explicação em linguagem simples e "Como é calculado". Fecha com Esc, clique fora, rolagem ou nova navegação; `aria-label` "O que é: …" e `aria-expanded`. | Dado foco no "i" e Enter, então o balão abre; Esc fecha. | M |
+| RF-053 | Navegação principal com 4 itens — Painel · Negócios · Recria · Conta —, lateral no desktop e barra inferior abaixo de 900 px; item ativo com `aria-current`. Substitui a rota "Configurações" do design. | Em 390 px a barra inferior aparece e a lateral some. | M |
 | RF-060 | Integração Google Sheets (leitura). | Fora da v1. | C |
 
 ## 3. Requisitos não funcionais (RNF)
@@ -66,7 +84,7 @@ Legenda de prioridade: **M** = must (v1) · **S** = should (v1.1) · **C** = cou
 | RNF-006 | Responsivo 360–1920 px; navegação lateral vira barra inferior em tela estreita. | verificação visual | M |
 | RNF-007 | Idioma pt-BR, moeda BRL, números `1.234,56`. Em campo de formulário só a vírgula é decimal; ponto só vale como milhar com vírgula decimal ou com 2+ grupos de 3 dígitos; `1.500`/`1.5` são rejeitados com dica para usar vírgula. | testes de formatação | M |
 | RNF-008 | Observabilidade: logs estruturados, id de requisição, erros sem PII. | revisão | S |
-| RNF-009 | LGPD: consentimento, exportação e exclusão de conta. | fluxo mínimo | S |
+| RNF-009 | LGPD: consentimento e exportação dos dados do titular. (A **exclusão de conta** virou requisito funcional RF-007, M.) | fluxo mínimo | S |
 | RNF-010 | Qualidade: TS estrito, lint, cobertura de domínio ≥ 95%, CI em todo PR. | CI | M |
 | RNF-011 | Reprodutibilidade: `docker compose up` sobe Postgres; seed com cenário de ouro. | README | M |
 | RNF-012 | Instalabilidade: manifest completo, ícones 192/512/maskable, service worker, HTTPS. | Lighthouse "installable" passa | M |

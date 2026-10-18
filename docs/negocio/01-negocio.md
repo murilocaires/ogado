@@ -33,9 +33,9 @@ A **v1 do O Gado cobre Compra e Venda + Cálculos de Recria** (as duas planilhas
 
 | Conceito | Definição usada nas planilhas |
 |---|---|
-| **Arroba (@)** | Na **compra**, 1 @ = **30 kg de peso vivo**. Na **venda**, 1 @ = **15 kg de carcaça** (peso vivo × rendimento). |
+| **Arroba (@)** | Na **compra**, 1 @ = **30 kg de peso vivo**. Na **venda** (protótipo, ADR-0012) o lote escolhe a base: **peso vivo** (30 kg, padrão) ou **carcaça** (15 kg). Na planilha original a venda era sempre 15 kg de carcaça. |
 | **Rendimento de carcaça** | 52% do peso vivo (padrão editável). |
-| **Desconto na venda** | 10 kg por cabeça deduzidos do peso antes de converter em @ (quebra/jejum). |
+| **Desconto na venda** | **Percentual do peso** (padrão 10%) aplicado por lote antes de converter em @; vem ligado para categorias femininas e desligado para as demais (editável). Na planilha original: 10 kg por cabeça. |
 | **UA — Unidade Animal** | 450 kg de peso vivo. Lotação = UA por hectare. |
 | **GMD** | Ganho médio diário (kg/cab/dia) = (peso final − inicial) / dias. |
 | **Ano safra** | Julho a junho. Recria típica: 120 dias de seca + 240 dias de capim verde (o app permite informar os dias). |
@@ -52,9 +52,11 @@ Linhas de **compra** (categoria, quantidade, peso, preço da @, data):
 - O peso pode ser informado como **peso total do lote (kg)** *ou* **peso médio × quantidade**. O app acrescenta um terceiro modo pedido pelo usuário: **peso individual** (animal a animal), somando os pesos.
 - @ = kg ÷ 30 · Total = @ × R$/@ · R$/cab. = Total ÷ cabeças.
 
-Linhas de **venda**: igual, porém @ = (kg − cabeças × 10) ÷ 15 e Total = @ × R$/@.
+Linhas de **venda** (planilha original): igual, porém @ = (kg − cabeças × 10) ÷ 15 e Total = @ × R$/@.
 
-**Exemplo de ouro** (planilha): compras R$ 142.835,83, vendas R$ 53.360,00, **saldo −R$ 89.475,83**.
+**Venda no protótipo (ADR-0012, aguardando aprovação):** cada lote escolhe a **base do preço da @** (peso vivo ÷ 30, padrão, ou carcaça ÷ 15) e um **desconto percentual** sobre o peso (padrão 10%, ligado automaticamente para fêmeas). @ = kg × (1 − desconto%) ÷ (30 ou 15); Total = @ × R$/@. As telas de Compra e Venda viram uma só, **Negócios**, com abas Todas/Compras/Vendas.
+
+**Exemplo de ouro** (planilha original): compras R$ 142.835,83, vendas R$ 53.360,00, **saldo −R$ 89.475,83**. Com a regra do protótipo o saldo muda (valores propostos em `03-formulas-e-paridade.md` §A2).
 
 Pontos de atenção da planilha: ver §8.
 
@@ -111,12 +113,13 @@ Quatro abas (CHUVAS, Adubação, Dimensionamento de água, Resumo materiais) sã
 | PA-05 | `I4` (R$/cab.) só existe na linha 5 | Calculado para todas as linhas |
 | PA-06 | Nenhuma aba oculta/protegida nas duas planilhas v1; ocultas só na CRIA | Registrar para v2 |
 | PA-07 | Células "travadas" vs editáveis: azul/branco entrada, restante calculado | Campo branco = entrada; menta + cadeado = calculado |
+| PA-08 | Venda na planilha: @ sempre de 15 kg e desconto fixo de 10 kg/cab (vale igual para machos e fêmeas) | O protótipo troca por base da @ por lote + desconto % (padrão 10%, automático para fêmeas). Decisão pendente de aprovação: ADR-0012 / Q-A |
 
 ## 9. Visão de produto e roadmap
 
 - **v1 (web)**: conta, fazenda, Compra e Venda (3 modos de peso), Recria (simulador + resultado), painel, exportação. **Instalável (PWA) e utilizável offline com sincronização (ADR-0007).** *Paridade exata com as planilhas v1.*
-- **v1 também inclui** cenários por ano safra (RF-032, ticket T-08); a exportação CSV/XLSX é desejável (RF-041, nível S).
-- **v1.1**: comparação de cenários (RF-033); importação de planilha Excel (RF-042); várias fazendas por conta.
+- **v1 também inclui** cenários nomeados e datados (RF-032, T-08), com busca, ordenação, lista/grade e **comparação de 2 a 3 cenários** (RF-033…RF-036, promovida da v1.1 pelo ADR-0012), a tela **Conta** (RF-004…RF-007, T-18) e a **ajuda contextual** "i" (RF-052); a exportação CSV/XLSX é desejável (RF-041, nível S).
+- **v1.1**: importação de planilha Excel (RF-042); várias fazendas por conta.
 - **v2**: Cria (indicadores, reprodutivo, IATF×touro), Metas e Fechamento da Recria, módulos compartilhados (chuvas, adubação, água, materiais), integração Google Sheets.
 - **v3**: app móvel nativo (o offline já existe na web v1), evolução multi-safra, relatórios e equipe.
 

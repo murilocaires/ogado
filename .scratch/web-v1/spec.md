@@ -1,4 +1,4 @@
-Status: aguardando-aprovacao-humana
+Status: aguardando-aprovacao-humana (revisão pós-protótipo ADR-0012 pendente)
 Label: ready-for-agent (aplicar somente após aprovação)
 
 # Spec — O Gado Web v1 (instalável, offline-first)
@@ -93,3 +93,12 @@ Cria completa, Metas e Fechamento da Recria, integração Google Sheets, app **n
 - **Ambiente Windows:** `references/calculo/verify.py` falha como está (barras invertidas no caminho passado ao Node). `references/` é somente leitura; rodei uma cópia corrigida e o resultado foi 32/32. Decidir se o `pnpm test:parity` usa o oráculo apenas em CI Linux.
 - Itens sem ticket a distribuir no Passo 2: RNF-002, RNF-007, RN-019, RN-020, RF-033/RF-042 (v1.1).
 - Os diagramas e telas de offline vêm de `WebEstados` e `AppOffline`; o texto de ajuda do estado offline já existe no design.
+
+## Revisão pós-protótipo (ADR-0012, 2026-10-18 — proposta, aguardando aprovação humana)
+O protótipo `docs/prototipo/ogado-prototipo.html` é a referência de comportamento e UX. Mudanças na spec:
+- **Venda:** base da @ por lote (peso vivo ÷ 30, padrão, ou carcaça ÷ 15) e desconto **percentual** (padrão 10%, automático para categorias femininas) no lugar de 10 kg × cab (RN-002, RN-024, RN-025). O saldo de ouro muda (valores propostos em `docs/negocio/03-formulas-e-paridade.md` §A2); a planilha vira referência histórica (Q-A).
+- **Telas:** Painel · **Negócios** (compras e vendas juntas, abas Todas/Compras/Vendas) · Recria · **Conta** (perfil, senha, Google, fazenda, apagar conta). Ajuda contextual "i" nos indicadores (RF-052).
+- **Recria:** seletor de lotação inicial dentro da simulação; sem variante `carcaca` do bruto na tela; alertas (cabeças fracionárias, lotação > 4/6 UA/ha, > 250 cab.) e resultado completo (RF-031).
+- **Cenários:** nome livre + data, busca, ordenação, lista/grade, duplicar/renomear/excluir, abrir no simulador, ★ e **comparação de 2–3 cenários na v1** (RF-032…RF-036).
+- **Novas histórias:** (37) alterar perfil e senha; (38) vincular/desvincular Google sem perder o acesso; (39) apagar minha conta digitando "deletar"; (40) entender cada número tocando no "i"; (41) comparar até 3 cenários; (42) ver só o modo de peso ativo sem perder o que digitei nos outros; (43) desconto de peso de fêmeas ligado automaticamente, ajustável por lote.
+- **Em aberto:** Q-A…Q-G em `docs/adr/0012-revisao-pos-prototipo.md` (primeiros passos e tela de parâmetros não existem no protótipo; abrir simulador em branco ou com padrões; regras de senha).

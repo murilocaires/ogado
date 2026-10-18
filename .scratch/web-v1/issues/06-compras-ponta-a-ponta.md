@@ -12,3 +12,7 @@
 - [ ] Modo individual: colar lista, editar e remover pesos; qtd = nº de pesos
 - [ ] Campos calculados em menta com cadeado, não editáveis (RF-051)
 - [ ] Toda consulta com `fazendaId`; tela fiel a `WebCompraVenda`
+
+**Herdado do T-05 / ADR-0011:** primeira rota DELETE aplica §7 (sem corpo, `?version=N`, CSRF sem exigir `Content-Type` só para DELETE sem corpo); PATCH com versão otimista e 409 `atual` no mesmo padrão da Fazenda; colisão de UUID de cliente com outra fazenda (CA-15 do T-04) testada na criação de lote; parâmetros de compra vêm da configuração da fazenda; se o lote guarda snapshot dos parâmetros depende da Q3 do T-05.
+
+**Revisão pós-protótipo (ADR-0012, proposta):** a tela é a unificada **Negócios** (RF-024, RF-025): abas, número do lote sequencial, categoria livre em maiúsculas, retenção de valores por modo de peso (RN-027), confirmação ao salvar/excluir, pré-visualização menta + cadeado, ajuda "i" (RF-052).

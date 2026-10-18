@@ -7,6 +7,7 @@ Produto: gestão de pecuária (cria/recria/compra e venda) a partir das planilha
 2. `GLOSSARY.md` — vocabulário.
 3. `docs/negocio/01-negocio.md`, `02-requisitos.md`, `03-formulas-e-paridade.md`.
 4. `references/design/README.md` — telas e tokens.
+5. `docs/prototipo/ogado-prototipo.html` + `docs/adr/0012-revisao-pos-prototipo.md` — protótipo do pecuarista; onde diverge do design, vale o protótipo.
 
 ## Como trabalhamos (SDD + loops)
 Use `/sdd-workflow`. Fases: especificar → planejar → implementar em loop (TDD, máx. 5 iterações) → revisar → entregar. **Sem requisito numerado, sem código.** Decisões estruturais viram ADR em `docs/adr/`.

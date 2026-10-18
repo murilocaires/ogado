@@ -10,9 +10,15 @@ Atualizada pelo `docs-keeper` com a skill `traceability`. Rode `node scripts/tra
 | RN-001…RN-006, RNF-007 | T-02 | `packages/domain/src/compra-venda.test.ts`, `pt-br.test.ts` | `packages/domain/src/compra-venda.ts`, `pt-br.ts` | Implementado; ticket aguardando aprovação (regra do parser `1.234`) |
 | RN-007…RN-023 | T-03 | `packages/domain/src/recria.test.ts`, `tests/fixtures/variantes.json` | `packages/domain/src/recria.ts` | Implementado; variantes aguardando revisão humana |
 | RF-001 (e-mail), RF-002 (sessão/logout), RF-010, RNF-003, RNF-004 | T-04 | `apps/api/test/*.test.ts` (auth-signup, auth-login, auth-session, session-lifecycle, storage, isolation, fazenda-repository, rate-limit, security), `packages/contracts/src/auth.test.ts`, `apps/web/lib/auth/*.test.ts`, `apps/web/components/AuthScreen.test.tsx`, `apps/web/components/PainelPlaceholder.test.tsx`, `apps/web/e2e/auth.spec.ts` | `apps/api/src/**`, `apps/web/{lib/auth,components,app/entrar,app/cadastrar,app/painel}/**`, `packages/db/prisma/schema.prisma`, `packages/contracts/src/{auth,errors,fazenda,session,password-rules}.ts` | Implementado (backend CA-01…19; front e e2e CA-20…22); aguardando revisão humana |
+| RF-003, RF-011, RN-021, RN-023, RF-076 (Fazenda) | T-05 | — (previstos: `apps/api/test/fazenda-config*.test.ts`, isolation, teste do mapeamento de configuração no domínio, testes das telas de primeiros passos/configurações, `apps/web/e2e/primeiros-passos.spec.ts`) | — | ADR-0011 aprovado (Q1–Q4 respondidas). Etapa 1 em andamento (pausada): domínio `packages/domain/src/configuracao.ts` + `configuracao.test.ts` verdes (CA-18/19/20); migração e contratos parciais; rotas pendentes |
 | RF-001 (Google), RF-002 | T-16 | — | — | Pendente |
 | RF-021, RF-023, RN-002, RN-005, RN-006 | T-17 | — | — | Pendente |
 | RF-070, RF-071, RF-072, RNF-012, RNF-016 | T-13 | — | — | Pendente |
 | RF-073, RF-074, RF-076, RF-079, RF-080, RNF-013, RNF-017 | T-14 | — | — | Pendente |
 | RF-075, RF-077, RF-078, RNF-014, RNF-015 | T-15 | — | — | Pendente |
+| RN-024, RN-025, RN-027, RF-024…RF-026 (revisão pós-protótipo) | T-02 (nova rodada), T-06, T-17 | — | — | Pendente; ADR-0012 aguardando aprovação (Q-A, Q-B) |
+| RN-026, RF-031 (completo), RF-030 | T-07 | — | — | Pendente |
+| RF-032, RF-033…RF-036 | T-08, T-19 | — | — | Pendente (RF-033 promovido de S para M) |
+| RF-004…RF-007 | T-18 | — | — | Pendente |
+| RF-052, RF-053 | T-10 | — | — | Pendente |
 | (preencher por ticket) | | | | |

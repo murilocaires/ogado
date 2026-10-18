@@ -4,6 +4,8 @@ Autoridade em ordem: **células do .xlsx** (`references/planilhas/`) → este do
 
 ## A. Compra e Venda (`compra-e-venda-de-gado.xlsx`)
 
+> **Atenção (ADR-0012):** as linhas de **venda** abaixo (`F11`, `H11`, `H19` e o saldo −89.475,83) são a **regra original da planilha**. O protótipo muda a venda (base da @ e desconto %); ver §A2 e §D3. Compra e recria não mudam.
+
 | Campo | Fórmula | Célula | Ouro |
 |---|---|---|---|
 | kg do lote | informado, ou qtd × peso médio, ou Σ pesos | `E` | lote 2: 10 × 210 = 2.100 |
@@ -17,6 +19,26 @@ Autoridade em ordem: **células do .xlsx** (`references/planilhas/`) → este do
 
 Cenário de ouro (RN-001…006): compras = {60 cab., 11.311 kg total, R$ 325/@; 10 cab., 210 kg médio, R$ 290/@}; vendas = {16 cab., 2.920 kg total, R$ 290/@}.
 Caso extra (modo individual, RN-003): 3 animais de 200, 210 e 220 kg a R$ 300/@ → 630 kg, 21 @, R$ 6.300,00, R$ 2.100,00/cab.
+
+### A2. Venda no protótipo (ADR-0012 — aguardando aprovação, Q-A)
+O protótipo (`docs/prototipo/ogado-prototipo.html`, função `vendaLinha`) calcula a venda assim; **substitui** as linhas `@ venda`/`total venda` da tabela acima como regra do produto, e a planilha fica como referência histórica:
+
+| Campo | Fórmula | Regra |
+|---|---|---|
+| kg líquido | kg × (1 − desconto%) ; desconto padrão 10%, 0% se desligado | RN-025 |
+| @ venda | kg líquido ÷ 30 (base `vivo`, padrão) ou ÷ 15 (base `carcaca`) | RN-024 |
+| total venda | @ × R$/@ | RN-005 |
+| R$/cab. | total ÷ qtd (indefinido com qtd 0) | RN-004 |
+
+**Valores propostos para o novo ouro da venda** (lote 16 cab., 2.920 kg, R$ 290/@; compras inalteradas = 142.835,8333…). Calculados à mão a partir das fórmulas acima, `origem: "nao-planilha"`, **a revisar pelo humano** antes de virarem teste:
+
+| Base | Desconto | @ | Total venda | Saldo |
+|---|---|---|---|---|
+| carcaça (÷ 15) | 10% | 175,2 | 50.808,00 | −92.027,8333… |
+| peso vivo (÷ 30) | sem desconto | 97,3333… | 28.226,6667… | −114.609,1667… |
+| peso vivo (÷ 30) | 10% | 87,6 | 25.404,00 | −117.431,8333… |
+
+O ouro original da planilha (saldo **−89.475,8333…**, `@ = (2.920 − 16×10) ÷ 15 = 184`) continua no oráculo `calc.js` e em `tests/fixtures/golden.json` como **referência histórica**; deixa de ser o critério de aceite do saldo se o ADR-0012 for aprovado.
 
 ## B. Recria (`calculos-recria.xlsx`)
 
@@ -58,5 +80,15 @@ Entradas padrão: área 102 · dias 270 · investimento 122.534,80 · R$/cab. 2.
 - **Parser de formulário** (`parseNumeroPtBr`): só a vírgula é decimal; `1.500` e `1.5` retornam inválido. O modo `{ ambiguoPonto: 'planilha' }` reproduz o `calc.js` (colar texto da planilha). Decisão do pecuarista em 2026-10-17.
 - **Tolerância de paridade:** relativa estrita, `|atual − esperado| ≤ 1e-6 × |esperado|`.
 
-## E. Fórmulas futuras (v2) — Metas da RECRIA
+## D3. Divergências deliberadas em relação à planilha (protótipo, ADR-0012)
+- **Venda:** base da @ por lote (vivo 30 kg | carcaça 15 kg) e desconto **percentual** (padrão 10%, por lote) no lugar de 10 kg × cab (RN-024/025). O padrão deixa de ser a planilha (Q-A).
+- **Compra:** inalterada (@ = kg ÷ 30), sem desconto.
+- **Recria:** as fórmulas do protótipo são as da planilha (conferidas linha a linha com `recria()` do protótipo: cabeças, UA, lotação, suplemento, imposto, sanidade, custo, bruto = `pesoFin ÷ 30 × cab × R$/@`, líquido, caixa, mês, ha, GMD). Muda só a **escolha** da lotação inicial (na simulação) e a **ausência** da variante `carcaca` do bruto.
+- **Entradas em %:** o simulador recebe consumo, rendimento e imposto em % (ex.: `0,3`, `52`, `1,5`) e converte para fração antes de calcular; a API/domínio continuam em fração (ADR-0011 §2).
+- **Cabeças = 0 / campos vazios:** o protótipo mostra R$ 0 onde a spec manda "—" (RN-022); a spec prevalece.
+
+## E. Alertas da recria (promovidos à v1 — RN-026)
+Cabeças fracionárias · lotação inicial > 4 UA/ha · lotação final > 6 UA/ha · mais de 250 cabeças. Informativos, nunca bloqueiam. (As demais "Metas" abaixo seguem na v2.)
+
+## F. Fórmulas futuras (v2) — Metas da RECRIA
 GMD = (saída − entrada) ÷ dias · lotação entrada/média/saída = (cab/ha × peso) ÷ 450 · R$ compra = (peso ÷ 30) × cab × R$/@ · custo op. = (dias ÷ 30) × cab × desembolso · faturamento = (peso saída ÷ 30) × cab × R$/@ · rentabilidade a.m. = (margem ÷ custo total) ÷ meses · @ produzidas = ((saída − entrada) ÷ 30) × cab · custo da @ = custo op. ÷ @ produzidas · anos para pagar = (custo total + investimentos) ÷ faturamento. Alertas: ≤ 250 cab./lote; lotação entrada ≤ 4 e saída ≤ 6 UA/ha.

@@ -10,3 +10,5 @@
 
 - [ ] Saldo e últimas operações batem com os dados lançados
 - [ ] Estado vazio claro para conta nova
+
+**Revisão pós-protótipo (ADR-0012, proposta):** RF-040 revisado: saudação, saldo com Comprado/Vendido, cartão da recria (líquido, por mês, por ha), atalhos e as 6 últimas operações por data.
