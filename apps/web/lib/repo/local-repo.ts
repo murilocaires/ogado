@@ -5,7 +5,11 @@
 import { Decimal, ENTRADA_PADRAO } from '@ogado/domain';
 import { paraCampo } from '../format';
 import {
+  CENARIO_NOME_MAX,
+  CENARIO_RESULTADO_CAMPOS,
   RECRIA_CAMPOS,
+  type CenarioEntity,
+  type CenarioSalvar,
   type LoteEntity,
   type OGadoRepo,
   type PersistenciaStatus,
@@ -15,8 +19,12 @@ import {
   type RepoSnapshot,
 } from './types';
 
-export const STORAGE_KEY = 'ogado.e1.v1';
-const SCHEMA = 1;
+/** Chave atual (E2, esquema 2: lotes + recria + cenários). */
+export const STORAGE_KEY = 'ogado.e2.v2';
+/** Chave da E1 (esquema 1, sem cenários): lida uma vez e migrada, nunca apagada. */
+export const STORAGE_KEY_E1 = 'ogado.e1.v1';
+const SCHEMA = 2;
+const SCHEMA_E1 = 1;
 
 /** Campos digitados em % na tela e guardados em fração no domínio. */
 const CAMPOS_PERCENTUAIS = new Set(['consumoPct', 'rendCarcaca', 'imposto']);
@@ -56,6 +64,7 @@ interface Envelope {
   schema: number;
   lotes: LoteEntity[];
   recria: RecriaEntity;
+  cenarios: CenarioEntity[];
 }
 
 function ehTexto(v: unknown): v is string {
@@ -99,13 +108,55 @@ function ehRecria(v: unknown): v is RecriaEntity {
   return RECRIA_CAMPOS.every((c) => ehTexto((form as Record<string, unknown>)[c]));
 }
 
+function ehTextoOuNulo(v: unknown): v is string | null {
+  return v === null || ehTexto(v);
+}
+
+function ehObjeto(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null;
+}
+
+function ehCenario(v: unknown): v is CenarioEntity {
+  if (!ehObjeto(v)) return false;
+  if (!ehMeta(v) || !ehTexto(v['nome']) || !ehTexto(v['criadoEm'])) return false;
+  const { form, variantes, parametros, resultado } = v;
+  if (!ehObjeto(form) || !RECRIA_CAMPOS.every((c) => ehTexto(form[c]))) return false;
+  if (!ehObjeto(variantes)) return false;
+  if (variantes['lotacaoInicial'] !== 'fixa80' && variantes['lotacaoInicial'] !== 'areaPastavel') {
+    return false;
+  }
+  if (variantes['faturamentoBruto'] !== 'pesoVivo' && variantes['faturamentoBruto'] !== 'carcaca') {
+    return false;
+  }
+  const chavesParametros = ['arrobaVivoKg', 'arrobaCarcacaKg', 'uaKg', 'lotacaoFixaHa'];
+  if (!ehObjeto(parametros) || !chavesParametros.every((k) => ehTexto(parametros[k]))) return false;
+  if (!ehObjeto(resultado) || !CENARIO_RESULTADO_CAMPOS.every((c) => ehTextoOuNulo(resultado[c]))) {
+    return false;
+  }
+  const custos = resultado['custos'];
+  return (
+    Array.isArray(custos) &&
+    custos.every(
+      (c: unknown) =>
+        ehObjeto(c) && ehTexto(c['id']) && ehTexto(c['nome']) && ehTextoOuNulo(c['valor']),
+    )
+  );
+}
+
+/**
+ * Leitura tolerante: aceita o esquema 2 e o 1 (sem cenários); descarta só os itens inválidos,
+ * nunca o conteúdo inteiro por causa de um item.
+ */
 function lerEnvelope(bruto: string): Envelope | null {
   const dados: unknown = JSON.parse(bruto);
-  if (typeof dados !== 'object' || dados === null) return null;
-  const o = dados as Record<string, unknown>;
-  if (o['schema'] !== SCHEMA || !Array.isArray(o['lotes']) || !ehRecria(o['recria'])) return null;
-  const lotes = (o['lotes'] as unknown[]).filter(ehLote);
-  return { schema: SCHEMA, lotes, recria: o['recria'] };
+  if (!ehObjeto(dados)) return null;
+  if (dados['schema'] !== SCHEMA && dados['schema'] !== SCHEMA_E1) return null;
+  if (!Array.isArray(dados['lotes']) || !ehRecria(dados['recria'])) return null;
+  const lotes = (dados['lotes'] as unknown[]).filter(ehLote);
+  const cenarios = Array.isArray(dados['cenarios'])
+    ? (dados['cenarios'] as unknown[]).filter(ehCenario)
+    : [];
+  return { schema: SCHEMA, lotes, recria: dados['recria'], cenarios };
 }
 
 export function obterStorageDoNavegador(): Storage | null {
@@ -130,6 +181,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): OGadoRepo {
   const carregando: RepoSnapshot = { status: 'carregando' };
 
   let lotes: LoteEntity[] = []; // inclui tombstones (deletedAt)
+  let cenarios: CenarioEntity[] = []; // inclui tombstones (deletedAt)
   let recria: RecriaEntity = recriaPadrao();
   let persistencia: PersistenciaStatus = 'ok';
   let snapshot: RepoSnapshot | null = null;
@@ -157,8 +209,14 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): OGadoRepo {
       return;
     }
     let bruto: string | null;
+    let chave = STORAGE_KEY;
     try {
       bruto = storage.getItem(STORAGE_KEY);
+      if (bruto === null) {
+        // Migração E1 -> E2: sem dados novos, lê os da E1 (esquema 1) sem perder lotes/entradas.
+        bruto = storage.getItem(STORAGE_KEY_E1);
+        chave = STORAGE_KEY_E1;
+      }
     } catch {
       persistencia = 'indisponivel';
       return;
@@ -169,6 +227,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): OGadoRepo {
       if (envelope) {
         lotes = envelope.lotes;
         recria = envelope.recria;
+        cenarios = envelope.cenarios;
         return;
       }
     } catch {
@@ -176,7 +235,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): OGadoRepo {
     }
     // Conteúdo ilegível: guarda uma cópia para não perder nada e segue com os padrões.
     try {
-      storage.setItem(`${STORAGE_KEY}.corrompido`, bruto);
+      storage.setItem(`${chave}.corrompido`, bruto);
     } catch {
       /* sem espaço: segue */
     }
@@ -187,7 +246,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): OGadoRepo {
     try {
       const storage = obterStorage();
       if (!storage) throw new Error('sem storage');
-      const envelope: Envelope = { schema: SCHEMA, lotes, recria };
+      const envelope: Envelope = { schema: SCHEMA, lotes, recria, cenarios };
       storage.setItem(STORAGE_KEY, JSON.stringify(envelope));
     } catch {
       persistencia = 'indisponivel';
@@ -199,6 +258,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): OGadoRepo {
       status: 'pronto',
       lotes: lotes.filter((l) => l.deletedAt === null),
       recria,
+      cenarios: cenarios.filter((c) => c.deletedAt === null),
       persistencia,
     };
   }
@@ -277,5 +337,78 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): OGadoRepo {
       };
       notificar();
     },
+    salvarCenario(entrada) {
+      garantir();
+      const agoraISO = agora().toISOString();
+      const vivos = cenarios.filter((c) => c.deletedAt === null).length;
+      const salvo: CenarioEntity = {
+        id: gerarId(),
+        version: 1,
+        updatedAt: agoraISO,
+        deletedAt: null,
+        criadoEm: agoraISO,
+        nome: nomeValido(entrada.nome, `Cenário ${vivos + 1}`),
+        ...copiarSnapshot(entrada),
+      };
+      cenarios = [...cenarios, salvo];
+      notificar();
+      return salvo;
+    },
+    renomearCenario(id, nome) {
+      garantir();
+      const agoraISO = agora().toISOString();
+      cenarios = cenarios.map((c) =>
+        c.id === id && c.deletedAt === null
+          ? { ...c, nome: nomeValido(nome, c.nome), version: c.version + 1, updatedAt: agoraISO }
+          : c,
+      );
+      notificar();
+    },
+    duplicarCenario(id) {
+      garantir();
+      const origem = cenarios.find((c) => c.id === id && c.deletedAt === null);
+      if (!origem) return null;
+      const agoraISO = agora().toISOString();
+      const copia: CenarioEntity = {
+        id: gerarId(),
+        version: 1,
+        updatedAt: agoraISO,
+        deletedAt: null,
+        criadoEm: agoraISO,
+        nome: nomeValido(`${origem.nome} (cópia)`, origem.nome),
+        ...copiarSnapshot(origem),
+      };
+      cenarios = [...cenarios, copia];
+      notificar();
+      return copia;
+    },
+    excluirCenario(id) {
+      garantir();
+      const agoraISO = agora().toISOString();
+      cenarios = cenarios.map((c) =>
+        c.id === id && c.deletedAt === null
+          ? { ...c, version: c.version + 1, updatedAt: agoraISO, deletedAt: agoraISO }
+          : c,
+      );
+      notificar();
+    },
+  };
+}
+
+/** Nome aparado e limitado a 80 caracteres; vazio cai na reserva. */
+function nomeValido(nome: string, reserva: string): string {
+  const aparado = nome.trim().slice(0, CENARIO_NOME_MAX);
+  return aparado === '' ? reserva.slice(0, CENARIO_NOME_MAX) : aparado;
+}
+
+/** Cópia profunda do snapshot: o cenário salvo nunca compartilha referência com o simulador. */
+function copiarSnapshot(
+  origem: CenarioSalvar,
+): Pick<CenarioEntity, 'form' | 'variantes' | 'parametros' | 'resultado'> {
+  return {
+    form: { ...origem.form },
+    variantes: { ...origem.variantes },
+    parametros: { ...origem.parametros },
+    resultado: { ...origem.resultado, custos: origem.resultado.custos.map((c) => ({ ...c })) },
   };
 }

@@ -13,7 +13,7 @@ const producao = process.env['E2E_LOCAL_BUILD'] === '1';
 
 export default defineConfig({
   testDir: './e2e',
-  testMatch: /e1-.*\.spec\.ts/,
+  testMatch: /e[12]-.*\.spec\.ts/,
   timeout: 90_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,

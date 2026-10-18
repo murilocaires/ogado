@@ -1,7 +1,13 @@
-import { RecriaScreen } from '../../../components/RecriaScreen';
+import { Suspense } from 'react';
+import { Carregando } from '../../../components/AppShell';
+import { RecriaRoute } from '../../../components/RecriaRoute';
 
 export const metadata = { title: 'Recria · O Gado' };
 
 export default function RecriaPage() {
-  return <RecriaScreen />;
+  return (
+    <Suspense fallback={<Carregando />}>
+      <RecriaRoute />
+    </Suspense>
+  );
 }
