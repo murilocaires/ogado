@@ -35,7 +35,7 @@ A **v1 do O Gado cobre Compra e Venda + Cálculos de Recria** (as duas planilhas
 |---|---|
 | **Arroba (@)** | Na **compra**, 1 @ = **30 kg de peso vivo**. Na **venda** (protótipo, ADR-0012) o lote escolhe a base: **peso vivo** (30 kg, padrão) ou **carcaça** (15 kg). Na planilha original a venda era sempre 15 kg de carcaça. |
 | **Rendimento de carcaça** | 52% do peso vivo (padrão editável). |
-| **Desconto na venda** | **Percentual do peso** (padrão 10%) aplicado por lote antes de converter em @; vem ligado para categorias femininas e desligado para as demais (editável). Na planilha original: 10 kg por cabeça. |
+| **Desconto na venda** | **10 kg por cabeça** (padrão, ADR-0013), descontados do peso por lote antes de converter em @; vem ligado para categorias femininas e desligado para as demais (editável por lote). Mesmo critério da planilha. |
 | **UA — Unidade Animal** | 450 kg de peso vivo. Lotação = UA por hectare. |
 | **GMD** | Ganho médio diário (kg/cab/dia) = (peso final − inicial) / dias. |
 | **Ano safra** | Julho a junho. Recria típica: 120 dias de seca + 240 dias de capim verde (o app permite informar os dias). |
@@ -54,7 +54,7 @@ Linhas de **compra** (categoria, quantidade, peso, preço da @, data):
 
 Linhas de **venda** (planilha original): igual, porém @ = (kg − cabeças × 10) ÷ 15 e Total = @ × R$/@.
 
-**Venda no protótipo (ADR-0012, aguardando aprovação):** cada lote escolhe a **base do preço da @** (peso vivo ÷ 30, padrão, ou carcaça ÷ 15) e um **desconto percentual** sobre o peso (padrão 10%, ligado automaticamente para fêmeas). @ = kg × (1 − desconto%) ÷ (30 ou 15); Total = @ × R$/@. As telas de Compra e Venda viram uma só, **Negócios**, com abas Todas/Compras/Vendas.
+**Venda no protótipo (ADR-0012, aguardando aprovação):** cada lote escolhe a **base do preço da @** (peso vivo ÷ 30, padrão, ou carcaça ÷ 15) e um **desconto em kg por cabeça** (padrão 10 kg/cab., ligado automaticamente para fêmeas; ADR-0013). @ = (kg − qtd × desconto) ÷ (30 ou 15); Total = @ × R$/@. As telas de Compra e Venda viram uma só, **Negócios**, com abas Todas/Compras/Vendas.
 
 **Exemplo de ouro** (planilha original): compras R$ 142.835,83, vendas R$ 53.360,00, **saldo −R$ 89.475,83**. Com a regra do protótipo o saldo muda (valores propostos em `03-formulas-e-paridade.md` §A2).
 
@@ -113,7 +113,7 @@ Quatro abas (CHUVAS, Adubação, Dimensionamento de água, Resumo materiais) sã
 | PA-05 | `I4` (R$/cab.) só existe na linha 5 | Calculado para todas as linhas |
 | PA-06 | Nenhuma aba oculta/protegida nas duas planilhas v1; ocultas só na CRIA | Registrar para v2 |
 | PA-07 | Células "travadas" vs editáveis: azul/branco entrada, restante calculado | Campo branco = entrada; menta + cadeado = calculado |
-| PA-08 | Venda na planilha: @ sempre de 15 kg e desconto fixo de 10 kg/cab (vale igual para machos e fêmeas) | O protótipo troca por base da @ por lote + desconto % (padrão 10%, automático para fêmeas). Decisão pendente de aprovação: ADR-0012 / Q-A |
+| PA-08 | Venda na planilha: @ sempre de 15 kg e desconto fixo de 10 kg/cab (vale igual para machos e fêmeas) | O produto adota base da @ por lote e mantém o desconto de 10 kg/cab. (automático para fêmeas), ADR-0012 + ADR-0013 |
 
 ## 9. Visão de produto e roadmap
 

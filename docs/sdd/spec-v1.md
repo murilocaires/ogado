@@ -46,7 +46,7 @@ Cria completa, Metas/Fechamento da Recria, integração Google Sheets, app **nat
 
 ## Revisão pós-protótipo (ADR-0012, 2026-10-18 — proposta, aguardando aprovação humana)
 O protótipo `docs/prototipo/ogado-prototipo.html` é a referência de comportamento e UX. Mudanças na spec:
-- **Venda:** base da @ por lote (peso vivo ÷ 30, padrão, ou carcaça ÷ 15) e desconto **percentual** (padrão 10%, automático para categorias femininas) no lugar de 10 kg × cab (RN-002, RN-024, RN-025). O saldo de ouro muda (valores propostos em `docs/negocio/03-formulas-e-paridade.md` §A2); a planilha vira referência histórica (Q-A).
+- **Venda:** base da @ por lote (peso vivo ÷ 30, padrão, ou carcaça ÷ 15) e desconto de **10 kg por cabeça** (padrão, automático para categorias femininas, editável por lote; ADR-0013 reverte o desconto % do protótipo) (RN-002, RN-024, RN-025). Com base carcaça o saldo de ouro volta a ser o da planilha (−89.475,83); valores em `docs/negocio/03-formulas-e-paridade.md` §A2.
 - **Telas:** Painel · **Negócios** (compras e vendas juntas, abas Todas/Compras/Vendas) · Recria · **Conta** (perfil, senha, Google, fazenda, apagar conta). Ajuda contextual "i" nos indicadores (RF-052).
 - **Recria:** seletor de lotação inicial dentro da simulação; sem variante `carcaca` do bruto na tela; alertas (cabeças fracionárias, lotação > 4/6 UA/ha, > 250 cab.) e resultado completo (RF-031).
 - **Cenários:** nome livre + data, busca, ordenação, lista/grade, duplicar/renomear/excluir, abrir no simulador, ★ e **comparação de 2–3 cenários na v1** (RF-032…RF-036).

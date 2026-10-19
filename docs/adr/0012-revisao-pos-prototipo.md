@@ -1,5 +1,7 @@
 # ADR-0012 — Revisão da spec a partir do protótipo navegável (2026-10-18)
 
+> **Nota (2026-10-19, ADR-0013):** a decisão A.2 (desconto percentual) e o parâmetro `descontoVendaPct` foram **revertidos** pelo dono: o desconto é de **10 kg por cabeça**. A base da @ por lote (A.1) e o restante deste ADR seguem valendo. Ver `0013-desconto-venda-kg-por-cabeca.md`.
+
 **Status:** aprovado pelo humano em 2026-10-18 (inclui a mudança do princípio 2: a venda deixa de seguir a planilha; Q-A aceita; demais Q-B…Q-G seguem as propostas) · **Data:** 2026-10-18
 **Fonte:** `docs/prototipo/ogado-prototipo.html` (protótipo navegável entregue pelo pecuarista; dados só no `localStorage`, sem backend)
 **Requisitos afetados:** RN-002, RN-009, RN-017, RN-019, RN-023, RN-024…RN-027 (novos), RF-004…RF-007, RF-024…RF-026, RF-032…RF-036, RF-040, RF-052, RF-053, RNF-009 · **Relacionados:** ADR-0004, ADR-0008, ADR-0010, ADR-0011

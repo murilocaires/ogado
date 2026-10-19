@@ -4,7 +4,7 @@ Autoridade em ordem: **células do .xlsx** (`references/planilhas/`) → este do
 
 ## A. Compra e Venda (`compra-e-venda-de-gado.xlsx`)
 
-> **Atenção (ADR-0012):** as linhas de **venda** abaixo (`F11`, `H11`, `H19` e o saldo −89.475,83) são a **regra original da planilha**. O protótipo muda a venda (base da @ e desconto %); ver §A2 e §D3. Compra e recria não mudam.
+> **Atenção (ADR-0012/0013):** as linhas de **venda** abaixo (`F11`, `H11`, `H19` e o saldo −89.475,83) são a regra da planilha e valem no domínio com **base carcaça + desconto de 10 kg/cab.** O produto acrescenta a base da @ por lote (vivo 30 kg, padrão) mas mantém o desconto em **kg por cabeça**; ver §A2 e §D3. Compra e recria não mudam.
 
 | Campo | Fórmula | Célula | Ouro |
 |---|---|---|---|
@@ -20,25 +20,25 @@ Autoridade em ordem: **células do .xlsx** (`references/planilhas/`) → este do
 Cenário de ouro (RN-001…006): compras = {60 cab., 11.311 kg total, R$ 325/@; 10 cab., 210 kg médio, R$ 290/@}; vendas = {16 cab., 2.920 kg total, R$ 290/@}.
 Caso extra (modo individual, RN-003): 3 animais de 200, 210 e 220 kg a R$ 300/@ → 630 kg, 21 @, R$ 6.300,00, R$ 2.100,00/cab.
 
-### A2. Venda no protótipo (ADR-0012 — aguardando aprovação, Q-A)
-O protótipo (`docs/prototipo/ogado-prototipo.html`, função `vendaLinha`) calcula a venda assim; **substitui** as linhas `@ venda`/`total venda` da tabela acima como regra do produto, e a planilha fica como referência histórica:
+### A2. Venda do produto (ADR-0012 base da @; ADR-0013 desconto em kg/cab.)
+A venda segue a planilha com uma variação: a base da @ é escolhida por lote (o protótipo, `docs/prototipo/ogado-prototipo.html`, função `vendaLinha`, usa desconto em %; essa parte foi **revertida** pelo ADR-0013):
 
 | Campo | Fórmula | Regra |
 |---|---|---|
-| kg líquido | kg × (1 − desconto%) ; desconto padrão 10%, 0% se desligado | RN-025 |
+| kg líquido | kg − qtd × desconto (kg/cab.) ; padrão 10, 0 se desligado ; mínimo 0 | RN-025 |
 | @ venda | kg líquido ÷ 30 (base `vivo`, padrão) ou ÷ 15 (base `carcaca`) | RN-024 |
 | total venda | @ × R$/@ | RN-005 |
 | R$/cab. | total ÷ qtd (indefinido com qtd 0) | RN-004 |
 
-**Valores propostos para o novo ouro da venda** (lote 16 cab., 2.920 kg, R$ 290/@; compras inalteradas = 142.835,8333…). Calculados à mão a partir das fórmulas acima, `origem: "nao-planilha"`, **a revisar pelo humano** antes de virarem teste:
+**Ouro da venda** (lote 16 cab., 2.920 kg, R$ 290/@; compras inalteradas = 142.835,8333…):
 
-| Base | Desconto | @ | Total venda | Saldo |
-|---|---|---|---|---|
-| carcaça (÷ 15) | 10% | 175,2 | 50.808,00 | −92.027,8333… |
-| peso vivo (÷ 30) | sem desconto | 97,3333… | 28.226,6667… | −114.609,1667… |
-| peso vivo (÷ 30) | 10% | 87,6 | 25.404,00 | −117.431,8333… |
+| Base | Desconto | @ | Total venda | Saldo | Origem |
+|---|---|---|---|---|---|
+| carcaça (÷ 15) | 10 kg/cab. | 184 | 53.360,00 | −89.475,8333… | **planilha** (`F11`/`H11`/`H19`; golden.json) |
+| peso vivo (÷ 30) | 10 kg/cab. | 92 | 26.680,00 | −116.155,8333… | à mão (`nao-planilha`) |
+| peso vivo (÷ 30) | sem desconto | 97,3333… | 28.226,6667… | −114.609,1667… | à mão (`nao-planilha`) |
 
-O ouro original da planilha (saldo **−89.475,8333…**, `@ = (2.920 − 16×10) ÷ 15 = 184`) continua no oráculo `calc.js` e em `tests/fixtures/golden.json` como **referência histórica**; deixa de ser o critério de aceite do saldo se o ADR-0012 for aprovado.
+A primeira linha é o critério de aceite do saldo de ouro (`pnpm test:parity` injeta `base: 'carcaca'` nas vendas do golden). Borda: se qtd × desconto > kg, kg líquido = 0, @ = 0 e total = R$ 0.
 
 ## B. Recria (`calculos-recria.xlsx`)
 
@@ -81,7 +81,7 @@ Entradas padrão: área 102 · dias 270 · investimento 122.534,80 · R$/cab. 2.
 - **Tolerância de paridade:** relativa estrita, `|atual − esperado| ≤ 1e-6 × |esperado|`.
 
 ## D3. Divergências deliberadas em relação à planilha (protótipo, ADR-0012)
-- **Venda:** base da @ por lote (vivo 30 kg | carcaça 15 kg) e desconto **percentual** (padrão 10%, por lote) no lugar de 10 kg × cab (RN-024/025). O padrão deixa de ser a planilha (Q-A).
+- **Venda:** base da @ por lote (vivo 30 kg, padrão | carcaça 15 kg, RN-024); o desconto continua **10 kg × cab** (RN-025, ADR-0013, que reverte o desconto % do protótipo/ADR-0012). Com base carcaça o resultado é o da planilha; o padrão (vivo) difere da planilha só pela base da @.
 - **Compra:** inalterada (@ = kg ÷ 30), sem desconto.
 - **Recria:** as fórmulas do protótipo são as da planilha (conferidas linha a linha com `recria()` do protótipo: cabeças, UA, lotação, suplemento, imposto, sanidade, custo, bruto = `pesoFin ÷ 30 × cab × R$/@`, líquido, caixa, mês, ha, GMD). Muda só a **escolha** da lotação inicial (na simulação) e a **ausência** da variante `carcaca` do bruto.
 - **Entradas em %:** o simulador recebe consumo, rendimento e imposto em % (ex.: `0,3`, `52`, `1,5`) e converte para fração antes de calcular; a API/domínio continuam em fração (ADR-0011 §2).
