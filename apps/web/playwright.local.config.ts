@@ -32,6 +32,8 @@ export default defineConfig({
     reuseExistingServer: !process.env['CI'],
     timeout: 600_000,
     // Sem API_ORIGIN em produção o repasse /api não existe, igual ao deploy da E1.
-    env: producao ? { NODE_ENV: 'production' } : {},
+    env: producao
+      ? { NODE_ENV: 'production', NEXT_PUBLIC_ACESSO_LIVRE: '1' }
+      : { NEXT_PUBLIC_ACESSO_LIVRE: '1' },
   },
 });
