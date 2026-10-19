@@ -23,9 +23,9 @@ describe('RF-030/RF-031 simulador de recria', () => {
     const ouro = formatarBRL(calcularRecria(ENTRADA_PADRAO).faturamentoLiquido);
     expect(ouro).toBe('R$ 102.408,05');
     expect(within(hero()).getByText('R$ 102.408,05')).toHaveClass('big');
-    expect(screen.getByLabelText('Proteinado')).toHaveValue('0,3');
-    expect(screen.getByLabelText('Se')).toHaveValue('52');
-    expect(screen.getAllByLabelText('Imposto').find((e) => e.tagName === 'INPUT')).toHaveValue('1,5');
+    expect(screen.getByLabelText('Proteinado')).toHaveValue('0,30');
+    expect(screen.getByLabelText('Se')).toHaveValue('52,00');
+    expect(screen.getAllByLabelText('Imposto').find((e) => e.tagName === 'INPUT')).toHaveValue('1,50');
   });
 
   it('RF-031 mostra por mês, por hectare, total em caixa, custos, números do lote e alerta de cabeças', () => {
@@ -48,7 +48,7 @@ describe('RF-030/RF-031 simulador de recria', () => {
     renderComPlanilha();
     const preco = screen.getByLabelText('R$/cab (venda)');
     await user.clear(preco);
-    await user.type(preco, '330');
+    await user.type(preco, '33000');
     const esperado = calcularRecria({ ...ENTRADA_PADRAO, precoVenda: '330' }).faturamentoLiquido;
     expect(within(hero()).getByText(formatarBRL(esperado))).toBeInTheDocument();
   });
@@ -65,15 +65,15 @@ describe('RF-030/RF-031 simulador de recria', () => {
     );
   });
 
-  it('RNF-007 "1.5" em dias é inválido, com dica de vírgula, e o resultado vira "—"', async () => {
+  it('bloqueia separadores manuais e conserva dias inteiros', async () => {
     const user = userEvent.setup();
     renderComPlanilha();
     const dias = screen.getByLabelText('Dias de Recria');
     await user.clear(dias);
-    await user.type(dias, '1.5');
-    expect(screen.getByText(/Use vírgula para os decimais/)).toBeInTheDocument();
-    expect(dias).toHaveAttribute('aria-invalid', 'true');
-    expect(within(hero()).queryByText('R$ 102.408,05')).not.toBeInTheDocument();
+    await user.type(dias, '2.,70');
+    expect(dias).toHaveValue('270');
+    expect(dias).not.toHaveAttribute('aria-invalid', 'true');
+    expect(within(hero()).getByText('R$ 102.408,05')).toBeInTheDocument();
   });
 
   it('RF-051 "Números do lote" são campos calculados com cadeado, não editáveis', () => {
@@ -138,7 +138,7 @@ describe('ADR-0014 simulador sem padrões', () => {
     renderComPlanilha();
     const area = screen.getByLabelText('Área Pastável');
     await user.clear(area);
-    await user.type(area, '50');
+    await user.type(area, '5000');
     const r = calcularRecria({ ...ENTRADA_PADRAO, area: '50' }, { lotacaoInicial: 'areaPastavel', faturamentoBruto: 'pesoVivo' });
     expect(r.lotacaoHaInicial).not.toBeNull();
     const lote = screen.getByRole('region', { name: 'Dados do lote' });

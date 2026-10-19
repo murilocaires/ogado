@@ -268,6 +268,8 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
                           prefixo={c.prefixo}
                           sufixo={c.sufixo}
                           dataK={c.id}
+                          mascara
+                          casas={c.id === 'dias' ? 0 : 2}
                           value={recria.form[c.id]}
                           onChange={(v) => repo.atualizarRecria({ form: { [c.id]: v } })}
                           dica={dicaCampo(recria.form[c.id])}
