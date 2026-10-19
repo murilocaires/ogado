@@ -15,16 +15,16 @@ A API (`apps/api`) roda no Railway com o Postgres do mesmo projeto (`ogado`, amb
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` | referência ao serviço chamado exatamente `Postgres` (URL privada) |
 | `NODE_ENV` | `production` | liga cookie Secure/`__Host-` e HSTS (falha fechado) |
 | `WEB_ORIGIN` | `https://ogado.vercel.app` | lista de origens separadas por vírgula; vale para CORS e para a barreira de CSRF (`Origin`). Acrescente a URL de preview da Vercel só se for usar a API a partir dela |
+| `PROXY_SECRET` | segredo de 32+ caracteres | o mesmo valor na Vercel; ver "Limites de taxa" |
 | `TRUST_PROXY` | `100.64.0.0/10` | obrigatório em produção; faixa interna do proxy do Railway |
-| `RATE_LIMIT_SIGNUP_IP_PER_HOUR` | `60` | ver "Limites de taxa" |
-| `RATE_LIMIT_LOGIN_IP_PER_MIN` | `120` | idem |
-| `RATE_LIMIT_GLOBAL_PER_MIN` | `3000` | idem |
 
 `PORT` é injetada pelo Railway (o servidor usa `PORT` quando `API_PORT` não existe). A API não tem segredo próprio: a sessão é um token aleatório cujo hash fica no banco.
 
 ### Limites de taxa atrás de dois proxies
 
-O tráfego chega pela Vercel (rewrite) e depois pelo proxy do Railway. O IP que a API enxerga como "cliente" tende a ser o de saída da Vercel, compartilhado por todos os usuários, então os limites por IP padrão (5 cadastros/hora) bloqueariam usuários legítimos. Por isso os limites por IP foram elevados acima; o limite por IP+e-mail do login (5/min) continua o padrão e protege contra força bruta por conta. Pendência: resolver o IP real do cliente (por exemplo, confiar no cabeçalho que a Vercel sobrescreve) e voltar aos padrões.
+O tráfego chega pela Vercel (rewrite) e depois pelo proxy do Railway, então `request.ip` na API é o egress da Vercel (igual para todos). O site (`apps/web/proxy.ts`) repassa o IP real em `x-ogado-client-ip` com o segredo compartilhado `PROXY_SECRET` em `x-ogado-proxy-secret`; a API (`plugins/client-ip.ts`) só confia no IP repassado quando o segredo confere (comparação em tempo constante) e o IP é válido. Cabeçalhos `x-ogado-*` vindos de fora são descartados pelo proxy do site. Os limites voltaram aos padrões (cadastro 5/h, login 20/min por IP, 5/min por IP+e-mail).
+
+`PROXY_SECRET` (mínimo 32 caracteres, igual nos dois lados): Railway (serviço `api`) e Vercel (Production e Preview). Para girar: gere outro, atualize os dois e faça novo deploy; durante a troca os limites caem para o IP do socket (nunca abrem).
 
 ## Passo a passo
 
@@ -39,9 +39,7 @@ railway add --service api \
   --variables 'NODE_ENV=production' \
   --variables 'WEB_ORIGIN=https://ogado.vercel.app' \
   --variables 'TRUST_PROXY=100.64.0.0/10' \
-  --variables 'RATE_LIMIT_SIGNUP_IP_PER_HOUR=60' \
-  --variables 'RATE_LIMIT_LOGIN_IP_PER_MIN=120' \
-  --variables 'RATE_LIMIT_GLOBAL_PER_MIN=3000'
+  --variables "PROXY_SECRET=$(openssl rand -hex 32)"
 railway domain --service api       # gera https://<nome>.up.railway.app
 
 # a cada entrega (a partir da raiz do monorepo)
@@ -52,7 +50,7 @@ As migrações rodam só pelo deploy (`prisma migrate deploy` no `CMD`); nunca a
 
 ## Conectar o site (Vercel)
 
-Defina `API_ORIGIN=https://<domínio público da API>` nas variáveis do projeto da Vercel e faça novo deploy: `apps/web/next.config.ts` passa a reescrever `/api/*` para a API.
+Defina `API_ORIGIN=https://<domínio público da API>` nas variáveis do projeto da Vercel e faça novo deploy: `apps/web/next.config.ts` passa a reescrever `/api/*` para a API. Defina também `PROXY_SECRET` (o mesmo do Railway).
 
 ## Verificação
 
