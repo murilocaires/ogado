@@ -319,21 +319,21 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
                       Por mês
                       <InfoPopover k="mes" />
                     </span>
-                    <b aria-live="polite">{brl(r.liquidoMes, 0)}</b>
+                    <b aria-live="polite">{brl(r.liquidoMes)}</b>
                   </div>
                   <div className="mini">
                     <span className="th">
                       Por hectare
                       <InfoPopover k="ha" />
                     </span>
-                    <b aria-live="polite">{brl(r.liquidoHa, 0)}</b>
+                    <b aria-live="polite">{brl(r.liquidoHa)}</b>
                   </div>
                   <div className="mini">
                     <span className="th">
                       Total em caixa
                       <InfoPopover k="caixa" />
                     </span>
-                    <b aria-live="polite">{brl(r.totalEmCaixa, 0)}</b>
+                    <b aria-live="polite">{brl(r.totalEmCaixa)}</b>
                   </div>
                 </div>
                 {vazios.length > 0 && (
