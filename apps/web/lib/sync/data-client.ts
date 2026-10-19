@@ -1,6 +1,7 @@
 // Cliente HTTP dos dados na nuvem (E3). Mesma origem: o Next repassa `/api/*` (ADR-0010 a.5).
 import {
   cenarioListResponseSchema,
+  errorEnvelopeSchema,
   cenarioSchema,
   loteListResponseSchema,
   loteSchema,
@@ -19,8 +20,16 @@ interface Esquema<T> {
   safeParse(valor: unknown): { success: true; data: T } | { success: false };
 }
 
+/** Campo que o servidor recusou (400 `validacao_invalida`): caminho e mensagem em pt-BR. */
+export interface CampoInvalido {
+  caminho: string;
+  mensagem: string;
+}
+
 export type DadosFalha =
   | { ok: false; kind: 'conflito'; atual: unknown }
+  /** 400 `validacao_invalida`: o item foi recusado e precisa de correção (RF-079). */
+  | { ok: false; kind: 'validacao'; mensagem: string; campos: CampoInvalido[] }
   | { ok: false; kind: 'nao-encontrado' | 'nao-autenticado' | 'rede' | 'servidor' | 'contrato' };
 
 export type DadosResult<T> = { ok: true; data: T; created: boolean } | DadosFalha;
@@ -64,7 +73,10 @@ export function criarDadosClient(
     }
     if (res.status === 401) return { ok: false, kind: 'nao-autenticado' };
     if (res.status === 404) return { ok: false, kind: 'nao-encontrado' };
-    if (res.status >= 500) return { ok: false, kind: 'servidor' };
+    // Limite de taxa e bloqueio temporário não dizem nada sobre o item: tenta de novo depois.
+    if (res.status >= 500 || res.status === 429 || res.status === 403) {
+      return { ok: false, kind: 'servidor' };
+    }
     let json: unknown;
     try {
       json = await res.json();
@@ -77,6 +89,20 @@ export function criarDadosClient(
       return atual === undefined
         ? { ok: false, kind: 'contrato' }
         : { ok: false, kind: 'conflito', atual };
+    }
+    if (res.status === 400) {
+      const envelope = errorEnvelopeSchema.safeParse(json);
+      if (envelope.success && envelope.data.erro.codigo === 'validacao_invalida') {
+        return {
+          ok: false,
+          kind: 'validacao',
+          mensagem: envelope.data.erro.mensagem,
+          campos: (envelope.data.erro.campos ?? []).map((c) => ({
+            caminho: c.caminho,
+            mensagem: c.mensagem,
+          })),
+        };
+      }
     }
     if (!res.ok) return { ok: false, kind: 'contrato' };
     const parsed = schema.safeParse(json);
