@@ -37,8 +37,8 @@ describe('RF-030/RF-031 simulador de recria', () => {
     expect(screen.getByRole('heading', { name: /Custo operacional/ })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Da venda ao líquido' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Dados do lote' })).toBeInTheDocument();
-    // RN-026: 122.534,80 / 2.050 = 59,77 cabeças
-    expect(screen.getByText(/O investimento compra 59,77 cabeças \(≈ 60\)/)).toBeInTheDocument();
+    // O aviso de fracao de animais nao deve aparecer na tela.
+    expect(screen.queryByText(/O investimento compra/)).not.toBeInTheDocument();
     // RF-051: GMD é campo calculado (somente leitura, com cadeado)
     expect(screen.getByText(/GMD implícito/)).toBeInTheDocument();
   });

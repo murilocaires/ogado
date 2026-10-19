@@ -159,7 +159,8 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
     );
   }
 
-  const { resultado: r, alertas } = calculada;
+  const { resultado: r } = calculada;
+  const alertas = calculada.alertas.filter((a) => a.codigo !== 'cabecas_fracionadas');
   const total = r.custoTotal;
   const vazios = (Object.keys(recria.form) as RecriaCampo[]).filter(
     (c) => lerCampo(recria.form[c]).tipo !== 'ok',
