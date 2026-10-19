@@ -99,27 +99,7 @@ function secoesRecria(r: ResultadoRecria): { titulo: string; itens: ItemSecao[] 
         { campo: 'sanidadeCabMes' },
         { rotulo: 'Total', info: 'san', valor: brl(r.sanidadeTotal) },
         { campo: 'funcionario' },
-      ],
-    },
-    {
-      titulo: 'Custo Operacional',
-      itens: [
-        { rotulo: 'Suplemento', valor: brl(r.suplTotal) },
-        { rotulo: 'Sanidade', valor: brl(r.sanidadeTotal) },
-        { rotulo: 'Imposto', valor: brl(r.impostoTotal) },
         { campo: 'frete' },
-        { rotulo: 'Funcionário', valor: brl(r.custos.find((c) => c.id === 'func')?.valor ?? null) },
-        { rotulo: 'TOTAL=>', info: 'custo', valor: brl(r.custoTotal) },
-      ],
-    },
-    {
-      titulo: 'Faturamento',
-      itens: [
-        { rotulo: 'Faturamento Bruto', info: 'bruto', valor: brl(r.faturamentoBruto) },
-        { rotulo: 'Faturamento Líquido', info: 'recLiq', valor: brl(r.faturamentoLiquido) },
-        { rotulo: 'Total em caixa', info: 'caixa', valor: brl(r.totalEmCaixa) },
-        { rotulo: 'R$/mês', info: 'mes', valor: brl(r.liquidoMes) },
-        { rotulo: 'R$/ha', info: 'ha', valor: brl(r.liquidoHa) },
       ],
     },
   ];
@@ -426,6 +406,27 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
                         <InfoPopover k="recLiq" />
                       </td>
                       <td>{brl(r.faturamentoLiquido)}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        Total em caixa
+                        <InfoPopover k="caixa" />
+                      </td>
+                      <td>{brl(r.totalEmCaixa)}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        R$/mês
+                        <InfoPopover k="mes" />
+                      </td>
+                      <td>{brl(r.liquidoMes)}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        R$/ha
+                        <InfoPopover k="ha" />
+                      </td>
+                      <td>{brl(r.liquidoHa)}</td>
                     </tr>
                   </tbody>
                 </table>
