@@ -153,9 +153,8 @@ test('RF-073 lançar lote offline aparece na lista e sobe quando a conexão volt
   await context.setOffline(true);
   await expect(page.getByText(/sem internet/i).first()).toBeVisible();
 
-  await page.getByRole('button', { name: 'Novo lote' }).first().click();
-  const modal = page.getByRole('dialog', { name: /Novo lote de/ });
-  await modal.getByRole('button', { name: 'Compra', exact: true }).click();
+  await page.getByRole('button', { name: 'Nova compra' }).first().click();
+  const modal = page.getByRole('dialog', { name: 'Nova compra' });
   await modal.getByLabel('Quantidade', { exact: true }).fill('12');
   await modal.getByLabel('Peso total do lote', { exact: true }).fill('3600');
   await modal.getByLabel('Preço da arroba', { exact: true }).fill('310');

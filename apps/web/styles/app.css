@@ -130,6 +130,7 @@
   padding: 28px 36px 60px;
   max-width: 1180px;
   width: 100%;
+  min-width: 0;
 }
 .app .top {
   display: flex;
@@ -485,9 +486,57 @@
   display: block;
   font-size: 14.5px;
 }
-.app .ops .m span {
+.app .ops .m b {
+  overflow-wrap: anywhere;
+}
+.app .ops .m span:not(.selo) {
+  display: block;
   font-size: 12.5px;
   color: var(--tinta-3);
+}
+.app .ops .m .selo {
+  margin-left: 8px;
+}
+.app .ops .op-dir {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: none;
+  white-space: nowrap;
+}
+.app .ops .op-acoes {
+  display: flex;
+  margin: 4px -6px -8px 0;
+}
+.app .ops > div {
+  align-items: flex-start;
+}
+.app .ops > div > .tag {
+  margin-top: 2px;
+  min-width: 68px;
+  text-align: center;
+}
+/* lista de Negócios no celular: tipo acima do título para sobrar largura ao detalhe */
+.app .lotes-m .ops > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 12px;
+  row-gap: 6px;
+}
+.app .lotes-m .ops > div > .tag {
+  justify-self: start;
+  margin-top: 0;
+  min-width: 0;
+}
+.app .lotes-m .ops > div > .m {
+  grid-column: 1;
+}
+.app .lotes-m .ops > div > .tag + .m {
+  grid-row: 2;
+}
+.app .lotes-m .ops > div > .op-dir {
+  grid-column: 2;
+  grid-row: 1 / span 2;
 }
 .app .icon-b {
   border: 0;
@@ -589,6 +638,27 @@
 .app .lrow .l2 > span:last-child {
   flex: none;
   white-space: nowrap;
+}
+.app .abas-barra {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 10px;
+}
+.app .abas-barra .seg {
+  flex: 0 1 420px;
+  min-width: 0;
+}
+.app .abas-acoes,
+.app .empty-acoes {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.app .empty-acoes {
+  justify-content: center;
+  flex-wrap: wrap;
 }
 .app .resumo-aba {
   display: flex;
@@ -915,7 +985,7 @@
 
 @media (max-width: 900px) {
   .app .app-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .app .app-side {
     display: none;
@@ -984,6 +1054,16 @@
   }
   .app .tbl-d {
     display: none;
+  }
+  .app .abas-barra {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .app .abas-barra .seg {
+    flex: none;
+  }
+  .app .abas-acoes > .btn {
+    flex: 1;
   }
   .app .lotes-m {
     display: block;
@@ -1419,14 +1499,14 @@
 .app .btn.ghost:focus-visible {
   outline-color: #fff;
 }
-.app .sec {
+.app section.sec {
   display: grid;
   grid-template-columns: 250px minmax(0, 1fr);
   gap: 32px;
   padding: 28px 0;
   border-top: 1px solid var(--linha);
 }
-.app .sec:first-of-type {
+.app section.sec:first-of-type {
   border-top: 0;
 }
 .app .sec .hd {
@@ -1499,7 +1579,7 @@
   gap: 16px;
 }
 @media (max-width: 900px) {
-  .app .sec {
+  .app section.sec {
     grid-template-columns: 1fr;
     gap: 14px;
     padding: 22px 0;

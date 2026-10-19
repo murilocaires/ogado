@@ -13,7 +13,6 @@ import {
   previaPronta,
   rascunhoDeLote,
   rascunhoParaDominio,
-  trocarTipo,
   validarRascunho,
   type LoteDraft,
 } from '../lib/lote-draft';
@@ -25,7 +24,7 @@ import { CampoCalculado, CampoNumero } from './Fields';
 import { useToast } from './Toast';
 
 interface Props {
-  /** Tipo do lançamento novo (ignorado na edição). */
+  /** Tipo do lançamento novo, definido pelo botão que abriu o modal (ignorado na edição). */
   tipo: LoteTipo;
   lote?: LoteEntity;
   onClose: () => void;
@@ -101,28 +100,12 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
   return (
     <>
       <Dialog
-        titulo={`${novo ? 'Novo' : 'Editar'} lote de ${d.tipo}`}
+        titulo={novo ? `Nova ${d.tipo}` : `Editar lote de ${d.tipo}`}
         onClose={onClose}
         fecharNoFundo
-        focoInicial={novo ? '[data-tipo-ativo]' : '#d-cat'}
+        focoInicial="#d-cat"
       >
         <div className="stack">
-          {novo && (
-            <div className="seg g" role="group" aria-label="Tipo de lançamento">
-              {(['compra', 'venda'] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  aria-pressed={d.tipo === t}
-                  data-tipo-ativo={d.tipo === t ? '' : undefined}
-                  onClick={() => setD((a) => trocarTipo(a, t, proximoNumero(lotes, t)))}
-                >
-                  {t === 'compra' ? 'Compra' : 'Venda'}
-                </button>
-              ))}
-            </div>
-          )}
-
           <div className="row">
             <div className="lbl">
               <label htmlFor="d-cat">Categoria</label>

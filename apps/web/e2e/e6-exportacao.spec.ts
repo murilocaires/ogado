@@ -29,9 +29,8 @@ test('RF-041 e RNF-009: lança um lote, baixa o CSV e o XLSX e baixa os dados da
   await expect(page).toHaveURL(/\/painel$/);
 
   await page.getByRole('link', { name: 'Negócios' }).filter({ visible: true }).click();
-  await page.getByRole('button', { name: 'Novo lote' }).first().click();
-  const modal = page.getByRole('dialog', { name: /Novo lote de/ });
-  await modal.getByRole('button', { name: 'Compra', exact: true }).click();
+  await page.getByRole('button', { name: 'Nova compra' }).first().click();
+  const modal = page.getByRole('dialog', { name: 'Nova compra' });
   await modal.getByLabel('Categoria', { exact: true }).fill('Bezerros; "nelore"');
   await modal.getByLabel('Quantidade', { exact: true }).fill('10');
   await modal.getByLabel('Peso total do lote', { exact: true }).fill('3000');

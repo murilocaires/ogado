@@ -65,7 +65,7 @@ describe('RF-040 Painel', () => {
     expect(screen.getByRole('link', { name: 'Simular recria' })).toHaveAttribute('href', '/recria');
   });
 
-  it('RF-040 lista só as 6 últimas operações, por data decrescente, e mostra o saldo', () => {
+  it('RF-040 lista só as 3 últimas operações, por data decrescente, e mostra o saldo', () => {
     const repo = criarRepoLocal({ storage: () => criarStorageMemoria() });
     for (let i = 1; i <= 7; i += 1) repo.salvarLote(lote(i, `2026-10-0${i}`));
     repo.salvarLote(lote(1, '2026-10-09', 'venda'));
@@ -73,10 +73,11 @@ describe('RF-040 Painel', () => {
 
     const secao = screen.getByRole('region', { name: 'Últimas operações' });
     const itens = Array.from(secao.querySelectorAll('.ops > div'));
-    expect(itens).toHaveLength(6);
+    expect(itens).toHaveLength(3);
     expect(itens[0]).toHaveTextContent('VENDA');
     expect(itens[0]).toHaveTextContent('09/10/2026');
-    expect(itens[5]).toHaveTextContent('Lote 3'); // 7,6,5,4,3 depois da venda do dia 9
+    expect(itens[1]).toHaveTextContent('Lote 7');
+    expect(itens[2]).toHaveTextContent('Lote 6'); // venda do dia 9, depois 7 e 6
     // 7 compras de R$ 30.000 e 1 venda de R$ 30.000: saldo −R$ 180.000,00
     expect(screen.getByTestId('saldo')).toHaveTextContent('−R$ 180.000,00');
   });

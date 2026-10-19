@@ -3,15 +3,16 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { decimalDe, ultimoCenario } from '../lib/cenarios';
-import { brl, brlComSinal, capitalizar, dataBR, ehNegativo, num } from '../lib/format';
+import { brl, brlComSinal, dataBR, ehNegativo, num } from '../lib/format';
 import { ordenarPorData, resumirNegocios } from '../lib/negocios';
 import { calcularRecriaEntidade } from '../lib/recria';
 import { useRepoState } from '../lib/repo/repo-provider';
 import { Carregando, PageHeader } from './AppShell';
 import { Icon } from './Icon';
 import { InfoPopover } from './InfoPopover';
+import { OperacaoItem } from './OperacaoItem';
 
-/** Painel (RF-040): saldo, recria atual, atalhos e as últimas 6 operações. */
+/** Painel (RF-040): saldo, recria atual, atalhos e as 3 últimas operações. */
 export function PainelScreen() {
   const dados = useRepoState();
   const lotes = dados.status === 'pronto' ? dados.lotes : null;
@@ -37,7 +38,7 @@ export function PainelScreen() {
   const liquido = ultimo ? decimalDe(ultimo.resultado.faturamentoLiquido) : r.faturamentoLiquido;
   const porMes = ultimo ? decimalDe(ultimo.resultado.liquidoMes) : r.liquidoMes;
   const porHa = ultimo ? decimalDe(ultimo.resultado.liquidoHa) : r.liquidoHa;
-  const recentes = ordenarPorData(itens).slice(0, 6);
+  const recentes = ordenarPorData(itens).slice(0, 3);
   const vazio = itens.length === 0;
   const saldoNeg = ehNegativo(cv.saldo);
   const frase = vazio
@@ -159,20 +160,11 @@ export function PainelScreen() {
         {recentes.length ? (
           <div className="ops">
             {recentes.map((x) => (
-              <div key={x.lote.id}>
-                <span className={`tag${x.tipo === 'venda' ? ' v' : ''}`}>
-                  {x.tipo === 'venda' ? 'VENDA' : 'COMPRA'}
-                </span>
-                <div className="m">
-                  <b>
-                    Lote {x.lote.numero} · {capitalizar(x.lote.categoria)}
-                  </b>
-                  <span>
-                    {num(x.linha.qtd, 0)} cab. · {dataBR(x.lote.data)}
-                  </span>
-                </div>
-                <b>{brl(x.linha.total, 0)}</b>
-              </div>
+              <OperacaoItem
+                key={x.lote.id}
+                item={x}
+                detalhe={`${num(x.linha.qtd, 0)} cab. · ${dataBR(x.lote.data)}`}
+              />
             ))}
           </div>
         ) : (
