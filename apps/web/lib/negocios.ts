@@ -15,12 +15,6 @@ export interface ItemNegocio {
   linha: LinhaCalculada;
 }
 
-/** Percentual digitado (`10`) -> fração do domínio (`0,10`). */
-export function fracaoDePercentual(texto: string): Decimal | null {
-  const v = valorCampo(texto);
-  return v ? v.div(100) : null;
-}
-
 /** Lote salvo -> entrada do domínio. Valores inválidos viram `null` (indefinido). */
 export function loteParaDominio(lote: LoteEntity): LoteInput {
   const base: LoteInput = {
@@ -35,7 +29,7 @@ export function loteParaDominio(lote: LoteEntity): LoteInput {
     ...base,
     base: lote.base ?? 'vivo',
     aplicarDesconto: lote.aplicarDesconto ?? false,
-    desconto: lote.aplicarDesconto ? fracaoDePercentual(lote.descontoPct ?? '') : null,
+    desconto: lote.aplicarDesconto ? valorCampo(lote.descontoKg ?? '') : null,
   };
 }
 

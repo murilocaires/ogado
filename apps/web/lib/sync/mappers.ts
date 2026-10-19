@@ -9,7 +9,6 @@ import type {
   RecriaEntradaDto,
   RecriaEntradaPut,
 } from '@ogado/contracts';
-import { Decimal } from '@ogado/domain';
 import { paraCampo, valorCampo } from '../format';
 import { ehCenario, ehRecria } from '../repo/local-repo';
 import type { CenarioEntity, LoteEntity, RecriaEntity } from '../repo/types';
@@ -24,16 +23,11 @@ function textoPtBr(canonicoStr: string): string {
   return paraCampo(canonicoStr);
 }
 
-/** Fração (`0.1`) -> percentual digitado (`10`). */
-function percentualDeFracao(fracao: string): string {
-  return paraCampo(new Decimal(fracao).times(100).toFixed());
-}
-
 export function loteParaCriar(l: LoteEntity): LoteCreate {
-  const pct = valorCampo(l.descontoPct ?? '');
-  const desconto =
-    l.tipo === 'venda' && l.aplicarDesconto && pct && !pct.isNegative()
-      ? pct.div(100).toDecimalPlaces(6).toFixed()
+  const kg = valorCampo(l.descontoKg ?? '');
+  const descontoKg =
+    l.tipo === 'venda' && l.aplicarDesconto && kg && !kg.isNegative()
+      ? kg.toDecimalPlaces(3).toFixed()
       : null;
   return {
     id: l.id,
@@ -47,7 +41,7 @@ export function loteParaCriar(l: LoteEntity): LoteCreate {
     preco: canonico(l.preco, 2),
     base: l.base ?? 'vivo',
     aplicarDesconto: l.tipo === 'venda' ? (l.aplicarDesconto ?? false) : false,
-    desconto,
+    descontoKg,
   };
 }
 
@@ -78,7 +72,7 @@ export function loteDeDto(d: LoteDto): LoteEntity {
       ? {
           base: d.base,
           aplicarDesconto: d.aplicarDesconto,
-          descontoPct: d.desconto === null ? '' : percentualDeFracao(d.desconto),
+          descontoKg: d.descontoKg === null ? '' : textoPtBr(d.descontoKg),
         }
       : {}),
   };

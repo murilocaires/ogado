@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { criarStorageMemoria } from '../../components/test-utils';
 import { snapshotDaRecria } from '../cenarios';
-import { criarRepoLocal, recriaFormPadrao, STORAGE_KEY, STORAGE_KEY_E1 } from './local-repo';
+import {
+  criarRepoLocal,
+  recriaFormPadrao,
+  STORAGE_KEY,
+  STORAGE_KEY_E1,
+} from './local-repo';
 import type { LoteSalvar, RecriaEntity } from './types';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -276,7 +281,7 @@ describe('RNF-004 migração do storage da E1 para a E2', () => {
       lotes: unknown[];
       cenarios: unknown[];
     };
-    expect(novo.schema).toBe(2);
+    expect(novo.schema).toBe(3);
     expect(novo.lotes).toHaveLength(1);
     expect(novo.cenarios).toHaveLength(1);
     expect(storage.getItem(STORAGE_KEY_E1)).not.toBeNull(); // a cópia antiga fica de reserva

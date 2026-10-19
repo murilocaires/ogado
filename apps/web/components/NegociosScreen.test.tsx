@@ -90,7 +90,7 @@ describe('RF-020/RF-021/RF-023/RN-006 compra e venda geram o saldo do domínio',
     expect(screen.getByText('2 lançamentos · 1 compra · 1 venda')).toBeInTheDocument();
   });
 
-  it('RN-025 categoria feminina liga o desconto de 10% e o total segue o domínio', async () => {
+  it('RN-025 categoria feminina liga o desconto de 10 kg/cab. e o total segue o domínio', async () => {
     const user = userEvent.setup();
     renderComApp(<NegociosScreen />);
     await user.click(screen.getAllByRole('button', { name: 'Novo lote' })[0]!);
@@ -115,12 +115,12 @@ describe('RF-020/RF-021/RF-023/RN-006 compra e venda geram o saldo do domínio',
       preco: '300',
       base: 'vivo',
       aplicarDesconto: true,
-      desconto: '0.1',
+      desconto: '10',
     });
-    expect(formatarBRL(esperado.total)).toBe('R$ 27.000,00');
+    expect(formatarBRL(esperado.total)).toBe('R$ 29.000,00'); // (3.000 − 10×10) ÷ 30 × 300
     const previa = within(modal).getByRole('group', { name: 'Pré-visualização do lote' });
-    expect(within(previa).getByText('R$ 27.000,00')).toBeInTheDocument();
-    expect(within(previa).getByText('2.700 kg líq.')).toBeInTheDocument();
+    expect(within(previa).getByText('R$ 29.000,00')).toBeInTheDocument();
+    expect(within(previa).getByText('2.900 kg líq.')).toBeInTheDocument();
   });
 
   it('RN-025 depois que o usuário mexe no desconto, trocar a categoria não o religa', async () => {

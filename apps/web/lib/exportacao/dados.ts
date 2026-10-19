@@ -22,7 +22,8 @@ export const COLUNAS_NEGOCIOS: readonly Coluna[] = [
   { titulo: 'Cabeças', tipo: 'numero', casas: 0 },
   { titulo: 'Peso (kg)', tipo: 'numero', casas: 2 },
   { titulo: 'Base da @', tipo: 'texto' },
-  { titulo: 'Desconto (%)', tipo: 'numero', casas: 2 },
+  { titulo: 'Desconto (kg/cab.)', tipo: 'numero', casas: 2 },
+  { titulo: 'kg líquido', tipo: 'numero', casas: 2 },
   { titulo: 'Arrobas (@)', tipo: 'numero', casas: 2 },
   { titulo: 'Preço (R$/@)', tipo: 'numero', casas: 2 },
   { titulo: 'Total (R$)', tipo: 'numero', casas: 2 },
@@ -31,7 +32,6 @@ export const COLUNAS_NEGOCIOS: readonly Coluna[] = [
 
 function linhaDeNegocio(x: ItemNegocio): Celula[] {
   const venda = x.tipo === 'venda';
-  const pct = x.linha.descontoPct.times(100);
   return [
     venda ? 'Venda' : 'Compra',
     x.lote.numero,
@@ -41,7 +41,8 @@ function linhaDeNegocio(x: ItemNegocio): Celula[] {
     numeroFinal(x.linha.qtd, 0),
     numeroFinal(x.linha.kg, 2),
     venda ? (x.lote.base === 'carcaca' ? 'Carcaça' : 'Peso vivo') : null,
-    venda ? numeroFinal(pct, 2) : null,
+    venda ? numeroFinal(x.linha.descontoKgCab, 2) : null,
+    venda ? numeroFinal(x.linha.kgLiquido, 2) : null,
     numeroFinal(x.linha.arrobas, 2),
     numeroFinal(x.linha.preco, 2),
     numeroFinal(x.linha.total, 2),

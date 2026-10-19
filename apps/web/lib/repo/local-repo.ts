@@ -20,12 +20,15 @@ import {
   type RepoSnapshot,
 } from './types';
 
-/** Chave atual (E2, esquema 2: lotes + recria + cenários). */
+/** Chave atual (E2, esquema 3: lotes + recria + cenários; o 3 troca descontoPct por descontoKg). */
 export const STORAGE_KEY = 'ogado.e2.v2';
 /** Chave da E1 (esquema 1, sem cenários): lida uma vez e migrada, nunca apagada. */
 export const STORAGE_KEY_E1 = 'ogado.e1.v1';
-const SCHEMA = 2;
+const SCHEMA = 3;
+const SCHEMA_E2 = 2;
 const SCHEMA_E1 = 1;
+/** Desconto padrão da venda (kg/cab.) usado ao converter lotes do esquema antigo (ADR-0013). */
+const DESCONTO_KG_MIGRACAO = '10';
 
 /** Campos digitados em % na tela e guardados em fração no domínio. */
 const CAMPOS_PERCENTUAIS = new Set(['consumoPct', 'rendCarcaca', 'imposto']);
@@ -145,15 +148,29 @@ export function ehCenario(v: unknown): v is CenarioEntity {
 }
 
 /**
- * Leitura tolerante: aceita o esquema 2 e o 1 (sem cenários); descarta só os itens inválidos,
- * nunca o conteúdo inteiro por causa de um item.
+ * Esquemas 1 e 2 guardavam o desconto da venda em `descontoPct` (%, ADR-0012). Pela decisão do dono
+ * (ADR-0013) o desconto é de kg por cabeça: venda com desconto ligado vira 10 kg/cab. (qualquer que
+ * fosse o percentual), e o campo antigo some. Compra e venda sem desconto não mudam.
+ */
+export function migrarLoteDescontoKg(bruto: unknown): unknown {
+  if (!ehObjeto(bruto) || !('descontoPct' in bruto)) return bruto;
+  const resto: Record<string, unknown> = { ...bruto };
+  delete resto['descontoPct'];
+  if (resto['tipo'] !== 'venda') return resto;
+  return { ...resto, descontoKg: resto['aplicarDesconto'] === true ? DESCONTO_KG_MIGRACAO : '' };
+}
+
+/**
+ * Leitura tolerante: aceita os esquemas 3, 2 e 1 (sem cenários), convertendo o desconto dos lotes
+ * antigos; descarta só os itens inválidos, nunca o conteúdo inteiro por causa de um item.
  */
 function lerEnvelope(bruto: string): Envelope | null {
   const dados: unknown = JSON.parse(bruto);
   if (!ehObjeto(dados)) return null;
-  if (dados['schema'] !== SCHEMA && dados['schema'] !== SCHEMA_E1) return null;
+  const schemaLido = dados['schema'];
+  if (schemaLido !== SCHEMA && schemaLido !== SCHEMA_E2 && schemaLido !== SCHEMA_E1) return null;
   if (!Array.isArray(dados['lotes']) || !ehRecria(dados['recria'])) return null;
-  const lotes = (dados['lotes'] as unknown[]).filter(ehLote);
+  const lotes = (dados['lotes'] as unknown[]).map(migrarLoteDescontoKg).filter(ehLote);
   const cenarios = Array.isArray(dados['cenarios'])
     ? (dados['cenarios'] as unknown[]).filter(ehCenario)
     : [];

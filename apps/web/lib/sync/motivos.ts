@@ -11,7 +11,7 @@ const ROTULOS: Record<string, string> = {
   data: 'Data',
   modo: 'Modo de peso',
   base: 'Base da arroba',
-  desconto: 'Desconto',
+  descontoKg: 'Desconto (kg por cabeça)',
   nome: 'Nome',
   entradas: 'Entradas',
   lotacaoInicial: 'Lotação inicial',

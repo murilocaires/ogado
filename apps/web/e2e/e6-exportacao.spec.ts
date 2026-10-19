@@ -53,10 +53,10 @@ test('RF-041 e RNF-009: lança um lote, baixa o CSV e o XLSX e baixa os dados da
   const texto = bytes.toString('utf8').slice(1);
   const linhas = texto.split('\r\n');
   expect(linhas[0]).toBe(
-    'Tipo;Lote;Data;Categoria;Modo de peso;Cabeças;Peso (kg);Base da @;Desconto (%);Arrobas (@);Preço (R$/@);Total (R$);R$/cabeça',
+    'Tipo;Lote;Data;Categoria;Modo de peso;Cabeças;Peso (kg);Base da @;Desconto (kg/cab.);kg líquido;Arrobas (@);Preço (R$/@);Total (R$);R$/cabeça',
   );
   // categoria com ; e aspas sai escapada; números com vírgula decimal
-  expect(linhas[1]).toMatch(/^Compra;1;[^;]*;"Bezerros; ""nelore""";Peso total;10;3000,00;;;/);
+  expect(linhas[1]).toMatch(/^Compra;1;[^;]*;"Bezerros; ""nelore""";Peso total;10;3000,00;;;;/);
   expect(linhas[1]).toMatch(/;300,00;\d+,\d{2};\d+,\d{2}$/);
   await expect(
     page.getByRole('status').filter({ hasText: /Arquivo ogado-compras-.*\.csv baixado\./ }),
