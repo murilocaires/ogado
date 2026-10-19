@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSyncExternalStore, type ReactNode } from 'react';
+import { useOptionalSessionController } from '../lib/auth/session-provider';
 import { useRepoState } from '../lib/repo/repo-provider';
 import { Icon, type IconName } from './Icon';
 import { LogoMark } from './Logo';
+import { useSyncStatus, type SyncStatus } from './SyncProvider';
 
 const ITENS: { href: string; rotulo: string; icone: IconName }[] = [
   { href: '/painel', rotulo: 'Painel', icone: 'home' },
@@ -30,11 +32,21 @@ function useOnline(): boolean {
   );
 }
 
+const TEXTO_SYNC: Record<SyncStatus, string> = {
+  desligado: 'Seus dados ficam salvos neste navegador.',
+  sincronizando: 'Sincronizando com a nuvem…',
+  sincronizado: 'Dados salvos na sua conta.',
+  offline: 'Sem conexão: salvo neste aparelho, sobe quando voltar.',
+  erro: 'Não foi possível sincronizar agora. Tentaremos de novo.',
+};
+
 /** Navegação lateral (desktop) e barra inferior (< 900 px); item ativo com `aria-current` (RF-053). */
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const online = useOnline();
   const dados = useRepoState();
+  const sync = useSyncStatus();
+  const comConta = useOptionalSessionController() !== null;
   const ativo = (href: string): boolean => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
@@ -58,7 +70,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
           <div className="side-foot">
             <div className="tagline">Cada arroba na ponta do lápis.</div>
-            Seus dados ficam salvos neste navegador.
+            <span role="status">{TEXTO_SYNC[sync]}</span>
+            {comConta && (
+              <div>
+                <Link href={sync === 'desligado' ? '/entrar' : '/conta'}>
+                  {sync === 'desligado' ? 'Entrar para guardar na nuvem' : 'Minha conta'}
+                </Link>
+              </div>
+            )}
           </div>
         </aside>
         <main id="conteudo" className="app-main" tabIndex={-1}>

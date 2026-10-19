@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
+import { limparDadosDoAparelho } from '../sync/storage';
 import { createApiClient } from './api-client';
 import {
   browserIdentityStore,
@@ -24,8 +25,8 @@ function createBrowserController(): SessionController {
   return createSessionController({
     api: createApiClient(),
     identity: browserIdentityStore(),
-    // O banco local entra com o T-14; até lá não há nada a apagar além da identidade.
-    clearLocalData: () => undefined,
+    // Logout confirmado (RF-078): apaga os dados do aparelho e o controle de sincronização.
+    clearLocalData: limparDadosDoAparelho,
   });
 }
 
@@ -51,6 +52,11 @@ export function useSessionController(): SessionController {
   const controller = useContext(SessionContext);
   if (!controller) throw new Error('useSessionController fora do SessionProvider');
   return controller;
+}
+
+/** Para telas que funcionam com ou sem conta (o produto é usável sem entrar). */
+export function useOptionalSessionController(): SessionController | null {
+  return useContext(SessionContext);
 }
 
 export function useSessionState(): SessionState {

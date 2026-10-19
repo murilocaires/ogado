@@ -71,7 +71,7 @@ describe('RF-001 tela de entrar (CA-20)', () => {
     await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
     await user.click(screen.getByRole('button', { name: 'Entrar' }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/conta'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/painel'));
     expect(api.login).toHaveBeenCalledWith({ email: 'ana@fazenda.com', senha: SENHA_BOA });
   });
 
@@ -119,7 +119,7 @@ describe('RF-001 tela de entrar (CA-20)', () => {
     await user.click(busy);
     expect(login).toHaveBeenCalledTimes(1);
     resolve({ ok: true, data: sessionBody });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/conta'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/painel'));
   });
 
   it('RNF-003 sem internet avisa que entrar exige conexão e não chama a API', async () => {
@@ -217,7 +217,7 @@ describe('RF-001 tela de cadastro (CA-06, parte de tela)', () => {
     await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/conta'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/painel'));
     expect(api.signup).toHaveBeenCalledWith({ email: 'ana@fazenda.com', senha: SENHA_BOA });
   });
 

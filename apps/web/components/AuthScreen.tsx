@@ -133,7 +133,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
   const rulesId = `${ids}-regras`;
 
   useEffect(() => {
-    if (session.status === 'autenticado') router.replace('/conta');
+    if (session.status === 'autenticado') router.replace('/painel');
   }, [session.status, router]);
 
   useEffect(() => {

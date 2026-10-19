@@ -168,3 +168,23 @@ export interface OGadoRepo {
   duplicarCenario(id: string): CenarioEntity | null;
   excluirCenario(id: string): void;
 }
+
+/** Tudo o que o aparelho guarda, inclusive excluídos (tombstones), para a sincronização (E3). */
+export interface DadosCompletos {
+  lotes: LoteEntity[];
+  recria: RecriaEntity;
+  cenarios: CenarioEntity[];
+}
+
+/** Repositório local que também deixa o motor de sincronização ler e aplicar dados da nuvem. */
+export interface SyncableRepo extends OGadoRepo {
+  exportar(): DadosCompletos;
+  /** Substitui por `id` (ou acrescenta) o que veio da nuvem; não mexe no resto. */
+  aplicar(mudanca: {
+    lotes?: LoteEntity[];
+    cenarios?: CenarioEntity[];
+    recria?: RecriaEntity;
+  }): void;
+  /** Apaga os dados do aparelho (logout confirmado, RF-078). */
+  limpar(): void;
+}

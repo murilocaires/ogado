@@ -11,7 +11,8 @@ import {
   type CenarioEntity,
   type CenarioSalvar,
   type LoteEntity,
-  type OGadoRepo,
+  type DadosCompletos,
+  type SyncableRepo,
   type PersistenciaStatus,
   type RecriaAtualizacao,
   type RecriaEntity,
@@ -80,7 +81,7 @@ function ehMeta(o: Record<string, unknown>): boolean {
   );
 }
 
-function ehLote(v: unknown): v is LoteEntity {
+export function ehLote(v: unknown): v is LoteEntity {
   if (typeof v !== 'object' || v === null) return false;
   const o = v as Record<string, unknown>;
   return (
@@ -98,7 +99,7 @@ function ehLote(v: unknown): v is LoteEntity {
   );
 }
 
-function ehRecria(v: unknown): v is RecriaEntity {
+export function ehRecria(v: unknown): v is RecriaEntity {
   if (typeof v !== 'object' || v === null) return false;
   const o = v as Record<string, unknown>;
   if (!ehMeta(o)) return false;
@@ -116,7 +117,7 @@ function ehObjeto(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
 }
 
-function ehCenario(v: unknown): v is CenarioEntity {
+export function ehCenario(v: unknown): v is CenarioEntity {
   if (!ehObjeto(v)) return false;
   if (!ehMeta(v) || !ehTexto(v['nome']) || !ehTexto(v['criadoEm'])) return false;
   const { form, variantes, parametros, resultado } = v;
@@ -173,7 +174,7 @@ export interface OpcoesRepoLocal {
   novoId?: () => string;
 }
 
-export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): OGadoRepo {
+export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
   const obterStorage = opcoes.storage ?? obterStorageDoNavegador;
   const agora = opcoes.agora ?? (() => new Date());
   const gerarId = opcoes.novoId ?? novoId;
@@ -278,6 +279,45 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): OGadoRepo {
   }
 
   return {
+    exportar(): DadosCompletos {
+      garantir();
+      return { lotes: [...lotes], recria, cenarios: [...cenarios] };
+    },
+    aplicar(mudanca) {
+      garantir();
+      const mesclar = <T extends { id: string }>(
+        atuais: T[],
+        novos: readonly T[] | undefined,
+      ): T[] => {
+        if (!novos || novos.length === 0) return atuais;
+        const porId = new Map(novos.map((n) => [n.id, n]));
+        const vistos = new Set<string>();
+        const resultado = atuais.map((a) => {
+          const novo = porId.get(a.id);
+          if (novo) vistos.add(a.id);
+          return novo ?? a;
+        });
+        return [...resultado, ...novos.filter((n) => !vistos.has(n.id))];
+      };
+      lotes = mesclar(lotes, mudanca.lotes);
+      cenarios = mesclar(cenarios, mudanca.cenarios);
+      if (mudanca.recria) recria = mudanca.recria;
+      notificar();
+    },
+    limpar() {
+      lotes = [];
+      cenarios = [];
+      recria = recriaPadrao();
+      try {
+        const storage = obterStorage();
+        storage?.removeItem(STORAGE_KEY);
+        storage?.removeItem(STORAGE_KEY_E1);
+      } catch {
+        /* sem storage: nada a apagar */
+      }
+      snapshot = montarSnapshot();
+      ouvintes.forEach((o) => o());
+    },
     subscribe(listener) {
       ouvintes.add(listener);
       return () => {
