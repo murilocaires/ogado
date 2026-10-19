@@ -58,8 +58,7 @@ function secoesRecria(r: ResultadoRecria): { titulo: string; itens: ItemSecao[] 
         {
           rotulo: 'Total de cabeças',
           info: 'cabecas',
-          valor: num(r.cabecas, 2),
-          pequeno: r.cabecas ? `≈ ${num(r.cabecas, 0)}` : undefined,
+          valor: r.cabecas ? num(r.cabecas.ceil(), 0) : TRACO,
         },
         { campo: 'pesoIni' },
         { rotulo: 'Lotação Total', info: 'lotTot', valor: comUnidade(r.lotacaoTotalUA, 2, 'UA') },
@@ -131,7 +130,7 @@ const CUSTO_INFO = { supl: 'supl', san: 'san', imp: 'imp', frete: 'frete', func:
 function mensagemAlerta(a: AlertaRecria): string {
   switch (a.codigo) {
     case 'cabecas_fracionadas':
-      return `O investimento compra ${num(a.cabecas, 2)} cabeças (≈ ${num(a.cabecasArredondadas, 0)}). O cálculo usa o valor exato.`;
+      return `O investimento compra ${num(a.cabecas, 2)} cabeças (≈ ${num(a.cabecas.ceil(), 0)}). O cálculo usa o valor exato.`;
     case 'lotacao_entrada_alta':
       return `Lotação de entrada acima de ${a.limite} UA/ha.`;
     case 'lotacao_saida_alta':
