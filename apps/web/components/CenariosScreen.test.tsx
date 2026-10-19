@@ -100,7 +100,7 @@ describe('RF-032 salvar como cenário', () => {
     const user = userEvent.setup();
     const repo = novoRepo();
     renderComApp(<RecriaScreen />, repo);
-    await user.clear(screen.getByLabelText('Investimento'));
+    await user.clear(screen.getByLabelText('Investimento (compra)'));
     await user.click(screen.getByRole('button', { name: 'Salvar como cenário' }));
     expect(
       screen.getByText(/Preencha todos os campos com números válidos para salvar/),
@@ -118,7 +118,7 @@ describe('RF-032 salvar como cenário', () => {
 
     // volta ao simulador e muda o preço de venda
     await user.click(screen.getByRole('tab', { name: 'Simulador' }));
-    const preco = screen.getByLabelText('Preço de venda');
+    const preco = screen.getByLabelText('R$/cab (venda)');
     await user.clear(preco);
     await user.type(preco, '400');
 
@@ -129,7 +129,7 @@ describe('RF-032 salvar como cenário', () => {
     await user.click(screen.getByRole('button', { name: 'Abrir Cenário 1' }));
     expect(screen.getByText('Cenário "Cenário 1" aberto no simulador.')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Simulador' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByLabelText('Preço de venda')).toHaveValue('325');
+    expect(screen.getByLabelText('R$/cab (venda)')).toHaveValue('325');
   });
 });
 
