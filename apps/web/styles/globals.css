@@ -495,3 +495,32 @@ a {
   width: auto;
   flex: 1 1 140px;
 }
+
+/* ---------- Entrar com Google (RF-001) ---------- */
+.btn-google {
+  background: #fff;
+  color: var(--tinta);
+  border-color: var(--nevoa-200);
+  text-decoration: none;
+}
+
+.btn-google:hover {
+  background: var(--nevoa-50, #f7f8f7);
+}
+
+.auth-sep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--tinta-2);
+  font-size: 13.5px;
+}
+
+.auth-sep::before,
+.auth-sep::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--nevoa-200);
+}

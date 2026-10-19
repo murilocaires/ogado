@@ -69,6 +69,7 @@ function montar(srv: ReturnType<typeof criarServidor>, extra?: Partial<DadosClie
       logout: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
       updatePerfil: vi.fn(),
       changePassword: vi.fn(),
+      unlinkGoogle: vi.fn(),
       updateFazenda: vi.fn(),
       deleteAccount: vi.fn(),
       forgotPassword: vi.fn(),

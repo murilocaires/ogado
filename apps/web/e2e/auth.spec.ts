@@ -84,6 +84,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
 
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
+    await page.getByLabel('Confirmar senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Criar conta' }).click();
     await expect(page).toHaveURL(/\/painel$/);
     await abrirConta(page, email);
@@ -152,6 +153,33 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     expect(signupCalls).toBe(0);
   });
 
+  test('RF-001 cadastro com confirmação diferente não é enviado e foca na confirmação', async ({
+    page,
+  }) => {
+    await page.goto('/cadastrar');
+    let signupCalls = 0;
+    page.on('request', (r) => {
+      if (r.url().endsWith('/api/auth/signup')) signupCalls += 1;
+    });
+    await page.getByLabel('E-mail', { exact: true }).fill(uniqueEmail('confirma'));
+    await page.getByLabel('Senha', { exact: true }).fill(SENHA);
+    await page.getByLabel('Confirmar senha', { exact: true }).fill(`${SENHA}x`);
+    await page.getByRole('button', { name: 'Criar conta' }).click();
+
+    const confirmacao = page.getByLabel('Confirmar senha', { exact: true });
+    await expect(page.getByText('As senhas não coincidem.')).toBeVisible();
+    await expect(confirmacao).toBeFocused();
+    await expect(confirmacao).toHaveAttribute('aria-invalid', 'true');
+    expect(signupCalls).toBe(0);
+
+    // Corrigida a confirmação, o cadastro segue e a confirmação não vai no corpo da requisição.
+    const corpo = page.waitForRequest((r) => r.url().endsWith('/api/auth/signup'));
+    await confirmacao.fill(SENHA);
+    await page.getByRole('button', { name: 'Criar conta' }).click();
+    expect(JSON.parse((await corpo).postData() ?? '{}')).not.toHaveProperty('confirmacao');
+    await expect(page).toHaveURL(/\/painel$/);
+  });
+
   test('CA-21 sessão expirada mostra "Entre de novo" e não apaga o que há no aparelho', async ({
     page,
     context,
@@ -160,6 +188,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.goto('/cadastrar');
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
+    await page.getByLabel('Confirmar senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Criar conta' }).click();
     await expect(page).toHaveURL(/\/painel$/);
     await abrirConta(page, email);
@@ -198,6 +227,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.goto('/cadastrar');
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
+    await page.getByLabel('Confirmar senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Criar conta' }).click();
     await expect(page).toHaveURL(/\/painel$/);
     await abrirConta(page, email);

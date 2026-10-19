@@ -1698,3 +1698,46 @@
     align-self: auto;
   }
 }
+
+/* ---------- Conta · Google (RF-006) ---------- */
+.app .rowi {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.app .gmark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--nevoa-200);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.app .sp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--nevoa-100);
+  color: var(--tinta-2);
+}
+.app .sp.ok {
+  background: var(--calculado);
+  color: var(--floresta-900);
+}
+.app .sp i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+.app a.btn.sm {
+  text-decoration: none;
+}

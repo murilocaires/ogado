@@ -31,6 +31,7 @@ function setup(
     logout: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     updatePerfil: vi.fn(),
     changePassword: vi.fn(),
+    unlinkGoogle: vi.fn(),
     updateFazenda: vi.fn(),
     deleteAccount: vi.fn(),
     forgotPassword: vi.fn(),
@@ -235,6 +236,7 @@ describe('RF-001 tela de cadastro (CA-06, parte de tela)', () => {
     const { api, user } = setup('cadastrar');
     await user.type(await screen.findByLabelText('E-mail'), ' Ana@Fazenda.com ');
     await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
+    await user.type(screen.getByLabelText('Confirmar senha'), SENHA_BOA);
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/painel'));
@@ -247,6 +249,7 @@ describe('RF-001 tela de cadastro (CA-06, parte de tela)', () => {
     });
     await user.type(await screen.findByLabelText('E-mail'), 'ana@fazenda.com');
     await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
+    await user.type(screen.getByLabelText('Confirmar senha'), SENHA_BOA);
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
 
     const alert = await screen.findByRole('alert');
@@ -260,8 +263,105 @@ describe('RF-001 tela de cadastro (CA-06, parte de tela)', () => {
     const { api, user } = setup('cadastrar');
     await user.type(await screen.findByLabelText('E-mail'), 'ana@fazenda.com');
     await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
+    await user.type(screen.getByLabelText('Confirmar senha'), SENHA_BOA);
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/criar a conta é preciso internet/i);
     expect(api.signup).not.toHaveBeenCalled();
+  });
+});
+
+describe('RF-001 confirmação de senha no cadastro', () => {
+  it('só existe em Cadastrar, não em Entrar', async () => {
+    setup('entrar');
+    await screen.findByLabelText('Senha');
+    expect(screen.queryByLabelText('Confirmar senha')).not.toBeInTheDocument();
+  });
+
+  it('senhas diferentes não são enviadas: marca o campo, descreve o erro e foca', async () => {
+    const { api, user } = setup('cadastrar');
+    await user.type(await screen.findByLabelText('E-mail'), 'ana@fazenda.com');
+    await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
+    const confirmacao = screen.getByLabelText('Confirmar senha');
+    await user.type(confirmacao, `${SENHA_BOA}x`);
+    await user.click(screen.getByRole('button', { name: 'Criar conta' }));
+
+    expect(api.signup).not.toHaveBeenCalled();
+    expect(await screen.findByText('As senhas não coincidem.')).toBeVisible();
+    expect(confirmacao).toHaveAttribute('aria-invalid', 'true');
+    expect(confirmacao).toHaveAccessibleDescription('As senhas não coincidem.');
+    expect(confirmacao).toHaveFocus();
+  });
+
+  it('confirmação vazia também bloqueia o envio', async () => {
+    const { api, user } = setup('cadastrar');
+    await user.type(await screen.findByLabelText('E-mail'), 'ana@fazenda.com');
+    await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
+    await user.click(screen.getByRole('button', { name: 'Criar conta' }));
+    expect(await screen.findByText('Repita a senha.')).toBeVisible();
+    expect(screen.getByLabelText('Confirmar senha')).toHaveFocus();
+    expect(api.signup).not.toHaveBeenCalled();
+  });
+
+  it('a confirmação não vai para a API', async () => {
+    const { api, user } = setup('cadastrar');
+    await user.type(await screen.findByLabelText('E-mail'), 'ana@fazenda.com');
+    await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
+    await user.type(screen.getByLabelText('Confirmar senha'), SENHA_BOA);
+    await user.click(screen.getByRole('button', { name: 'Criar conta' }));
+    await waitFor(() => expect(api.signup).toHaveBeenCalledTimes(1));
+    expect(api.signup).toHaveBeenCalledWith({ email: 'ana@fazenda.com', senha: SENHA_BOA });
+  });
+
+  it('Mostrar/Ocultar cobre os dois campos', async () => {
+    const { user } = setup('cadastrar');
+    const senha = await screen.findByLabelText('Senha');
+    const confirmacao = screen.getByLabelText('Confirmar senha');
+    await user.click(screen.getByRole('button', { name: 'Mostrar senhas' }));
+    expect(senha).toHaveAttribute('type', 'text');
+    expect(confirmacao).toHaveAttribute('type', 'text');
+    await user.click(screen.getByRole('button', { name: 'Ocultar senhas' }));
+    expect(senha).toHaveAttribute('type', 'password');
+    expect(confirmacao).toHaveAttribute('type', 'password');
+  });
+});
+
+describe('RF-001 entrar com Google', () => {
+  it('Entrar tem o botão como link de navegação completa para a API', async () => {
+    setup('entrar');
+    const link = await screen.findByRole('link', { name: 'Entrar com Google' });
+    expect(link).toHaveAttribute('href', '/api/auth/google/start');
+    expect(link.querySelector('svg')).not.toBeNull();
+  });
+
+  it('Cadastrar chama "Cadastrar com Google" e usa a mesma rota', async () => {
+    setup('cadastrar');
+    expect(await screen.findByRole('link', { name: 'Cadastrar com Google' })).toHaveAttribute(
+      'href',
+      '/api/auth/google/start',
+    );
+  });
+
+  it.each([
+    [
+      'google-conta-existente',
+      'Já existe uma conta com este e-mail. Entre com a senha e vincule o Google em Conta.',
+    ],
+    ['google', 'Não foi possível entrar com o Google. Tente de novo.'],
+  ])('?erro=%s mostra o alerta com foco e limpa a URL', async (codigo, texto) => {
+    window.history.replaceState(null, '', `/entrar?erro=${codigo}&x=1`);
+    setup('entrar');
+    const alerta = await screen.findByRole('alert');
+    expect(alerta).toHaveTextContent(texto);
+    await waitFor(() => expect(alerta).toHaveFocus());
+    expect(window.location.search).toBe('?x=1');
+    window.history.replaceState(null, '', '/');
+  });
+
+  it('erro desconhecido na URL é ignorado', async () => {
+    window.history.replaceState(null, '', '/entrar?erro=outro');
+    setup('entrar');
+    await screen.findByLabelText('Senha');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    window.history.replaceState(null, '', '/');
   });
 });

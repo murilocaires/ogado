@@ -12,11 +12,12 @@ import {
 import type { ApiFailure } from '../lib/auth/api-client';
 import { useOnline, useSessionController, useSessionState } from '../lib/auth/session-provider';
 import { AuthShell } from './AuthShell';
+import { GoogleLink } from './GoogleButton';
 import { PasswordRules } from './PasswordRules';
 
 export type AuthMode = 'entrar' | 'cadastrar';
 
-type FieldName = 'email' | 'senha';
+type FieldName = 'email' | 'senha' | 'confirmacao';
 type FieldErrors = Partial<Record<FieldName, string>>;
 type FocusTarget = FieldName | 'alert';
 
@@ -28,6 +29,11 @@ const MSG = {
   servidor: 'Algo deu errado do nosso lado. Tente de novo em instantes.',
   bloqueada: 'A solicitação foi bloqueada. Recarregue a página e tente de novo.',
   senhaRequisitos: 'A senha ainda não cumpre os requisitos abaixo.',
+  confirmacaoVazia: 'Repita a senha.',
+  confirmacaoDiferente: 'As senhas não coincidem.',
+  googleContaExistente:
+    'Já existe uma conta com este e-mail. Entre com a senha e vincule o Google em Conta.',
+  google: 'Não foi possível entrar com o Google. Tente de novo.',
 } as const;
 
 function failureMessage(failure: ApiFailure): string {
@@ -63,20 +69,27 @@ function fieldsFromServer(campos: FieldError[]): FieldErrors {
 type Validation = { ok: true; body: LoginRequest } | { ok: false; errors: FieldErrors };
 
 /** Valida com os mesmos schemas da API; o corpo enviado é o normalizado (e-mail sem espaços/maiúsculas). */
-function validate(mode: AuthMode, email: string, senha: string): Validation {
+function validate(mode: AuthMode, email: string, senha: string, confirmacao: string): Validation {
   const schema = mode === 'entrar' ? loginRequestSchema : signupRequestSchema;
   const parsed = schema.safeParse({ email, senha });
-  if (parsed.success) return { ok: true, body: parsed.data };
   const errors: FieldErrors = {};
-  for (const issue of parsed.error.issues) {
-    const field = issue.path[0];
-    if (field !== 'email' && field !== 'senha') continue;
-    if (errors[field]) continue;
-    errors[field] =
-      field === 'senha' && mode === 'cadastrar' && senha !== ''
-        ? MSG.senhaRequisitos
-        : issue.message;
+  if (!parsed.success) {
+    for (const issue of parsed.error.issues) {
+      const field = issue.path[0];
+      if (field !== 'email' && field !== 'senha') continue;
+      if (errors[field]) continue;
+      errors[field] =
+        field === 'senha' && mode === 'cadastrar' && senha !== ''
+          ? MSG.senhaRequisitos
+          : issue.message;
+    }
   }
+  // A confirmação é só da tela: nunca vai para a API.
+  if (mode === 'cadastrar') {
+    if (confirmacao === '') errors.confirmacao = MSG.confirmacaoVazia;
+    else if (confirmacao !== senha) errors.confirmacao = MSG.confirmacaoDiferente;
+  }
+  if (parsed.success && !errors.confirmacao) return { ok: true, body: parsed.data };
   return { ok: false, errors };
 }
 
@@ -89,6 +102,8 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [confirmacao, setConfirmacao] = useState('');
+  const [googleErro, setGoogleErro] = useState<string | null>(null);
   const [verSenha, setVerSenha] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [failure, setFailure] = useState<ApiFailure | null>(null);
@@ -97,17 +112,36 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 
   const emailRef = useRef<HTMLInputElement>(null);
   const senhaRef = useRef<HTMLInputElement>(null);
+  const confirmacaoRef = useRef<HTMLInputElement>(null);
   const alertRef = useRef<HTMLDivElement>(null);
   const submitting = useRef(false);
 
   const isLogin = mode === 'entrar';
   const emailId = `${ids}-email`;
   const senhaId = `${ids}-senha`;
+  const confirmacaoId = `${ids}-confirmacao`;
   const rulesId = `${ids}-regras`;
 
   useEffect(() => {
     if (session.status === 'autenticado') router.replace('/painel');
   }, [session.status, router]);
+
+  // Retorno do Google com erro (?erro=google...): mostra o aviso e tira o parâmetro da URL.
+  useEffect(() => {
+    if (!isLogin) return;
+    const params = new URLSearchParams(window.location.search);
+    const erro = params.get('erro');
+    if (erro !== 'google' && erro !== 'google-conta-existente') return;
+    setGoogleErro(erro === 'google' ? MSG.google : MSG.googleContaExistente);
+    params.delete('erro');
+    const resto = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      '',
+      window.location.pathname + (resto ? `?${resto}` : ''),
+    );
+    setFocusRequest({ target: 'alert', n: 1 });
+  }, [isLogin]);
 
   useEffect(() => {
     if (!focusRequest) return;
@@ -116,7 +150,9 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
         ? emailRef.current
         : focusRequest.target === 'senha'
           ? senhaRef.current
-          : alertRef.current;
+          : focusRequest.target === 'confirmacao'
+            ? confirmacaoRef.current
+            : alertRef.current;
     element?.focus();
   }, [focusRequest]);
 
@@ -126,7 +162,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 
   const offlineMessage = isLogin ? MSG.offlineEntrar : MSG.offlineCadastrar;
   const showOffline = !online;
-  const alertText = showOffline ? offlineMessage : failure ? failureMessage(failure) : null;
+  const alertText = showOffline ? offlineMessage : failure ? failureMessage(failure) : googleErro;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -137,11 +173,14 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
       return;
     }
 
-    const validation = validate(mode, email, senha);
+    const validation = validate(mode, email, senha, confirmacao);
     setFailure(null);
+    setGoogleErro(null);
     if (!validation.ok) {
       setFieldErrors(validation.errors);
-      requestFocus(validation.errors.email ? 'email' : 'senha');
+      requestFocus(
+        validation.errors.email ? 'email' : validation.errors.senha ? 'senha' : 'confirmacao',
+      );
       return;
     }
     setFieldErrors({});
@@ -168,6 +207,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 
   const emailError = fieldErrors.email;
   const senhaError = fieldErrors.senha;
+  const confirmacaoError = fieldErrors.confirmacao;
 
   return (
     <AuthShell mobileTitle={isLogin ? 'Bem-vindo de volta' : 'Crie sua conta'}>
@@ -254,7 +294,15 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
             <button
               type="button"
               onClick={() => setVerSenha((v) => !v)}
-              aria-label={verSenha ? 'Ocultar senha' : 'Mostrar senha'}
+              aria-label={
+                verSenha
+                  ? isLogin
+                    ? 'Ocultar senha'
+                    : 'Ocultar senhas'
+                  : isLogin
+                    ? 'Mostrar senha'
+                    : 'Mostrar senhas'
+              }
               aria-pressed={verSenha}
               style={{
                 border: 0,
@@ -279,6 +327,30 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 
         {!isLogin && <PasswordRules senha={senha} id={rulesId} />}
 
+        {!isLogin && (
+          <div className="lbl">
+            <label htmlFor={confirmacaoId}>Confirmar senha</label>
+            <div className="fld" data-invalid={confirmacaoError ? 'true' : 'false'}>
+              <input
+                ref={confirmacaoRef}
+                id={confirmacaoId}
+                type={verSenha ? 'text' : 'password'}
+                autoComplete="new-password"
+                placeholder="Repita a senha"
+                value={confirmacao}
+                onChange={(e) => setConfirmacao(e.target.value)}
+                aria-invalid={confirmacaoError ? true : undefined}
+                aria-describedby={confirmacaoError ? `${confirmacaoId}-erro` : undefined}
+              />
+            </div>
+            {confirmacaoError && (
+              <span className="err" id={`${confirmacaoId}-erro`}>
+                {confirmacaoError}
+              </span>
+            )}
+          </div>
+        )}
+
         {isLogin && (
           <p style={{ margin: 0, textAlign: 'right', fontSize: 14.5 }}>
             <Link href="/esqueci-senha" className="link">
@@ -302,6 +374,11 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
               ? 'Entrar'
               : 'Criar conta'}
         </button>
+
+        <p className="auth-sep" aria-hidden="true">
+          ou
+        </p>
+        <GoogleLink texto={isLogin ? 'Entrar com Google' : 'Cadastrar com Google'} />
 
         <p style={{ margin: 0, textAlign: 'center', fontSize: 14.5, color: 'var(--tinta-2)' }}>
           {isLogin ? 'Ainda não tem conta? ' : 'Já tem conta? '}

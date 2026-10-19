@@ -51,8 +51,10 @@ export interface SessionController {
   logout(): Promise<ApiResult<void>>;
   /** RF-004: grava nome/e-mail; em sucesso o estado passa a refletir o usuário devolvido. */
   updatePerfil(body: PerfilRequest): Promise<ApiResult<SessionResponse>>;
-  /** RF-005: define ou altera a senha (a atual é exigida pela API quando já existe). */
+  /** RF-005/RF-006: define ou altera a senha (a atual só é exigida quando a conta já tem senha); em sucesso `temSenha` passa a verdadeiro. */
   changePassword(body: SenhaRequest): Promise<ApiResult<void>>;
+  /** RF-006: desvincula o Google (a API recusa com 409 sem senha); em sucesso `googleVinculado` passa a falso. */
+  unlinkGoogle(): Promise<ApiResult<void>>;
   /** RF-011: grava nome/área da fazenda; em sucesso o estado passa a refletir a fazenda devolvida. */
   updateFazenda(body: FazendaPatch): Promise<ApiResult<SessionResponse>>;
   /** RF-007: apaga a conta no servidor e, só depois do 204, o aparelho (como no logout). */
@@ -145,6 +147,12 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
     }
   }
 
+  /** Ajusta só os selos do usuário já autenticado (mesma conta, mesmos ids). */
+  function patchUsuario(patch: Partial<UsuarioDto>): void {
+    if (state.status !== 'autenticado') return;
+    set({ ...state, usuario: { ...state.usuario, ...patch } });
+  }
+
   return {
     getState: () => state,
     getAccountMismatch: () => mismatch,
@@ -176,7 +184,16 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
       return result;
     },
     updatePerfil: (body) => accountCall(() => deps.api.updatePerfil(body), applySession),
-    changePassword: (body) => accountCall(() => deps.api.changePassword(body)),
+    changePassword: (body) =>
+      accountCall(
+        () => deps.api.changePassword(body),
+        () => patchUsuario({ temSenha: true }),
+      ),
+    unlinkGoogle: () =>
+      accountCall(
+        () => deps.api.unlinkGoogle(),
+        () => patchUsuario({ googleVinculado: false }),
+      ),
     updateFazenda: (body) => accountCall(() => deps.api.updateFazenda(body), applySession),
     async deleteAccount() {
       const result = await accountCall(() => deps.api.deleteAccount());
