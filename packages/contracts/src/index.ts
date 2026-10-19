@@ -8,3 +8,4 @@ export * from './decimal';
 export * from './dados';
 export * from './conta';
 export * from './recuperacao-senha';
+export * from './termos';

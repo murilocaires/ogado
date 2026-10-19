@@ -18,6 +18,9 @@ model Usuario {
   senhaHash    String?
   // nome de exibição (RF-004); opcional até o usuário preencher na Conta
   nome         String?
+  // RNF-009: versão (AAAA-MM-DD) dos Termos/Política aceita e quando; nulos = nunca aceitou
+  aceiteTermosVersao String?
+  aceiteTermosEm     DateTime? @db.Timestamptz(3)
   criadoEm     DateTime @default(now()) @db.Timestamptz(3)
   atualizadoEm DateTime @default(now()) @updatedAt @db.Timestamptz(3)
 

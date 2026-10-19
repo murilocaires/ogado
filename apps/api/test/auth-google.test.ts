@@ -201,6 +201,9 @@ describe('GET /auth/google/callback: entrar (RF-001)', () => {
     expect(sessao.usuario.nome).toBe('Ana do Gado');
     expect(sessao.usuario.temSenha).toBe(false);
     expect(sessao.usuario.googleVinculado).toBe(true);
+    // RNF-009: conta nova pelo Google nasce sem aceite; a web pede o aceite antes de liberar o produto
+    expect(sessao.usuario.aceiteVigente).toBe(false);
+    expect(sessao.usuario.aceiteTermosVersao).toBeNull();
     expect(sessao.fazenda.id).toBeTruthy();
 
     const row = await prisma.usuario.findUniqueOrThrow({

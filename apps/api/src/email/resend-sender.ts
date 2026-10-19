@@ -28,6 +28,7 @@ export function createResendEmailSender(options: ResendOptions): EmailSender {
           to: [message.to],
           subject: message.subject,
           text: message.text,
+          ...(message.attachments?.length ? { attachments: message.attachments } : {}),
         }),
         signal: AbortSignal.timeout(options.timeoutMs ?? 10_000),
       });

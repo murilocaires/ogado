@@ -35,7 +35,7 @@ describe('CSRF (Origin, Sec-Fetch-Site, JSON)', () => {
     const res = await postJson(
       app,
       '/auth/signup',
-      { email, senha: VALID_PASSWORD },
+      { email, senha: VALID_PASSWORD, aceiteTermos: true },
       { origin: 'https://evil.example' },
     );
     expect(res.statusCode).toBe(403);
@@ -49,7 +49,7 @@ describe('CSRF (Origin, Sec-Fetch-Site, JSON)', () => {
     const res = await postJson(
       app,
       '/auth/signup',
-      { email, senha: VALID_PASSWORD },
+      { email, senha: VALID_PASSWORD, aceiteTermos: true },
       { origin: null },
     );
     expect(res.statusCode).toBe(403);
@@ -61,7 +61,7 @@ describe('CSRF (Origin, Sec-Fetch-Site, JSON)', () => {
     const res = await postJson(
       app,
       '/auth/signup',
-      { email, senha: VALID_PASSWORD },
+      { email, senha: VALID_PASSWORD, aceiteTermos: true },
       { headers: { 'sec-fetch-site': 'cross-site' } },
     );
     expect(res.statusCode).toBe(403);
@@ -73,7 +73,7 @@ describe('CSRF (Origin, Sec-Fetch-Site, JSON)', () => {
       const res = await postJson(
         app,
         '/auth/signup',
-        { email: uniqueEmail('csrf'), senha: VALID_PASSWORD },
+        { email: uniqueEmail('csrf'), senha: VALID_PASSWORD, aceiteTermos: true },
         { headers: { 'sec-fetch-site': site } },
       );
       expect(res.statusCode, site).toBe(201);
@@ -88,7 +88,7 @@ describe('CSRF (Origin, Sec-Fetch-Site, JSON)', () => {
         method: 'POST',
         url: '/auth/signup',
         headers: { 'content-type': contentType, origin: TEST_ORIGIN },
-        payload: JSON.stringify({ email, senha: VALID_PASSWORD }),
+        payload: JSON.stringify({ email, senha: VALID_PASSWORD, aceiteTermos: true }),
       });
       expect(res.statusCode).toBe(403);
       await expectNoAccount(email);
@@ -279,6 +279,7 @@ describe('headers de segurança e CORS', () => {
     const res = await postJson(prod, '/auth/signup', {
       email: uniqueEmail('prod'),
       senha: VALID_PASSWORD,
+      aceiteTermos: true,
     });
     expect(res.statusCode).toBe(201);
     const linha = setCookieLine(res) ?? '';

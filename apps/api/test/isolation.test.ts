@@ -7,6 +7,7 @@ import {
   fazendaListResponseSchema,
   fazendaSchema,
   sessionResponseSchema,
+  TERMOS_VERSAO,
 } from '@ogado/contracts';
 import { TEST_ORIGIN } from './support/env';
 import {
@@ -275,7 +276,7 @@ Object.assign(isolationCases, isolationCasesDados);
 
 const comoA = (
   a: Farm,
-  method: 'PATCH' | 'PUT' | 'DELETE',
+  method: 'POST' | 'PATCH' | 'PUT' | 'DELETE',
   url: string,
   body: unknown,
 ): Promise<LightMyRequestResponse> =>
@@ -302,6 +303,30 @@ const isolationCasesConta: Record<string, (a: Farm, b: Farm) => Promise<number>>
     const depois = await prisma.usuario.findUniqueOrThrow({ where: { id: b.usuarioId } });
     expect(depois).toEqual(antes);
     return 2;
+  },
+  'POST /conta/aceite': async (a, b) => {
+    await prisma.usuario.updateMany({
+      where: { id: { in: [a.usuarioId, b.usuarioId] } },
+      data: { aceiteTermosVersao: '2020-01-01' },
+    });
+    const comId = await comoA(a, 'POST', '/conta/aceite', {
+      versao: TERMOS_VERSAO,
+      usuarioId: b.usuarioId,
+    });
+    expect(comId.statusCode).toBe(400);
+    const propria = await comoA(a, 'POST', '/conta/aceite', { versao: TERMOS_VERSAO });
+    expect(propria.statusCode).toBe(200);
+    expect(propria.body).not.toContain(b.usuarioId);
+    const linhaB = await prisma.usuario.findUniqueOrThrow({ where: { id: b.usuarioId } });
+    expect(linhaB.aceiteTermosVersao).toBe('2020-01-01');
+    return 2;
+  },
+  'POST /conta/exportar/enviar': async (a, b) => {
+    const res = await comoA(a, 'POST', '/conta/exportar/enviar', {});
+    expect(res.statusCode).toBe(202);
+    expect(res.body).not.toContain(b.usuarioId);
+    expect(res.body).not.toContain(b.fazendaId);
+    return 1;
   },
   'PUT /conta/senha': async (a, b) => {
     const antes = await prisma.usuario.findUniqueOrThrow({ where: { id: b.usuarioId } });

@@ -25,7 +25,11 @@ afterAll(async () => {
 describe('POST /auth/signup', () => {
   it('RF-001 CA-01: e-mail novo + senha válida responde 201 com cookie HttpOnly/SameSite=Lax; a sessão devolve usuário e fazenda', async () => {
     const email = uniqueEmail();
-    const res = await postJson(app, '/auth/signup', { email, senha: VALID_PASSWORD });
+    const res = await postJson(app, '/auth/signup', {
+      email,
+      senha: VALID_PASSWORD,
+      aceiteTermos: true,
+    });
 
     expect(res.statusCode).toBe(201);
     const line = setCookieLine(res);
@@ -54,7 +58,11 @@ describe('POST /auth/signup', () => {
     await colidindo.ready();
     const email = uniqueEmail('atomico');
 
-    const res = await postJson(colidindo, '/auth/signup', { email, senha: VALID_PASSWORD });
+    const res = await postJson(colidindo, '/auth/signup', {
+      email,
+      senha: VALID_PASSWORD,
+      aceiteTermos: true,
+    });
 
     expect(res.statusCode).toBe(409);
     expect(errorEnvelopeSchema.parse(res.json()).erro.codigo).toBe('conflito');
@@ -69,7 +77,11 @@ describe('POST /auth/signup', () => {
     const normalizado = uniqueEmail('maiusc');
     const digitado = `  ${normalizado.toUpperCase()} `;
 
-    const criada = await postJson(app, '/auth/signup', { email: digitado, senha: VALID_PASSWORD });
+    const criada = await postJson(app, '/auth/signup', {
+      email: digitado,
+      senha: VALID_PASSWORD,
+      aceiteTermos: true,
+    });
     expect(criada.statusCode).toBe(201);
     const usuarioId = sessionResponseSchema.parse(criada.json()).usuario.id;
     expect(sessionResponseSchema.parse(criada.json()).usuario.email).toBe(normalizado);
@@ -88,6 +100,7 @@ describe('POST /auth/signup', () => {
     const outra = await postJson(app, '/auth/signup', {
       email: original.email.toUpperCase(),
       senha: 'Outra#Senha77',
+      aceiteTermos: true,
     });
 
     expect(outra.statusCode).toBe(409);
@@ -111,7 +124,7 @@ describe('POST /auth/signup', () => {
 
   it('RF-001 CA-06: senha fraca responde 400 com o caminho do campo e a regra que falhou, sem ecoar o valor', async () => {
     const email = uniqueEmail('fraca');
-    const res = await postJson(app, '/auth/signup', { email, senha: 'zzqqxx' });
+    const res = await postJson(app, '/auth/signup', { email, senha: 'zzqqxx', aceiteTermos: true });
 
     expect(res.statusCode).toBe(400);
     const erro = errorEnvelopeSchema.parse(res.json()).erro;
@@ -129,7 +142,11 @@ describe('POST /auth/signup', () => {
 
   it('RF-001 CA-06: senha acima de 128 caracteres é recusada antes do hash (regra maximo)', async () => {
     const longa = 'Aa1!' + 'x'.repeat(125);
-    const res = await postJson(app, '/auth/signup', { email: uniqueEmail(), senha: longa });
+    const res = await postJson(app, '/auth/signup', {
+      email: uniqueEmail(),
+      senha: longa,
+      aceiteTermos: true,
+    });
     expect(res.statusCode).toBe(400);
     const erro = errorEnvelopeSchema.parse(res.json()).erro;
     expect(erro.campos?.map((c) => c.regra)).toEqual(['maximo']);
@@ -137,7 +154,11 @@ describe('POST /auth/signup', () => {
   });
 
   it('RF-001 CA-06: e-mail ausente ou inválido aponta o campo email', async () => {
-    const res = await postJson(app, '/auth/signup', { email: 'sem-arroba', senha: VALID_PASSWORD });
+    const res = await postJson(app, '/auth/signup', {
+      email: 'sem-arroba',
+      senha: VALID_PASSWORD,
+      aceiteTermos: true,
+    });
     expect(res.statusCode).toBe(400);
     expect(errorEnvelopeSchema.parse(res.json()).erro.campos?.map((c) => c.caminho)).toEqual([
       'email',

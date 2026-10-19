@@ -53,6 +53,7 @@ const envSchema = z.object({
   RATE_LIMIT_GOOGLE_IP_PER_HOUR: positiveInt.default(60),
   // Exportação dos dados do titular (RNF-009): por usuário.
   RATE_LIMIT_EXPORT_USER_PER_HOUR: positiveInt.default(10),
+  RATE_LIMIT_EXPORT_EMAIL_USER_PER_HOUR: positiveInt.default(3),
   // Google OAuth (opcionais): ausentes, as rotas /auth/google/* respondem 404 e a API sobe normalmente.
   GOOGLE_CLIENT_ID: z.string().min(1).optional(),
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),

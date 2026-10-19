@@ -70,6 +70,8 @@ export const exportacaoDadosSchema = z.object({
     criadoEm: z.iso.datetime(),
     temSenha: z.boolean(),
     googleVinculado: z.boolean(),
+    aceiteTermosVersao: z.string().nullable(),
+    aceiteTermosEm: z.iso.datetime().nullable(),
   }),
   fazenda: z.object({
     id: z.uuid(),
@@ -82,3 +84,9 @@ export const exportacaoDadosSchema = z.object({
   recriaEntrada: recriaEntradaSchema.nullable(),
 });
 export type ExportacaoDados = z.infer<typeof exportacaoDadosSchema>;
+
+/** POST /conta/exportar/enviar: a resposta é sempre a mesma (202), o e-mail é da própria conta. */
+export const EXPORTACAO_ENVIO_MENSAGEM =
+  'Se tudo deu certo, você receberá seus dados por e-mail em alguns minutos.';
+export const exportacaoEnvioSchema = z.object({ mensagem: z.string() });
+export type ExportacaoEnvio = z.infer<typeof exportacaoEnvioSchema>;

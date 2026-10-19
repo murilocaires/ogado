@@ -96,6 +96,7 @@ describe('isolamento no repositório (alterar e excluir)', () => {
       payload: JSON.stringify({
         email: `c-${b.ctx.fazendaId}@teste.ogado.invalid`,
         senha: 'Boi#Gordo2026',
+        aceiteTermos: true,
       }),
     });
     expect(res.statusCode).toBe(409);

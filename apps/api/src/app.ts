@@ -127,6 +127,7 @@ export function buildApp(options: AppOptions): FastifyInstance {
       await prisma.$queryRaw`SELECT 1`;
     },
   });
+  const emailSender = options.emailSender ?? createMemoryEmailSender();
   registerAuthRoutes(app, {
     config,
     accounts,
@@ -135,7 +136,7 @@ export function buildApp(options: AppOptions): FastifyInstance {
     hasher,
     clock,
     newFazendaId: options.newFazendaId ?? randomUUID,
-    email: options.emailSender ?? createMemoryEmailSender(),
+    email: emailSender,
     webOrigin: options.corsOrigins[0] ?? 'http://localhost:3000',
   });
 
@@ -155,6 +156,7 @@ export function buildApp(options: AppOptions): FastifyInstance {
 
   registerContaRoutes(app, {
     config,
+    email: emailSender,
     accounts,
     fazendas,
     lotes,

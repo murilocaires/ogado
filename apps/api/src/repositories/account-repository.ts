@@ -31,6 +31,8 @@ export interface UsuarioRecord {
   nome: string | null;
   senhaHash: string | null;
   googleVinculado: boolean;
+  aceiteTermosVersao: string | null;
+  aceiteTermosEm: Date | null;
 }
 
 const fazendaSelect = {
@@ -57,6 +59,8 @@ export function createAccountRepository(prisma: PrismaClient) {
         nome: row.nome,
         senhaHash: row.senhaHash,
         googleVinculado: row.identidadeGoogle !== null,
+        aceiteTermosVersao: row.aceiteTermosVersao,
+        aceiteTermosEm: row.aceiteTermosEm,
       };
     },
 
@@ -113,6 +117,17 @@ export function createAccountRepository(prisma: PrismaClient) {
         select: { id: true },
       });
       return existe ? 'sem_senha' : 'nao_vinculado';
+    },
+
+    /** RNF-009: registra o aceite da versão informada (a rota só passa a vigente). */
+    async registrarAceite(usuarioId: string, versao: string, now: Date): Promise<UsuarioDto> {
+      return toUsuarioDto(
+        await prisma.usuario.update({
+          where: { id: usuarioId },
+          data: { aceiteTermosVersao: versao, aceiteTermosEm: now, atualizadoEm: now },
+          select: usuarioDtoSelect,
+        }),
+      );
     },
 
     async updateSenhaHash(usuarioId: string, senhaHash: string): Promise<void> {
@@ -250,6 +265,8 @@ export function createAccountRepository(prisma: PrismaClient) {
       nome?: string | null;
       /** Identidade Google criada na mesma transação (entrada com Google). */
       google?: { sub: string };
+      /** Versão dos termos aceita no cadastro por e-mail; ausente = sem aceite (Google). */
+      aceiteTermosVersao?: string;
       fazendaId: string;
       session: NewSessionData;
       now: Date;
@@ -261,6 +278,9 @@ export function createAccountRepository(prisma: PrismaClient) {
               email: input.email,
               senhaHash: input.senhaHash,
               nome: input.nome ?? null,
+              ...(input.aceiteTermosVersao
+                ? { aceiteTermosVersao: input.aceiteTermosVersao, aceiteTermosEm: input.now }
+                : {}),
               criadoEm: input.now,
               atualizadoEm: input.now,
             },
