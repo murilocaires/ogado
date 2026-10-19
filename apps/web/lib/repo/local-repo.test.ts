@@ -74,7 +74,7 @@ describe('RF-020 repositório local (ADR-0007)', () => {
     if (snap.status !== 'pronto') return;
     expect(Object.values(snap.recria.form).every((v) => v === '')).toBe(true);
     expect(Object.keys(snap.recria.form)).toHaveLength(14);
-    expect(snap.recria.lotacaoInicial).toBe('areaPastavel');
+    expect(snap.recria.lotacaoInicial).toBe('fixa80');
   });
 
   it('ADR-0014 entradas já salvas pelo usuário são preservadas (inclusive fixa80)', () => {
@@ -107,7 +107,7 @@ describe('RF-020 repositório local (ADR-0007)', () => {
     const snap = repo.getSnapshot();
     expect(chamadas).toBe(2);
     expect(snap.status === 'pronto' && snap.recria.form.dias).toBe('');
-    expect(snap.status === 'pronto' && snap.recria.lotacaoInicial).toBe('areaPastavel');
+    expect(snap.status === 'pronto' && snap.recria.lotacaoInicial).toBe('fixa80');
     cancelar();
     repo.limparRecria();
     expect(chamadas).toBe(2);
