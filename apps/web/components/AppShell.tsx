@@ -13,6 +13,7 @@ const ITENS: { href: string; rotulo: string; icone: IconName }[] = [
   { href: '/painel', rotulo: 'Painel', icone: 'home' },
   { href: '/negocios', rotulo: 'Negócios', icone: 'swap' },
   { href: '/recria', rotulo: 'Recria', icone: 'calc' },
+  { href: '/conta', rotulo: 'Conta', icone: 'user' },
 ];
 
 function assinarRede(listener: () => void): () => void {
@@ -71,11 +72,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="side-foot">
             <div className="tagline">Cada arroba na ponta do lápis.</div>
             <span role="status">{TEXTO_SYNC[sync]}</span>
-            {comConta && (
+            {comConta && sync === 'desligado' && (
               <div>
-                <Link href={sync === 'desligado' ? '/entrar' : '/conta'}>
-                  {sync === 'desligado' ? 'Entrar para guardar na nuvem' : 'Minha conta'}
-                </Link>
+                <Link href="/entrar">Entrar para guardar na nuvem</Link>
               </div>
             )}
           </div>

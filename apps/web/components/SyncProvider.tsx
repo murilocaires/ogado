@@ -20,7 +20,8 @@ import { browserSyncStore } from '../lib/sync/storage';
 /** `desligado`: sem conta (dados só neste aparelho). */
 export type SyncStatus = 'desligado' | 'sincronizando' | 'sincronizado' | 'offline' | 'erro';
 
-const SyncContext = createContext<SyncStatus>('desligado');
+/** Exportado para os testes das telas informarem o estado da sincronização. */
+export const SyncContext = createContext<SyncStatus>('desligado');
 
 export function useSyncStatus(): SyncStatus {
   return useContext(SyncContext);

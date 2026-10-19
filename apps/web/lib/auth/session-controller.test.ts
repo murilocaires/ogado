@@ -36,6 +36,10 @@ function fakeApi(overrides: Partial<ApiClient> = {}): ApiClient {
     login: vi.fn().mockResolvedValue(ok),
     getSession: vi.fn().mockResolvedValue(ok),
     logout: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+    updatePerfil: vi.fn(),
+    changePassword: vi.fn(),
+    updateFazenda: vi.fn(),
+    deleteAccount: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     ...overrides,
   };
 }
@@ -244,6 +248,77 @@ describe('RF-002 máquina de estados da sessão', () => {
     resolveOld({ ok: false, kind: 'nao-autenticado' });
     await pending;
 
+    expect(c.getState().status).toBe('autenticado');
+  });
+});
+
+describe('T-18 ações da Conta no controlador', () => {
+  const atualizada: SessionResponse = {
+    usuario: { ...sessionBody.usuario, nome: 'Ana Souza' },
+    fazenda: { ...sessionBody.fazenda, nome: 'Boa Vista', version: 2 },
+  };
+
+  async function autenticado(api: ApiClient, store = memoryStore(identity)) {
+    const clearLocalData = vi.fn();
+    const c = createSessionController({ api, identity: store, clearLocalData });
+    await c.verify();
+    return { c, store, clearLocalData };
+  }
+
+  it('RF-004 updatePerfil com sucesso troca o usuário do estado sem tocar na identidade', async () => {
+    const updatePerfil = vi.fn().mockResolvedValue({ ok: true, data: atualizada });
+    const { c, store } = await autenticado(fakeApi({ updatePerfil }));
+    const result = await c.updatePerfil({ nome: 'Ana Souza', email: 'ana@fazenda.com' });
+    expect(result.ok).toBe(true);
+    expect(c.getState()).toMatchObject({
+      status: 'autenticado',
+      usuario: { nome: 'Ana Souza' },
+    });
+    expect(store.current).toEqual(identity);
+  });
+
+  it('RF-011 updateFazenda com sucesso troca a fazenda (e a versão) do estado', async () => {
+    const updateFazenda = vi.fn().mockResolvedValue({ ok: true, data: atualizada });
+    const { c } = await autenticado(fakeApi({ updateFazenda }));
+    await c.updateFazenda({ nome: 'Boa Vista', version: 1 });
+    expect(c.getState()).toMatchObject({
+      status: 'autenticado',
+      fazenda: { nome: 'Boa Vista', version: 2 },
+    });
+  });
+
+  it('RF-080 401 em uma ação da Conta expira a sessão sem apagar nada', async () => {
+    const changePassword = vi.fn().mockResolvedValue({ ok: false, kind: 'nao-autenticado' });
+    const { c, store, clearLocalData } = await autenticado(fakeApi({ changePassword }));
+    await c.changePassword({ senhaAtual: 'a', novaSenha: 'Nova#Senha2027' });
+    expect(c.getState().status).toBe('expirada');
+    expect(store.current).toEqual(identity);
+    expect(clearLocalData).not.toHaveBeenCalled();
+  });
+
+  it('RF-005 senha atual errada (400) não expira a sessão', async () => {
+    const changePassword = vi.fn().mockResolvedValue({ ok: false, kind: 'credenciais' });
+    const { c } = await autenticado(fakeApi({ changePassword }));
+    await c.changePassword({ senhaAtual: 'x', novaSenha: 'Nova#Senha2027' });
+    expect(c.getState().status).toBe('autenticado');
+  });
+
+  it('RF-007 deleteAccount confirmado (204) limpa o aparelho e a identidade e fica anônimo', async () => {
+    const { c, store, clearLocalData } = await autenticado(fakeApi());
+    const result = await c.deleteAccount();
+    expect(result.ok).toBe(true);
+    expect(clearLocalData).toHaveBeenCalledTimes(1);
+    expect(store.current).toBeNull();
+    expect(c.getState().status).toBe('anonimo');
+  });
+
+  it('RF-007 deleteAccount rejeitado não apaga nada', async () => {
+    const deleteAccount = vi.fn().mockResolvedValue({ ok: false, kind: 'rede' });
+    const { c, store, clearLocalData } = await autenticado(fakeApi({ deleteAccount }));
+    const result = await c.deleteAccount();
+    expect(result.ok).toBe(false);
+    expect(clearLocalData).not.toHaveBeenCalled();
+    expect(store.current).toEqual(identity);
     expect(c.getState().status).toBe('autenticado');
   });
 });

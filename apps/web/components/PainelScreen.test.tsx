@@ -83,7 +83,7 @@ describe('RF-040 Painel', () => {
 });
 
 describe('RF-053 navegação', () => {
-  it('RF-053 tem 3 itens (Painel, Negócios, Recria) em cada barra, sem Conta, e marca a página atual', () => {
+  it('RF-053 tem 4 itens (Painel, Negócios, Recria, Conta) em cada barra e marca a página atual', () => {
     renderComApp(
       <AppShell>
         <p>conteúdo</p>
@@ -93,11 +93,10 @@ describe('RF-053 navegação', () => {
     expect(navs).toHaveLength(2); // lateral (desktop) e inferior (< 900 px)
     for (const nav of navs) {
       const links = within(nav).getAllByRole('link');
-      expect(links.map((l) => l.textContent)).toEqual(['Painel', 'Negócios', 'Recria']);
+      expect(links.map((l) => l.textContent)).toEqual(['Painel', 'Negócios', 'Recria', 'Conta']);
       expect(within(nav).getByRole('link', { name: 'Negócios' })).toHaveAttribute('aria-current', 'page');
       expect(within(nav).getByRole('link', { name: 'Painel' })).not.toHaveAttribute('aria-current');
     }
-    expect(screen.queryByText('Conta')).not.toBeInTheDocument();
     expect(screen.queryByText('PROTÓTIPO')).not.toBeInTheDocument();
   });
 
