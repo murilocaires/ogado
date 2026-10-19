@@ -42,6 +42,8 @@ Regra de leitura: **o protótipo vale onde ele fala**; onde ele é omisso (cadas
 | Q-B | O desconto automático por categoria usa só o **texto** da categoria. Aceitar essa heurística ou ter um campo "sexo" no lote? | RN-025; T-06/T-17 | Aceitar a heurística na v1; campo "sexo" fica para quando houver cadastro de categorias |
 | Q-C | **Variante `carcaca` do bruto** sai da v1? | RN-017/RN-023; T-03 (já implementado) | Adiar; manter o código do domínio sem expor na tela |
 | Q-D | **Primeiros passos (RF-003)** e **configurações com parâmetros editáveis (RF-011, RN-021)**: o protótipo não tem. Mantêm-se? | T-05 (backend pronto, front pendente) | Manter os requisitos; a tela de configurações vira uma seção da Conta; primeiros passos continuam opcionais até confirmação |
+
+> **Q-D encerrada em 2026-10-19 (decisão do dono):** não haverá tela de parâmetros editáveis (RF-011/RN-021); a área da fazenda não alimenta a "Área pastável". Primeiros passos (RF-003) seguem opcionais.
 | Q-E | O simulador abre **em branco** no protótipo; o ADR-0011 prevê abrir com os padrões da fazenda (rendimento, imposto, consumo, proteinado, sanidade). Qual vale? | T-07 | Manter os padrões da fazenda preenchidos |
 | Q-F | Regras de senha: o protótipo exige 8 caracteres; o T-04 (ADR-0010) é mais estrito. | RF-001 | Manter o ADR-0010 |
 | Q-G | Cenário "por ano safra" (RF-032): aceitar nome livre + data sem campo de safra? | T-08 | Aceitar |
