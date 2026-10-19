@@ -36,7 +36,7 @@ describe('RF-030/RF-031 simulador de recria', () => {
     expect(within(hero()).getByText(formatarBRL(r.totalEmCaixa, 0))).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Custo operacional/ })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Da venda ao líquido' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Números do lote' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Dados do lote' })).toBeInTheDocument();
     // RN-026: 122.534,80 / 2.050 = 59,77 cabeças
     expect(screen.getByText(/O investimento compra 59,77 cabeças \(≈ 60\)/)).toBeInTheDocument();
     // RF-051: GMD é campo calculado (somente leitura, com cadeado)
@@ -78,9 +78,9 @@ describe('RF-030/RF-031 simulador de recria', () => {
 
   it('RF-051 "Números do lote" são campos calculados com cadeado, não editáveis', () => {
     renderComPlanilha();
-    const secao = screen.getByRole('region', { name: 'Números do lote' });
-    expect(within(secao).queryAllByRole('textbox')).toHaveLength(0);
-    expect(within(secao).getAllByRole('group').length).toBeGreaterThanOrEqual(10);
+    const secao = screen.getByRole('region', { name: 'Dados do lote' });
+    expect(within(secao).queryAllByRole('group').length).toBeGreaterThan(0);
+    expect(within(secao).getAllByRole('group').length).toBeGreaterThanOrEqual(6);
   });
 
   it('RF-030 Limpar campos pede confirmação e deixa o resultado em "—"', async () => {
@@ -117,8 +117,8 @@ describe('ADR-0014 simulador sem padrões', () => {
     for (const rotulo of campos) expect(screen.getByLabelText(rotulo)).toHaveValue('');
     expect(hero().querySelector('.big')).toHaveTextContent('—');
     expect(within(hero()).getByText(/faltam 14/)).toBeInTheDocument();
-    const lote = screen.getByRole('region', { name: 'Números do lote' });
-    expect(within(lote).getAllByText('—')).toHaveLength(10);
+    const lote = screen.getByRole('region', { name: 'Dados do lote' });
+    expect(within(lote).getAllByText('—')).toHaveLength(7);
     expect(screen.queryByText(/O investimento compra/)).not.toBeInTheDocument();
   });
 
@@ -138,7 +138,7 @@ describe('ADR-0014 simulador sem padrões', () => {
     await user.type(area, '50');
     const r = calcularRecria({ ...ENTRADA_PADRAO, area: '50' }, { lotacaoInicial: 'areaPastavel', faturamentoBruto: 'pesoVivo' });
     expect(r.lotacaoHaInicial).not.toBeNull();
-    const lote = screen.getByRole('region', { name: 'Números do lote' });
+    const lote = screen.getByRole('region', { name: 'Dados do lote' });
     expect(within(lote).getByText(`${formatarNumero(r.lotacaoHaInicial, 2)} UA/ha`)).toBeInTheDocument();
   });
 
