@@ -5,11 +5,11 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { snapshotDaRecria } from '../lib/cenarios';
 import { BOM } from '../lib/exportacao/csv';
-import { criarRepoLocal, recriaFormPadrao } from '../lib/repo/local-repo';
 import type { OGadoRepo, RecriaEntity, RecriaForm } from '../lib/repo/types';
 import { PainelScreen } from './PainelScreen';
 import { RecriaScreen } from './RecriaScreen';
 import { criarStorageMemoria, renderComApp } from './test-utils';
+import { criarRepoComPlanilha, recriaFormPlanilha } from '../lib/repo/planilha.test-support';
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/recria',
@@ -40,8 +40,9 @@ vi.mock('../lib/exportacao/baixar', async (importOriginal) => ({
   },
 }));
 
+/** Repositório com as entradas da planilha preenchidas (o simulador novo abre vazio, ADR-0014). */
 function novoRepo(): OGadoRepo {
-  return criarRepoLocal({ storage: () => criarStorageMemoria() });
+  return criarRepoComPlanilha(() => criarStorageMemoria());
 }
 
 /** Guarda um cenário direto no repositório, com as entradas padrão alteradas por `form`. */
@@ -51,8 +52,8 @@ function semear(repo: OGadoRepo, nome: string, form: Partial<RecriaForm> = {}): 
     version: 1,
     updatedAt: '2026-10-18T10:00:00.000Z',
     deletedAt: null,
-    form: { ...recriaFormPadrao(), ...form },
-    lotacaoInicial: 'fixa80',
+    form: { ...recriaFormPlanilha(), ...form },
+    lotacaoInicial: 'areaPastavel',
   };
   const snapshot = snapshotDaRecria(recria, nome);
   if (!snapshot) throw new Error('snapshot indefinido');

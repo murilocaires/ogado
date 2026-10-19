@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { preencherPlanilha } from './planilha';
 
 /**
  * E2 (cenários da recria): jornada SEM API e SEM login, dados no navegador.
@@ -24,6 +25,7 @@ for (const vp of viewports) {
 
       await page.goto('/recria');
       const resultado = page.getByRole('region', { name: 'Resultado da recria' });
+      await preencherPlanilha(page);
       await expect(resultado.locator('.hero .big')).toHaveText('R$ 102.408,05');
 
       // 1) salva o cenário com os padrões da planilha

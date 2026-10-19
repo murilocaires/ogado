@@ -97,7 +97,7 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
   const dados = useRepoState();
   const repo = useRepo();
   const toast = useToast();
-  const [confirmar, setConfirmar] = useState<'padrao' | 'vazio' | null>(null);
+  const [confirmando, setConfirmando] = useState(false);
   const [aba, setAba] = useState<AbaRecria>(abaInicial);
   const [nomeando, setNomeando] = useState(false);
 
@@ -155,10 +155,7 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
         acoes={
           simulador ? (
             <>
-              <button type="button" className="btn sec sm" onClick={() => setConfirmar('padrao')}>
-                Restaurar padrões
-              </button>
-              <button type="button" className="btn sec sm" onClick={() => setConfirmar('vazio')}>
+              <button type="button" className="btn sec sm" onClick={() => setConfirmando(true)}>
                 Limpar campos
               </button>
             </>
@@ -222,30 +219,6 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
                       );
                     })}
                   </div>
-                  {g.titulo === 'Lote e área' && (
-                    <div className="lbl" style={{ marginTop: 14 }}>
-                      <label htmlFor="r-lotacao">Lotação inicial (UA/ha) calculada sobre</label>
-                      <div className="fld select-fld">
-                        <select
-                          id="r-lotacao"
-                          value={recria.lotacaoInicial}
-                          onChange={(e) =>
-                            repo.atualizarRecria({
-                              lotacaoInicial:
-                                e.target.value === 'areaPastavel' ? 'areaPastavel' : 'fixa80',
-                            })
-                          }
-                        >
-                          <option value="fixa80">80 ha de referência</option>
-                          <option value="areaPastavel">a área pastável informada</option>
-                        </select>
-                      </div>
-                      <span className="hint">
-                        Escolha a base da lotação inicial. Isto só altera a lotação inicial, não o
-                        resultado financeiro.
-                      </span>
-                    </div>
-                  )}
                 </section>
               ))}
             </div>
@@ -469,21 +442,17 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
         />
       )}
 
-      {confirmar && (
+      {confirmando && (
         <ConfirmDialog
-          titulo={confirmar === 'padrao' ? 'Restaurar os padrões?' : 'Limpar todos os campos?'}
-          texto={
-            confirmar === 'padrao'
-              ? 'Os campos voltam aos valores de exemplo da planilha. O que você digitou será substituído.'
-              : 'Todos os campos ficam em branco e o resultado aparece como "—" até você preencher de novo.'
-          }
-          confirmar={confirmar === 'padrao' ? 'Restaurar' : 'Limpar'}
+          titulo="Limpar todos os campos?"
+          texto='Todos os campos ficam em branco e o resultado aparece como "—" até você preencher de novo.'
+          confirmar="Limpar"
           perigo
-          onCancel={() => setConfirmar(null)}
+          onCancel={() => setConfirmando(false)}
           onConfirm={() => {
-            repo.redefinirRecria(confirmar);
-            toast(confirmar === 'padrao' ? 'Padrões restaurados.' : 'Campos limpos.');
-            setConfirmar(null);
+            repo.limparRecria();
+            toast('Campos limpos.');
+            setConfirmando(false);
           }}
         />
       )}

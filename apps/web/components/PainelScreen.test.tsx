@@ -4,6 +4,7 @@ import { screen, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { criarRepoLocal } from '../lib/repo/local-repo';
+import { criarRepoComPlanilha } from '../lib/repo/planilha.test-support';
 import type { LoteSalvar } from '../lib/repo/types';
 import { AppShell } from './AppShell';
 import { PainelScreen } from './PainelScreen';
@@ -54,8 +55,20 @@ describe('RF-040 Painel', () => {
       'href',
       '/negocios?novo=compra',
     );
+    // ADR-0014: simulador novo vazio -> o cartão mostra "—" e orienta a preencher
+    const cartao = screen.getByRole('region', { name: /Recria, simulação atual/ });
+    expect(within(cartao).getAllByText('—').length).toBeGreaterThanOrEqual(1);
+    expect(within(cartao).getByText(/Preencha o simulador da recria/)).toBeInTheDocument();
+  });
+
+  it('RF-040 com as entradas da planilha preenchidas, a recria atual mostra o valor de ouro', () => {
+    const repo = criarRepoComPlanilha(() => criarStorageMemoria());
+    renderComApp(<PainelScreen />, repo);
     const liquido = formatarBRL(calcularRecria(ENTRADA_PADRAO).faturamentoLiquido);
-    expect(within(screen.getByRole('region', { name: /Recria, simulação atual/ })).getByText(liquido)).toBeInTheDocument();
+    expect(liquido).toBe('R$ 102.408,05');
+    const cartao = screen.getByRole('region', { name: /Recria, simulação atual/ });
+    expect(within(cartao).getByText(liquido)).toBeInTheDocument();
+    expect(within(cartao).queryByText(/Preencha o simulador/)).not.toBeInTheDocument();
   });
 
   it('RF-040 atalhos levam a novo lote (compra, venda) e à recria', () => {

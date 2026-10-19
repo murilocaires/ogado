@@ -127,6 +127,11 @@ export function PainelScreen() {
               <b>{brl(porHa, 0)}</b>
             </div>
           </div>
+          {!ultimo && liquido === null && (
+            <p className="hint" style={{ margin: '12px 0 0' }}>
+              Preencha o simulador da recria para ver o resultado aqui.
+            </p>
+          )}
           <p style={{ margin: '14px 0 0', display: 'flex', gap: 18, flexWrap: 'wrap' }}>
             {ultimo && (
               <Link href="/recria?aba=cenarios" className="link">

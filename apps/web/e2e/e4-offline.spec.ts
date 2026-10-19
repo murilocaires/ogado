@@ -1,4 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
+import { preencherPlanilha } from './planilha';
 
 /**
  * E4: o app abre e calcula sem internet depois da primeira visita, e o que se lança offline sobe
@@ -104,6 +105,9 @@ test('RF-072/RF-071 abre sem internet após a primeira visita e a Recria calcula
   await irPara(page, 'Recria');
   await expect(page).toHaveURL(/\/recria$/);
   const resultado = page.getByRole('region', { name: 'Resultado da recria' });
+  // ADR-0014: o simulador abre vazio; as entradas da planilha são digitadas sem internet.
+  await expect(resultado.locator('.hero .big')).toHaveText('—');
+  await preencherPlanilha(page);
   await expect(resultado.locator('.hero .big')).toHaveText('R$ 102.408,05');
 
   await irPara(page, 'Conta');

@@ -3,11 +3,11 @@ import { criarStorageMemoria } from '../../components/test-utils';
 import { snapshotDaRecria } from '../cenarios';
 import {
   criarRepoLocal,
-  recriaFormPadrao,
   STORAGE_KEY,
   STORAGE_KEY_E1,
 } from './local-repo';
 import type { LoteSalvar, RecriaEntity } from './types';
+import { recriaFormPlanilha } from './planilha.test-support';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
@@ -68,10 +68,26 @@ describe('RF-020 repositório local (ADR-0007)', () => {
     expect(guardado.lotes[0]?.deletedAt).not.toBeNull();
   });
 
-  it('RNF-001 a recria abre com os padrões da planilha (percentuais em %)', () => {
+  it('RF-030 / ADR-0014 a recria nova abre com todos os campos vazios e lotação sobre a área pastável', () => {
     const snap = criarRepoLocal({ storage: () => criarStorageMemoria() }).getSnapshot();
-    expect(snap.status === 'pronto' && snap.recria.form).toEqual(recriaFormPadrao());
-    expect(recriaFormPadrao()).toMatchObject({
+    expect(snap.status).toBe('pronto');
+    if (snap.status !== 'pronto') return;
+    expect(Object.values(snap.recria.form).every((v) => v === '')).toBe(true);
+    expect(Object.keys(snap.recria.form)).toHaveLength(14);
+    expect(snap.recria.lotacaoInicial).toBe('areaPastavel');
+  });
+
+  it('ADR-0014 entradas já salvas pelo usuário são preservadas (inclusive fixa80)', () => {
+    const storage = criarStorageMemoria();
+    const repo = criarRepoLocal({ storage: () => storage });
+    repo.atualizarRecria({ form: { dias: '300' }, lotacaoInicial: 'fixa80' });
+    const depois = criarRepoLocal({ storage: () => storage }).getSnapshot();
+    expect(depois.status === 'pronto' && depois.recria.form.dias).toBe('300');
+    expect(depois.status === 'pronto' && depois.recria.lotacaoInicial).toBe('fixa80');
+  });
+
+  it('RNF-001 as entradas da planilha (helper de teste) usam percentuais em %', () => {
+    expect(recriaFormPlanilha()).toMatchObject({
       investimento: '122534,8',
       consumoPct: '0,3',
       rendCarcaca: '52',
@@ -80,20 +96,20 @@ describe('RF-020 repositório local (ADR-0007)', () => {
     });
   });
 
-  it('RF-030 notifica quem assina e redefine a recria', () => {
+  it('RF-030 notifica quem assina e limpa a recria', () => {
     const repo = criarRepoLocal({ storage: () => criarStorageMemoria() });
     let chamadas = 0;
     const cancelar = repo.subscribe(() => {
       chamadas += 1;
     });
-    repo.atualizarRecria({ form: { dias: '300' }, lotacaoInicial: 'areaPastavel' });
-    repo.redefinirRecria('vazio');
+    repo.atualizarRecria({ form: { dias: '300' }, lotacaoInicial: 'fixa80' });
+    repo.limparRecria();
     const snap = repo.getSnapshot();
     expect(chamadas).toBe(2);
     expect(snap.status === 'pronto' && snap.recria.form.dias).toBe('');
-    expect(snap.status === 'pronto' && snap.recria.lotacaoInicial).toBe('fixa80');
+    expect(snap.status === 'pronto' && snap.recria.lotacaoInicial).toBe('areaPastavel');
     cancelar();
-    repo.redefinirRecria('padrao');
+    repo.limparRecria();
     expect(chamadas).toBe(2);
   });
 });
@@ -165,7 +181,7 @@ function recriaPadraoEntidade(): RecriaEntity {
     version: 1,
     updatedAt: '2026-10-18T10:00:00.000Z',
     deletedAt: null,
-    form: recriaFormPadrao(),
+    form: recriaFormPlanilha(),
     lotacaoInicial: 'fixa80',
   };
 }
@@ -264,7 +280,7 @@ describe('RNF-004 migração do storage da E1 para a E2', () => {
         preco: '300',
       },
     ],
-    recria: { ...recriaPadraoEntidade(), id: 'r-e1', form: { ...recriaFormPadrao(), dias: '300' } },
+    recria: { ...recriaPadraoEntidade(), id: 'r-e1', form: { ...recriaFormPlanilha(), dias: '300' } },
   };
 
   it('RNF-004 lê a chave da E1 sem perder lotes nem a recria e passa a gravar na chave nova', () => {

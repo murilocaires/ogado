@@ -2,8 +2,6 @@
 // - Chave versionada; toda leitura/escrita em try/catch (modo privado, cota, storage bloqueado).
 // - Sem storage o app continua funcionando em memória e avisa (`persistencia: 'indisponivel'`).
 // - SSR-safe: no servidor o snapshot é `carregando`; o storage só é tocado no cliente.
-import { Decimal, ENTRADA_PADRAO } from '@ogado/domain';
-import { paraCampo } from '../format';
 import {
   CENARIO_NOME_MAX,
   CENARIO_RESULTADO_CAMPOS,
@@ -29,21 +27,6 @@ const SCHEMA_E2 = 2;
 const SCHEMA_E1 = 1;
 /** Desconto padrão da venda (kg/cab.) usado ao converter lotes do esquema antigo (ADR-0013). */
 const DESCONTO_KG_MIGRACAO = '10';
-
-/** Campos digitados em % na tela e guardados em fração no domínio. */
-const CAMPOS_PERCENTUAIS = new Set(['consumoPct', 'rendCarcaca', 'imposto']);
-
-/** Padrões da planilha (ENTRADA_PADRAO) como texto de campo pt-BR (fração -> %). */
-export function recriaFormPadrao(): RecriaForm {
-  const form = {} as RecriaForm;
-  for (const campo of RECRIA_CAMPOS) {
-    const original = ENTRADA_PADRAO[campo];
-    form[campo] = paraCampo(
-      CAMPOS_PERCENTUAIS.has(campo) ? new Decimal(original).times(100) : original,
-    );
-  }
-  return form;
-}
 
 export function recriaFormVazio(): RecriaForm {
   const form = {} as RecriaForm;
@@ -200,18 +183,19 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
 
   let lotes: LoteEntity[] = []; // inclui tombstones (deletedAt)
   let cenarios: CenarioEntity[] = []; // inclui tombstones (deletedAt)
-  let recria: RecriaEntity = recriaPadrao();
+  let recria: RecriaEntity = recriaInicial();
   let persistencia: PersistenciaStatus = 'ok';
   let snapshot: RepoSnapshot | null = null;
 
-  function recriaPadrao(): RecriaEntity {
+  /** Simulador novo: todos os campos vazios e lotação sobre a área pastável (ADR-0014). */
+  function recriaInicial(): RecriaEntity {
     return {
       id: gerarId(),
       version: 1,
       updatedAt: agora().toISOString(),
       deletedAt: null,
-      form: recriaFormPadrao(),
-      lotacaoInicial: 'fixa80',
+      form: recriaFormVazio(),
+      lotacaoInicial: 'areaPastavel',
     };
   }
 
@@ -251,7 +235,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
     } catch {
       /* JSON corrompido: cai no backup abaixo */
     }
-    // Conteúdo ilegível: guarda uma cópia para não perder nada e segue com os padrões.
+    // Conteúdo ilegível: guarda uma cópia para não perder nada e segue com o simulador vazio.
     try {
       storage.setItem(`${chave}.corrompido`, bruto);
     } catch {
@@ -324,7 +308,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
     limpar() {
       lotes = [];
       cenarios = [];
-      recria = recriaPadrao();
+      recria = recriaInicial();
       try {
         const storage = obterStorage();
         storage?.removeItem(STORAGE_KEY);
@@ -383,12 +367,12 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
       };
       notificar();
     },
-    redefinirRecria(modo) {
+    limparRecria() {
       garantir();
       recria = {
         ...recria,
-        form: modo === 'padrao' ? recriaFormPadrao() : recriaFormVazio(),
-        lotacaoInicial: 'fixa80',
+        form: recriaFormVazio(),
+        lotacaoInicial: 'areaPastavel',
         version: recria.version + 1,
         updatedAt: agora().toISOString(),
       };

@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { criarStorageMemoria } from '../../components/test-utils';
 import { snapshotDaRecria } from '../cenarios';
 import { loteParaDominio } from '../negocios';
-import { criarRepoLocal, recriaFormPadrao } from '../repo/local-repo';
+import { criarRepoLocal } from '../repo/local-repo';
 import type { LoteSalvar, RecriaEntity } from '../repo/types';
 import { BOM, tabelaParaCsv } from './csv';
 import { prepararNegocios, tabelaDeCenarios, tabelaDeNegocios } from './dados';
+import { recriaFormPlanilha } from '../repo/planilha.test-support';
 
 const compra = (extra: Partial<LoteSalvar> = {}): LoteSalvar => ({
   tipo: 'compra',
@@ -117,7 +118,7 @@ describe('RF-041 tabela de Cenários vem do snapshot salvo', () => {
       version: 1,
       updatedAt: '2026-10-18T10:00:00.000Z',
       deletedAt: null,
-      form: recriaFormPadrao(),
+      form: recriaFormPlanilha(),
       lotacaoInicial: 'fixa80',
     };
     const snapshot = snapshotDaRecria(recria, 'Safra; "otimista"');
