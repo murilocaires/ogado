@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 interface Politica {
   CACHE_ESTATICO: string;
   CACHE_PAGINAS: string;
+  versaoDe: (search: string) => string;
   estrategia: (req: { method: string; url: string; mode?: string }, origem: string) => string;
   podeGuardar: (r: {
     status: number;
@@ -19,7 +20,10 @@ interface Politica {
 
 // O arquivo é um script clássico (carregado por importScripts) dentro de um pacote ESM: avaliamos o
 // código como o navegador faria, expondo `module` para recolher a API.
-const codigo = readFileSync(fileURLToPath(new URL('../../public/sw-policy.js', import.meta.url)), 'utf8');
+const codigo = readFileSync(
+  fileURLToPath(new URL('../../public/sw-policy.js', import.meta.url)),
+  'utf8',
+);
 const modulo: { exports: Politica } = { exports: {} as Politica };
 new Function('module', codigo)(modulo);
 const P = modulo.exports;
@@ -41,9 +45,9 @@ describe('service worker: o que entra no cache (ADR-0007 §3, RF-071)', () => {
     expect(P.estrategia({ method: 'GET', url: `${O}/_next/static/chunks/a-123.js` }, O)).toBe(
       'estatico',
     );
-    expect(
-      P.estrategia({ method: 'GET', url: 'https://fonts.gstatic.com/s/geist.woff2' }, O),
-    ).toBe('fonte');
+    expect(P.estrategia({ method: 'GET', url: 'https://fonts.gstatic.com/s/geist.woff2' }, O)).toBe(
+      'fonte',
+    );
     expect(P.estrategia({ method: 'GET', url: `${O}/recria`, mode: 'navigate' }, O)).toBe(
       'navegacao',
     );
@@ -86,5 +90,38 @@ describe('service worker: o que entra no cache (ADR-0007 §3, RF-071)', () => {
   it('os caches usam o prefixo ogado- (o activate limpa por prefixo e versão)', () => {
     expect(P.CACHE_ESTATICO.startsWith('ogado-')).toBe(true);
     expect(P.CACHE_PAGINAS.startsWith('ogado-')).toBe(true);
+  });
+});
+
+describe('service worker: versão do cache por build (RF-077)', () => {
+  it('a versão vem do ?v= da URL de registro e muda a cada deploy', () => {
+    expect(P.versaoDe('?v=abc123')).toBe('abc123');
+    expect(P.versaoDe('?v=2026-10.1')).toBe('2026-10.1');
+    expect(P.versaoDe('?x=1&v=xyz')).toBe('xyz');
+  });
+
+  it('sem ?v= (ou vazio/malicioso) cai na versão padrão sem caracteres perigosos', () => {
+    expect(P.versaoDe('')).toBe('v1');
+    expect(P.versaoDe('?v=')).toBe('v1');
+    expect(P.versaoDe('?v=../../x')).toBe('....x');
+    expect(P.versaoDe('?v=a b/c')).toBe('abc');
+  });
+});
+
+describe('sw.js: atualização só com aceite do usuário (RF-077)', () => {
+  const fonte = readFileSync(fileURLToPath(new URL('../../public/sw.js', import.meta.url)), 'utf8');
+
+  /** Trecho de um listener: do `addEventListener('<tipo>'` até o `});` que fecha a função. */
+  const listener = (tipo: string): string => {
+    const ini = fonte.indexOf(`addEventListener('${tipo}'`);
+    const fim = fonte.indexOf('\n});', ini);
+    return ini < 0 || fim < 0 ? '' : fonte.slice(ini, fim);
+  };
+
+  it('não chama skipWaiting no install; só ao receber SKIP_WAITING', () => {
+    expect(listener('install')).not.toBe('');
+    expect(listener('install')).not.toContain('skipWaiting');
+    expect(listener('message')).toContain("'SKIP_WAITING'");
+    expect(listener('message')).toContain('skipWaiting()');
   });
 });

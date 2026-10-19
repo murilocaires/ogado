@@ -1,0 +1,57 @@
+// Texto e tom do indicador global de sincronização (RF-075): Sincronizado · Sem conexão ·
+// N pendentes · Erro. Puro, para a mesma regra valer no menu lateral e na tela estreita.
+export type StatusSync = 'desligado' | 'sincronizando' | 'sincronizado' | 'offline' | 'erro';
+
+export type TomIndicador = 'neutro' | 'ok' | 'pendente' | 'offline' | 'erro';
+
+export interface RotuloSync {
+  tom: TomIndicador;
+  /** Curto, para a pílula. */
+  texto: string;
+  /** Frase de apoio (menu lateral). */
+  detalhe: string;
+}
+
+export function pluralPendentes(n: number): string {
+  return `${n} ${n === 1 ? 'pendente' : 'pendentes'}`;
+}
+
+export function rotuloSync(status: StatusSync, pendentes: number, online: boolean): RotuloSync {
+  if (status === 'desligado') {
+    return {
+      tom: 'neutro',
+      texto: 'Só neste aparelho',
+      detalhe: 'Seus dados ficam salvos neste navegador.',
+    };
+  }
+  const resto = pendentes > 0 ? ` · ${pluralPendentes(pendentes)}` : '';
+  if (status === 'offline' || !online) {
+    return {
+      tom: 'offline',
+      texto: `Sem conexão${resto}`,
+      detalhe: 'Salvo neste aparelho, sobe quando a conexão voltar.',
+    };
+  }
+  if (status === 'erro') {
+    return {
+      tom: 'erro',
+      texto: `Erro ao sincronizar${resto}`,
+      detalhe: 'Não foi possível sincronizar agora. Tentaremos de novo.',
+    };
+  }
+  if (status === 'sincronizando') {
+    return {
+      tom: 'pendente',
+      texto: `Sincronizando…${resto}`,
+      detalhe: 'Sincronizando com a nuvem…',
+    };
+  }
+  if (pendentes > 0) {
+    return {
+      tom: 'pendente',
+      texto: pluralPendentes(pendentes),
+      detalhe: 'Salvo neste aparelho, ainda não enviado para a nuvem.',
+    };
+  }
+  return { tom: 'ok', texto: 'Sincronizado', detalhe: 'Dados salvos na sua conta.' };
+}

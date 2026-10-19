@@ -9,6 +9,7 @@ import { sessionBody } from '../lib/auth/fixtures';
 import { createSessionController, type LocalIdentity } from '../lib/auth/session-controller';
 import { SessionProvider } from '../lib/auth/session-provider';
 import { ContaScreen } from './ContaScreen';
+import { RepoProvider } from '../lib/repo/repo-provider';
 import { SyncContext, type SyncStatus } from './SyncProvider';
 import { ToastProvider } from './Toast';
 
@@ -87,11 +88,13 @@ async function setup({
   const user = userEvent.setup();
   render(
     <SessionProvider controller={controller}>
-      <SyncContext.Provider value={sync}>
-        <ToastProvider>
-          <ContaScreen />
-        </ToastProvider>
-      </SyncContext.Provider>
+      <RepoProvider>
+        <SyncContext.Provider value={sync}>
+          <ToastProvider>
+            <ContaScreen />
+          </ToastProvider>
+        </SyncContext.Provider>
+      </RepoProvider>
     </SessionProvider>,
   );
   return { user, api: cliente, controller, clearLocalData, getIdentity: () => current };

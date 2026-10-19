@@ -11,6 +11,7 @@ import { ConfirmDialog } from './Dialog';
 import { Icon } from './Icon';
 import { InfoPopover } from './InfoPopover';
 import { LoteModal } from './LoteModal';
+import { SeloSync } from './SyncIndicador';
 import { useToast } from './Toast';
 
 type Aba = 'todas' | 'compras' | 'vendas';
@@ -77,7 +78,9 @@ export function NegociosScreen() {
   }
 
   const visiveis = ordenarPorData(
-    itens.filter((x) => aba === 'todas' || (aba === 'compras' ? x.tipo === 'compra' : x.tipo === 'venda')),
+    itens.filter(
+      (x) => aba === 'todas' || (aba === 'compras' ? x.tipo === 'compra' : x.tipo === 'venda'),
+    ),
   );
   const todas = aba === 'todas';
   const nCompras = itens.filter((x) => x.tipo === 'compra').length;
@@ -171,7 +174,12 @@ export function NegociosScreen() {
         </div>
       </div>
 
-      <div className="seg" role="tablist" aria-label="Tipo de lançamento" style={{ maxWidth: 420, margin: '16px 0 10px' }}>
+      <div
+        className="seg"
+        role="tablist"
+        aria-label="Tipo de lançamento"
+        style={{ maxWidth: 420, margin: '16px 0 10px' }}
+      >
         {ABAS.map((a) => (
           <button
             key={a.id}
@@ -229,6 +237,7 @@ export function NegociosScreen() {
                     <td>
                       {todas && <Etiqueta tipo={x.tipo} />}
                       <b>Lote {x.lote.numero}</b>
+                      <SeloSync id={x.lote.id} />
                       <br />
                       <span className="hint">{descricaoItem(x)}</span>
                     </td>
@@ -251,15 +260,18 @@ export function NegociosScreen() {
                   <b>
                     {todas && <Etiqueta tipo={x.tipo} />}
                     Lote {x.lote.numero} · {capitalizar(x.lote.categoria)}
+                    <SeloSync id={x.lote.id} />
                   </b>
-                  <span style={todas && x.tipo === 'venda' ? { color: 'var(--folha-600)' } : undefined}>
+                  <span
+                    style={todas && x.tipo === 'venda' ? { color: 'var(--folha-600)' } : undefined}
+                  >
                     {brl(x.linha.total)}
                   </span>
                 </div>
                 <div className="l2">
                   <span>
-                    {num(x.linha.qtd, 0)} cab. · {num(x.linha.arrobas, 2)} @ · {brl(x.linha.preco, 0)}/@
-                    · {dataBR(x.lote.data)}
+                    {num(x.linha.qtd, 0)} cab. · {num(x.linha.arrobas, 2)} @ ·{' '}
+                    {brl(x.linha.preco, 0)}/@ · {dataBR(x.lote.data)}
                   </span>
                   <span>{botoes(x)}</span>
                 </div>

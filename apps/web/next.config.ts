@@ -11,7 +11,19 @@ const apiOrigin =
   process.env['API_ORIGIN'] ??
   (process.env['NODE_ENV'] === 'production' ? undefined : 'http://localhost:3001');
 
+/**
+ * Id do build: muda a cada deploy e vira a versão do service worker e dos caches (RF-077). Vem do
+ * ambiente (`NEXT_PUBLIC_BUILD_ID`, ou o commit da Vercel); sem isso, do instante do build.
+ */
+const buildId =
+  process.env['NEXT_PUBLIC_BUILD_ID'] ??
+  process.env['VERCEL_GIT_COMMIT_SHA']?.slice(0, 12) ??
+  Date.now().toString(36);
+// Os processos filhos do build herdam o ambiente: todos enxergam o mesmo id.
+process.env['NEXT_PUBLIC_BUILD_ID'] = buildId;
+
 const config: NextConfig = {
+  env: { NEXT_PUBLIC_BUILD_ID: buildId },
   transpilePackages: ['@ogado/contracts', '@ogado/domain'],
   agentRules: false,
   async rewrites() {

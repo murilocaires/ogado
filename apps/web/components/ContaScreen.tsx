@@ -21,7 +21,8 @@ import { ConfirmDialog, Dialog } from './Dialog';
 import { Icon, type IconName } from './Icon';
 import { InstalarApp } from './InstalarApp';
 import { PasswordRules } from './PasswordRules';
-import { useSyncStatus } from './SyncProvider';
+import { SincronizacaoPainel } from './SincronizacaoPainel';
+import { useSyncInfo, useSyncStatus } from './SyncProvider';
 import { useToast } from './Toast';
 
 /** Tela Conta (RF-004, RF-005, RF-007, RF-011, RF-078), copiada do protótipo, sem Google. */
@@ -569,9 +570,10 @@ function SairDialog({ onClose, onFalha }: { onClose: () => void; onFalha: () => 
   const router = useRouter();
   const controller = useSessionController();
   const sync = useSyncStatus();
+  const { totalPendentes } = useSyncInfo();
   const [saindo, setSaindo] = useState(false);
   const ocupado = useRef(false);
-  const comPendencias = sync !== 'sincronizado';
+  const comPendencias = sync !== 'sincronizado' || totalPendentes > 0;
 
   async function sair(): Promise<void> {
     if (ocupado.current) return;
@@ -605,8 +607,9 @@ function SairDialog({ onClose, onFalha }: { onClose: () => void; onFalha: () => 
       </p>
       {comPendencias && (
         <div className="note erro" role="alert" style={{ marginTop: 12 }}>
-          Atenção: há alterações que ainda não foram sincronizadas com a nuvem. Se sair agora, elas
-          serão perdidas.
+          {totalPendentes > 0
+            ? `Atenção: ${totalPendentes} ${totalPendentes === 1 ? 'lançamento ainda não foi enviado' : 'lançamentos ainda não foram enviados'} para a nuvem. Se sair agora, ${totalPendentes === 1 ? 'ele será perdido' : 'eles serão perdidos'}.`
+            : 'Atenção: há alterações que ainda não foram sincronizadas com a nuvem. Se sair agora, elas serão perdidas.'}
         </div>
       )}
       <div className="actions">
@@ -830,6 +833,13 @@ function ContaAutenticada({ usuario, fazenda }: { usuario: UsuarioDto; fazenda: 
         </Secao>
         <Secao icone="home" titulo="Fazenda" descricao="Dados usados nos seus cálculos.">
           <FazendaSecao fazenda={fazenda} />
+        </Secao>
+        <Secao
+          icone="swap"
+          titulo="Sincronização"
+          descricao="O que já subiu para a nuvem e o que precisa da sua decisão."
+        >
+          <SincronizacaoPainel />
         </Secao>
         <InstalarSecao />
         <Secao icone="trash" titulo="Zona de perigo" descricao="Ações sem volta." perigo>

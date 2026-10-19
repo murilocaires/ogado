@@ -5,8 +5,17 @@
 (function (root) {
   'use strict';
 
-  /** Mude ao alterar a estratégia: o activate apaga os caches de outras versões. */
-  var VERSAO = 'v1';
+  /**
+   * Versão do cache = id do build, vindo da URL de registro (`/sw.js?v=<build>`). Cada deploy muda a
+   * URL, então o navegador instala o worker novo e o activate apaga os caches das outras versões.
+   * Sem `?v=` (testes, dev) cai em 'v1'.
+   */
+  function versaoDe(search) {
+    var m = /[?&]v=([^&]*)/.exec(search || '');
+    var v = m ? m[1].replace(/[^A-Za-z0-9._-]/g, '') : '';
+    return v || 'v1';
+  }
+  var VERSAO = versaoDe(root && root.location ? root.location.search : '');
   var CACHE_ESTATICO = 'ogado-estatico-' + VERSAO;
   var CACHE_PAGINAS = 'ogado-paginas-' + VERSAO;
 
@@ -86,6 +95,7 @@
 
   var api = {
     VERSAO: VERSAO,
+    versaoDe: versaoDe,
     CACHE_ESTATICO: CACHE_ESTATICO,
     CACHE_PAGINAS: CACHE_PAGINAS,
     ROTAS: ROTAS,

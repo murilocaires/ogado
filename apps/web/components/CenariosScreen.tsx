@@ -21,6 +21,7 @@ import { ConfirmDialog } from './Dialog';
 import { Icon } from './Icon';
 import { InfoPopover } from './InfoPopover';
 import { NomeDialog } from './NomeDialog';
+import { SeloSync } from './SyncIndicador';
 import { useToast } from './Toast';
 
 type Visao = 'lista' | 'grade';
@@ -248,6 +249,7 @@ export function CenariosScreen({
                 <div className="t">
                   <b>
                     {c.nome}
+                    <SeloSync id={c.id} />
                     {ehMelhor(c, cenarios) && (
                       <>
                         {' '}
@@ -310,6 +312,7 @@ export function CenariosScreen({
                 <div className="nm2">
                   <b>
                     {c.nome}
+                    <SeloSync id={c.id} />
                     {ehMelhor(c, cenarios) && (
                       <>
                         {' '}
