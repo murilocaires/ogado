@@ -1853,11 +1853,3 @@
   gap: 8px;
   flex: 0 0 auto;
 }
-
-/* A fracao ocupa seu proprio espaco sem comprimir a parte inteira. */
-.app .fld input.numero-fracao {
-  flex: 0 0 3ch;
-  width: 3ch;
-  min-width: 3ch;
-  text-align: left;
-}

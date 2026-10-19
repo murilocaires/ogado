@@ -1,5 +1,12 @@
-import { useId, useLayoutEffect, useRef, type ReactNode, type InputHTMLAttributes } from 'react';
-import { valorCampo } from '../lib/format';
+import {
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type InputHTMLAttributes,
+} from 'react';
+import { num, valorCampo } from '../lib/format';
 import { InfoPopover } from './InfoPopover';
 import { Icon } from './Icon';
 import type { InfoKey } from '../lib/info';
@@ -18,22 +25,22 @@ interface CampoNumeroProps {
   mascara?: boolean;
 }
 
-/** Edicao somente de digitos, preservando a posicao do cursor ao agrupar milhares. */
-function ParteNumero({
+/** Um campo com virgula opcional e agrupamento automatico de milhares. */
+function NumeroFormatado({
   value,
   onValue,
-  agrupar = false,
-  limite,
+  casas,
   ...props
 }: Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> & {
   value: string;
   onValue: (texto: string) => void;
-  agrupar?: boolean;
-  limite?: number;
+  casas: number;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const cursor = useRef<number | null>(null);
-  const exibido = agrupar ? value.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : value;
+  const [rascunho, setRascunho] = useState<string | null>(null);
+  const numero = valorCampo(value);
+  const exibido = rascunho ?? (numero ? num(numero, casas) : value);
   useLayoutEffect(() => {
     if (cursor.current !== null) {
       ref.current?.setSelectionRange(cursor.current, cursor.current);
@@ -41,27 +48,41 @@ function ParteNumero({
     }
   });
   const atualizar = (texto: string, posicao: number) => {
-    const digitos = texto.replace(/\D/g, '');
-    if (limite !== undefined && digitos.length > limite) return;
-    const limpo = agrupar ? digitos.replace(/^0+(?=\d)/, '') : digitos;
-    const formatado = agrupar ? limpo.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : limpo;
+    const limpo = texto.replace(/\./g, '');
+    const valido = casas > 0 ? /^\d*(,\d*)?$/.test(limpo) : /^\d*$/.test(limpo);
+    if (!valido) return;
+    const [inteiro = '', fracao = ''] = limpo.split(',');
+    if (fracao.length > casas) return;
+    const parte = inteiro.replace(/^0+(?=\d)/, '') || (limpo.includes(',') ? '0' : '');
+    const formatado =
+      parte.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (limpo.includes(',') ? `,${fracao}` : '');
     let pos = formatado.length;
-    for (let n = texto.slice(posicao).replace(/\D/g, '').length; pos > 0 && n > 0;) {
-      if (/\d/.test(formatado[--pos]!)) n--;
+    for (let n = texto.slice(posicao).replace(/\./g, '').length; pos > 0 && n > 0;) {
+      if (formatado[--pos] !== '.') n--;
     }
     cursor.current = pos;
-    onValue(limpo);
+    setRascunho(formatado);
+    onValue(parte + (limpo.includes(',') ? `,${fracao || '0'}` : ''));
   };
   return (
     <input
       {...props}
       ref={ref}
       value={exibido}
-      inputMode="numeric"
+      inputMode={casas ? 'decimal' : 'numeric'}
       autoComplete="off"
+      onFocus={() => {
+        // Zeros decimais sao opcionais enquanto o usuario edita.
+        setRascunho(numero ? num(numero, casas).replace(/,0+$/, '') : value);
+      }}
+      onBlur={() => {
+        const atual = valorCampo(value);
+        setRascunho(null);
+        if (atual) onValue(casas ? num(atual, casas) : atual.toFixed(0));
+      }}
       onKeyDown={(e) => {
         if (e.ctrlKey || e.metaKey || e.altKey) return;
-        if (e.key.length === 1 && !/^\d$/.test(e.key)) e.preventDefault();
+        if (e.key.length === 1 && !(casas ? /^[\d,]$/ : /^\d$/).test(e.key)) e.preventDefault();
         const el = e.currentTarget;
         const inicio = el.selectionStart ?? 0;
         if (inicio !== el.selectionEnd) return;
@@ -72,12 +93,12 @@ function ParteNumero({
       }}
       onBeforeInput={(e) => {
         const data = (e.nativeEvent as InputEvent).data;
-        if (data && !/^\d+$/.test(data)) e.preventDefault();
+        if (data && !(casas ? /^[\d,]+$/ : /^\d+$/).test(data)) e.preventDefault();
       }}
       onPaste={(e) => {
         e.preventDefault();
         const texto = e.clipboardData.getData('text');
-        if (!/^\d+$/.test(texto)) return;
+        if (!(casas ? /^\d+(,\d*)?$/ : /^\d+$/).test(texto)) return;
         const inicio = e.currentTarget.selectionStart ?? 0;
         const fim = e.currentTarget.selectionEnd ?? inicio;
         atualizar(exibido.slice(0, inicio) + texto + exibido.slice(fim), inicio + texto.length);
@@ -87,7 +108,7 @@ function ParteNumero({
   );
 }
 
-/** Parte inteira e fracao separadas, sem deslocar a escala durante a digitacao. */
+/** Campo numerico com virgula opcional e zeros completados ao sair. */
 export function CampoNumero({
   label,
   value,
@@ -104,8 +125,6 @@ export function CampoNumero({
   const gerado = useId();
   const id = inputId ?? gerado;
   const dicaId = `${id}-dica`;
-  const numero = valorCampo(value);
-  const [inteiro = '', fracao = ''] = numero ? value.replace(/\./g, '').split(',') : ['', ''];
   const acessibilidade = {
     'aria-invalid': invalido || undefined,
     'aria-describedby': dica ? dicaId : undefined,
@@ -116,30 +135,14 @@ export function CampoNumero({
       <div className="fld" data-invalid={invalido ? 'true' : undefined}>
         {prefixo && <span aria-hidden="true">{prefixo}</span>}
         {mascara ? (
-          <>
-            <ParteNumero
-              {...acessibilidade}
-              id={id}
-              data-k={dataK}
-              agrupar
-              value={inteiro}
-              onValue={(v) => onChange(v === '' ? '' : v + (fracao ? `,${fracao}` : ''))}
-            />
-            {casas > 0 && (
-              <>
-                <span aria-hidden="true">,</span>
-                <ParteNumero
-                  {...acessibilidade}
-                  className="numero-fracao"
-                  aria-label={`${label} - decimais`}
-                  value={fracao}
-                  limite={casas}
-                  placeholder={'0'.repeat(casas)}
-                  onValue={(v) => onChange(v ? `${inteiro || '0'},${v}` : inteiro)}
-                />
-              </>
-            )}
-          </>
+          <NumeroFormatado
+            {...acessibilidade}
+            id={id}
+            data-k={dataK}
+            value={value}
+            casas={casas}
+            onValue={onChange}
+          />
         ) : (
           <input
             {...acessibilidade}

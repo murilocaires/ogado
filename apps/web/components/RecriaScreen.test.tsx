@@ -23,9 +23,9 @@ describe('RF-030/RF-031 simulador de recria', () => {
     const ouro = formatarBRL(calcularRecria(ENTRADA_PADRAO).faturamentoLiquido);
     expect(ouro).toBe('R$ 102.408,05');
     expect(within(hero()).getByText('R$ 102.408,05')).toHaveClass('big');
-    expect(screen.getByLabelText('Proteinado')).toHaveValue('0');
-    expect(screen.getByLabelText('Se')).toHaveValue('52');
-    expect(screen.getAllByLabelText('Imposto').find((e) => e.tagName === 'INPUT')).toHaveValue('1');
+    expect(screen.getByLabelText('Proteinado')).toHaveValue('0,30');
+    expect(screen.getByLabelText('Se')).toHaveValue('52,00');
+    expect(screen.getAllByLabelText('Imposto').find((e) => e.tagName === 'INPUT')).toHaveValue('1,50');
   });
 
   it('RF-031 mostra por mês, por hectare, total em caixa, custos, números do lote e alerta de cabeças', () => {
