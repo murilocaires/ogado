@@ -6,7 +6,6 @@ import { useState, type ReactNode } from 'react';
 import { useOptionalSessionController } from '../lib/auth/session-provider';
 import { useRepoState } from '../lib/repo/repo-provider';
 import { AtencaoDialog } from './AtencaoPainel';
-import { AtualizacaoBanner } from './AtualizacaoBanner';
 import { Icon, type IconName } from './Icon';
 import { InstalarApp } from './InstalarApp';
 import { LogoMark } from './Logo';
@@ -62,7 +61,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
         <main id="conteudo" className="app-main" tabIndex={-1}>
-          <AtualizacaoBanner />
           <SyncIndicador variante="compacto" onRevisar={() => setRevisando(true)} />
           {info.cotaQuaseCheia !== null && (
             <div className="note erro banner" role="status">

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { preencherPlanilha } from './planilha';
 
 /**
  * E1 (produto navegável): jornadas SEM API e SEM login, dados no navegador.
@@ -61,9 +62,20 @@ for (const vp of viewports) {
       expect(erros).toEqual([]);
     });
 
-    test(`RF-030 simular recria mostra o resultado (${vp.nome}px)`, async ({ page }) => {
+    test(`RF-030 simular recria: abre vazio, digita a planilha e chega ao valor de ouro (${vp.nome}px)`, async ({
+      page,
+    }) => {
       await page.goto('/recria');
       const resultado = page.getByRole('region', { name: 'Resultado da recria' });
+      // ADR-0014: o simulador novo abre em branco, sem padrões nem seletor de lotação.
+      await expect(page.getByLabel('Investimento', { exact: true })).toHaveValue('');
+      await expect(resultado.locator('.hero .big')).toHaveText('—');
+      await expect(page.getByRole('button', { name: 'Restaurar padrões' })).toHaveCount(0);
+      await expect(page.getByRole('combobox')).toHaveCount(0);
+      await page.evaluate(() => document.fonts.ready);
+      await page.screenshot({ path: `${OUT}/e1-recria-vazio-${vp.nome}.png`, fullPage: true });
+
+      await preencherPlanilha(page);
       await expect(resultado.locator('.hero .big')).toHaveText('R$ 102.408,05');
 
       await page.getByLabel('Preço de venda', { exact: true }).fill('330');
@@ -72,11 +84,15 @@ for (const vp of viewports) {
       await page.getByLabel('Investimento', { exact: true }).fill('');
       await expect(resultado.locator('.hero .big')).toHaveText('—');
 
-      await page.getByRole('button', { name: 'Restaurar padrões' }).click();
-      await page.getByRole('alertdialog').getByRole('button', { name: 'Restaurar' }).click();
+      await page.getByLabel('Investimento', { exact: true }).fill('122534,8');
+      await page.getByLabel('Preço de venda', { exact: true }).fill('325');
       await expect(resultado.locator('.hero .big')).toHaveText('R$ 102.408,05');
       await page.evaluate(() => document.fonts.ready);
       await page.screenshot({ path: `${OUT}/e1-recria-${vp.nome}.png`, fullPage: true });
+
+      await page.getByRole('button', { name: 'Limpar campos' }).click();
+      await page.getByRole('alertdialog').getByRole('button', { name: 'Limpar' }).click();
+      await expect(resultado.locator('.hero .big')).toHaveText('—');
     });
   });
 }

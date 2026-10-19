@@ -129,6 +129,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [failure, setFailure] = useState<ApiFailure | null>(null);
   const [loading, setLoading] = useState(false);
+  const [senhaTocada, setSenhaTocada] = useState(false);
   const [focusRequest, setFocusRequest] = useState<{ target: FocusTarget; n: number } | null>(null);
 
   const emailRef = useRef<HTMLInputElement>(null);
@@ -338,6 +339,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
               placeholder={isLogin ? 'Sua senha' : 'Crie uma senha'}
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
+              onFocus={() => setSenhaTocada(true)}
               aria-invalid={senhaError ? true : undefined}
               aria-describedby={
                 [senhaError ? `${senhaId}-erro` : null, isLogin ? null : rulesId]
@@ -379,7 +381,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
           )}
         </div>
 
-        {!isLogin && <PasswordRules senha={senha} id={rulesId} />}
+        {!isLogin && <PasswordRules senha={senha} id={rulesId} tocada={senhaTocada} />}
 
         {!isLogin && (
           <div className="lbl">

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { LogoMark, Wordmark } from './Logo';
 
@@ -30,11 +29,6 @@ export function AuthShell({ mobileTitle, children }: { mobileTitle: string; chil
 
       <main className="auth-main">
         {children}
-        <nav className="auth-legal" aria-label="Documentos legais">
-          <Link href="/termos">Termos de Uso</Link>
-          {' · '}
-          <Link href="/privacidade">Política de Privacidade</Link>
-        </nav>
       </main>
     </div>
   );

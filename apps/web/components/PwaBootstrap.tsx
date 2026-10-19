@@ -1,7 +1,8 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-import { obterControladorAtualizacao } from '../lib/pwa/atualizacao';
+import { obterAtualizadorSilencioso } from '../lib/pwa/atualizacao';
 import { iniciarCapturaInstalacao } from '../lib/pwa/instalacao';
 import { haDialogoAberto } from './Dialog';
 
@@ -11,20 +12,25 @@ const VERIFICAR_ATUALIZACAO_MS = 60 * 60 * 1000;
 
 /**
  * Raiz do app: registra o service worker (só em produção, que é HTTPS; em dev o cache atrapalharia)
- * e começa a capturar o `beforeinstallprompt` antes de qualquer tela pedir. O worker novo fica em
- * espera até o usuário aceitar a atualização (AtualizacaoBanner).
+ * e começa a capturar o `beforeinstallprompt` antes de qualquer tela pedir. Atualização silenciosa
+ * (ADR-0014): o worker novo assume sozinho e a página recarrega em momento seguro, sem aviso; cada
+ * navegação entre telas é um desses momentos.
  */
 export function PwaBootstrap() {
+  const pathname = usePathname();
+  useEffect(() => {
+    obterAtualizadorSilencioso(haDialogoAberto)?.aoNavegar();
+  }, [pathname]);
+
   useEffect(() => {
     iniciarCapturaInstalacao();
     if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;
-    const controlador = obterControladorAtualizacao(haDialogoAberto);
+    obterAtualizadorSilencioso(haDialogoAberto); // escuta o controllerchange desde já
     let intervalo: ReturnType<typeof setInterval> | undefined;
     const registrar = (): void => {
       navigator.serviceWorker
         .register(`/sw.js?v=${encodeURIComponent(BUILD_ID)}`, { scope: '/' })
         .then((registro) => {
-          controlador?.observar(registro);
           intervalo = setInterval(
             () => void registro.update().catch(() => undefined),
             VERIFICAR_ATUALIZACAO_MS,

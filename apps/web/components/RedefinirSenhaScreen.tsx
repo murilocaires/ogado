@@ -25,6 +25,7 @@ export function RedefinirSenhaScreen({ api }: { api?: ApiClient }) {
   const [stage, setStage] = useState<Stage>('lendo');
   const [token, setToken] = useState('');
   const [nova, setNova] = useState('');
+  const [novaTocada, setNovaTocada] = useState(false);
   const [confirmacao, setConfirmacao] = useState('');
   const [verSenha, setVerSenha] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -205,6 +206,7 @@ export function RedefinirSenhaScreen({ api }: { api?: ApiClient }) {
               placeholder="Crie uma senha"
               value={nova}
               onChange={(e) => setNova(e.target.value)}
+              onFocus={() => setNovaTocada(true)}
               aria-invalid={novaError ? true : undefined}
               aria-describedby={[novaError ? `${novaId}-erro` : null, rulesId]
                 .filter(Boolean)
@@ -236,7 +238,7 @@ export function RedefinirSenhaScreen({ api }: { api?: ApiClient }) {
           )}
         </div>
 
-        <PasswordRules senha={nova} id={rulesId} />
+        <PasswordRules senha={nova} id={rulesId} tocada={novaTocada} />
 
         <div className="lbl">
           <label htmlFor={confirmacaoId}>Repita a nova senha</label>

@@ -1693,18 +1693,6 @@
   color: var(--barro-600);
   border-color: var(--barro-borda);
 }
-.app .banner.atualizacao {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  background: var(--floresta-900);
-  color: #fff;
-}
-.app .banner.atualizacao .hint {
-  color: var(--nevoa-200);
-}
 .app .atencao-lista {
   list-style: none;
   margin: 0;

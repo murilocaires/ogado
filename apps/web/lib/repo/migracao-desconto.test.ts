@@ -3,18 +3,18 @@ import { criarStorageMemoria } from '../../components/test-utils';
 import {
   criarRepoLocal,
   migrarLoteDescontoKg,
-  recriaFormPadrao,
   STORAGE_KEY,
   STORAGE_KEY_E1,
 } from './local-repo';
 import type { RecriaEntity } from './types';
+import { recriaFormPlanilha } from './planilha.test-support';
 
 const recria: RecriaEntity = {
   id: 'r-1',
   version: 1,
   updatedAt: '2026-10-01T10:00:00.000Z',
   deletedAt: null,
-  form: recriaFormPadrao(),
+  form: recriaFormPlanilha(),
   lotacaoInicial: 'fixa80',
 };
 

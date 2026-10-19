@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { preencherPlanilha } from './planilha';
 
 /**
  * E2 (cenários da recria): jornada SEM API e SEM login, dados no navegador.
@@ -24,6 +25,7 @@ for (const vp of viewports) {
 
       await page.goto('/recria');
       const resultado = page.getByRole('region', { name: 'Resultado da recria' });
+      await preencherPlanilha(page);
       await expect(resultado.locator('.hero .big')).toHaveText('R$ 102.408,05');
 
       // 1) salva o cenário com os padrões da planilha
@@ -85,6 +87,7 @@ for (const vp of viewports) {
 test('RF-035 abrir no simulador substitui as entradas pelas do cenário', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/recria');
+  await preencherPlanilha(page);
   await page.getByRole('button', { name: 'Salvar como cenário' }).click();
   await page.keyboard.press('Enter');
   await page.getByRole('tab', { name: 'Simulador' }).click();
@@ -101,6 +104,7 @@ test('RF-034 a lista de cenários em 390 px oculta colunas e mantém abrir e exc
   await page.goto('/recria?aba=cenarios');
   await expect(page.getByRole('heading', { name: 'Nenhum cenário salvo' })).toBeVisible();
   await page.getByRole('button', { name: 'Ir para o Simulador' }).click();
+  await preencherPlanilha(page);
   await page.getByRole('button', { name: 'Salvar como cenário' }).click();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('button', { name: 'Abrir Cenário 1' })).toBeVisible();

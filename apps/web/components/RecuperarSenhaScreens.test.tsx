@@ -136,8 +136,9 @@ describe('RF-002 tela Redefinir senha', () => {
 
   it('mostra os requisitos da senha em tempo real', async () => {
     const { user } = abrir('?token=abc');
+    expect(screen.getByText('Mín. 8 caracteres, com maiúscula, número e símbolo')).toBeVisible();
     await user.type(await screen.findByLabelText('Nova senha'), 'a');
-    expect(screen.getByText('Requisitos da senha')).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Requisitos da senha' })).toBeInTheDocument();
     expect(screen.getAllByText(/— pendente/).length).toBeGreaterThan(0);
   });
 

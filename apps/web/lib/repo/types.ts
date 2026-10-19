@@ -158,8 +158,8 @@ export interface OGadoRepo {
   salvarLote(lote: LoteSalvar): LoteEntity;
   excluirLote(id: string): void;
   atualizarRecria(atualizacao: RecriaAtualizacao): void;
-  /** `padrao` = valores da planilha (ENTRADA_PADRAO); `vazio` = todos os campos em branco. */
-  redefinirRecria(modo: 'padrao' | 'vazio'): void;
+  /** Deixa todos os campos em branco (ADR-0014: não há "restaurar padrões"). */
+  limparRecria(): void;
   /** Guarda o snapshot de um cenário (RF-032). Nome vazio vira "Cenário N". */
   salvarCenario(cenario: CenarioSalvar): CenarioEntity;
   /** Altera só o nome (o snapshot nunca muda). */

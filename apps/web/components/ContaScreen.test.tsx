@@ -287,8 +287,9 @@ describe('RF-005 senha', () => {
   it('exige a senha atual e lista os requisitos da nova senha', async () => {
     const { user, api } = await setup();
     await pronto();
-    expect(screen.getByRole('list', { name: 'Requisitos da senha' })).toBeVisible();
+    expect(screen.getByText('Mín. 8 caracteres, com maiúscula, número e símbolo')).toBeVisible();
     await user.type(screen.getByLabelText('Nova senha'), 'fraca');
+    expect(screen.getByRole('list', { name: 'Requisitos da senha' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Alterar senha' }));
 
     expect(await screen.findByText('Informe a senha atual.')).toBeVisible();
