@@ -1,6 +1,6 @@
 'use client';
 
-import { rotuloSync } from '../lib/sync/indicador';
+import { descreverSync } from '../lib/sync/indicador';
 import { AtencaoLista } from './AtencaoPainel';
 import { useOnline } from './SyncIndicador';
 import { useSyncInfo, useSyncStatus } from './SyncProvider';
@@ -10,7 +10,7 @@ export function SincronizacaoPainel() {
   const status = useSyncStatus();
   const info = useSyncInfo();
   const online = useOnline();
-  const r = rotuloSync(status, info.totalPendentes, online);
+  const r = descreverSync(status, info.totalPendentes, online);
 
   return (
     <div className="panel" data-testid="painel-sync">

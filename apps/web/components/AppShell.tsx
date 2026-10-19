@@ -32,7 +32,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const ativo = (href: string): boolean => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <div className="app">
+    <div className="app" data-sync-status={sync}>
       <a href="#conteudo" className="skip">
         Pular para o conteúdo
       </a>

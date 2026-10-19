@@ -22,9 +22,10 @@ export function useOnline(): boolean {
 }
 
 /**
- * Indicador global de sincronização (RF-075): Sincronizado · Sem conexão · N pendentes · Erro.
- * `lateral` vive no menu (desktop); `compacto` aparece no topo da tela estreita. O botão
- * "Sincronizar agora" (RF-074) e o acesso a "Precisa de atenção" ficam junto.
+ * Indicador global de sincronização (RF-075): só aparece sem internet ("Sem conexão · N
+ * pendentes") e some ao reconectar; a sincronização ao voltar é automática. `lateral` vive no
+ * menu (desktop); `compacto` no topo da tela estreita. O aviso "N itens precisam de atenção"
+ * aparece, online ou offline, só quando houver conflito ou item recusado.
  */
 export function SyncIndicador({
   variante,
@@ -38,32 +39,24 @@ export function SyncIndicador({
   const online = useOnline();
   const r = rotuloSync(status, info.totalPendentes, online);
   const atencao = info.conflitos.length + info.rejeitados.length;
-  const comConta = status !== 'desligado';
   const compacto = variante === 'compacto';
 
-  // Sem conta não há nuvem: no topo da tela estreita o indicador nem aparece.
-  if (compacto && !comConta) return null;
+  if (!r && atencao === 0) return null;
 
   return (
-    <div className={`sync-ind ${variante}`} data-tom={r.tom}>
-      <span
-        className={`sync-pill ${r.tom}`}
-        role={compacto ? undefined : 'status'}
-        aria-live={compacto ? undefined : 'polite'}
-      >
-        <i aria-hidden="true" />
-        {r.texto}
-      </span>
-      {!compacto && <span className="sync-detalhe">{r.detalhe}</span>}
-      {comConta && (
-        <button
-          type="button"
-          className={compacto ? 'btn sec sm' : 'btn ghost sm block'}
-          onClick={info.sincronizarAgora}
-          disabled={status === 'sincronizando'}
-        >
-          Sincronizar agora
-        </button>
+    <div className={`sync-ind ${variante}`} data-tom={r?.tom ?? 'neutro'}>
+      {r && (
+        <>
+          <span
+            className={`sync-pill ${r.tom}`}
+            role={compacto ? undefined : 'status'}
+            aria-live={compacto ? undefined : 'polite'}
+          >
+            <i aria-hidden="true" />
+            {r.texto}
+          </span>
+          {!compacto && <span className="sync-detalhe">{r.detalhe}</span>}
+        </>
       )}
       {atencao > 0 && (
         <button

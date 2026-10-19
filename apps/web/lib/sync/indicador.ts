@@ -1,5 +1,6 @@
-// Texto e tom do indicador global de sincronização (RF-075): Sincronizado · Sem conexão ·
-// N pendentes · Erro. Puro, para a mesma regra valer no menu lateral e na tela estreita.
+// Texto e tom do indicador de sincronização (RF-075). Puro, para a mesma regra valer no menu
+// lateral e na tela estreita. `rotuloSync` é o indicador global: só existe sem internet.
+// `descreverSync` é o estado completo, usado na seção Sincronização da Conta.
 export type StatusSync = 'desligado' | 'sincronizando' | 'sincronizado' | 'offline' | 'erro';
 
 export type TomIndicador = 'neutro' | 'ok' | 'pendente' | 'offline' | 'erro';
@@ -16,7 +17,7 @@ export function pluralPendentes(n: number): string {
   return `${n} ${n === 1 ? 'pendente' : 'pendentes'}`;
 }
 
-export function rotuloSync(status: StatusSync, pendentes: number, online: boolean): RotuloSync {
+export function descreverSync(status: StatusSync, pendentes: number, online: boolean): RotuloSync {
   if (status === 'desligado') {
     return {
       tom: 'neutro',
@@ -54,4 +55,18 @@ export function rotuloSync(status: StatusSync, pendentes: number, online: boolea
     };
   }
   return { tom: 'ok', texto: 'Sincronizado', detalhe: 'Dados salvos na sua conta.' };
+}
+
+/**
+ * Indicador global (menu lateral e topo): aparece só sem internet ("Sem conexão · N pendentes")
+ * e some quando a conexão volta. Conectado, sincronizando, com erro ou sem conta: nada.
+ */
+export function rotuloSync(
+  status: StatusSync,
+  pendentes: number,
+  online: boolean,
+): RotuloSync | null {
+  if (status === 'desligado') return null;
+  if (status === 'offline' || !online) return descreverSync(status, pendentes, online);
+  return null;
 }

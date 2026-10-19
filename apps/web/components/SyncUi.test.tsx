@@ -95,15 +95,23 @@ function montar(srv: ReturnType<typeof criarServidor>, extra?: Partial<DadosClie
   return m;
 }
 
-/** A pílula do menu lateral (role=status) com o texto do indicador. */
-const pilula = () => screen.getAllByRole('status').find((e) => e.classList.contains('sync-pill'));
+/** A pílula do menu lateral (role=status) com o texto do indicador; só existe sem internet. */
+const pilula = () => screen.queryAllByRole('status').find((e) => e.classList.contains('sync-pill'));
 
+/** Sinal de teste que não é texto visível: o shell expõe o estado da sincronização. */
+const shell = () => document.querySelector('.app')!;
 async function aguardarSincronizado() {
-  await waitFor(() => expect(pilula()).toHaveTextContent('Sincronizado'), { timeout: 5000 });
+  await waitFor(() => expect(shell()).toHaveAttribute('data-sync-status', 'sincronizado'), {
+    timeout: 5000,
+  });
 }
 
-const sincronizarAgora = (user: ReturnType<typeof userEvent.setup>) =>
-  user.click(screen.getAllByRole('button', { name: 'Sincronizar agora' })[0]!);
+/** Sem botão no menu, uma rodada imediata é o que acontece quando a conexão volta. */
+const sincronizarAgora = async () => {
+  await act(async () => {
+    window.dispatchEvent(new Event('online'));
+  });
+};
 
 let storageOriginal: PropertyDescriptor | undefined;
 beforeEach(() => {
@@ -115,8 +123,44 @@ afterEach(() => {
 });
 
 describe('RF-075 indicador global e selo por registro', () => {
+  it('online e sincronizado não mostra nenhum indicador nem "Sincronizar agora"', async () => {
+    montar(criarServidor());
+    await aguardarSincronizado();
+    expect(pilula()).toBeUndefined();
+    expect(screen.queryByText('Sincronizado')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sincronizar agora' })).not.toBeInTheDocument();
+  });
+
+  it('ao ir offline aparece "Sem conexão" com pendentes; ao voltar online some e sobe sozinho', async () => {
+    const srv = criarServidor();
+    const m = montar(srv);
+    await aguardarSincronizado();
+    const onLine = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    m.rede.cortada = true;
+    act(() => {
+      window.dispatchEvent(new Event('offline'));
+      m.repo.salvarLote(COMPRA);
+    });
+
+    await waitFor(() => expect(pilula()).toHaveTextContent('Sem conexão · 1 pendente'));
+    expect(screen.getAllByText('Salvo neste aparelho, sobe quando a conexão voltar.')).toHaveLength(
+      1,
+    );
+
+    onLine.mockReturnValue(true);
+    m.rede.cortada = false;
+    act(() => {
+      window.dispatchEvent(new Event('online'));
+    });
+
+    await waitFor(() => expect(srv.lotes.size).toBe(1), { timeout: 5000 });
+    await waitFor(() => expect(pilula()).toBeUndefined());
+    await aguardarSincronizado();
+    expect(screen.queryByText(/Sem conexão/)).not.toBeInTheDocument();
+    onLine.mockRestore();
+  });
+
   it('lançar sem conexão mostra "1 pendente" e o selo; ao voltar a rede, some', async () => {
-    const user = userEvent.setup();
     const m = montar(criarServidor());
     await aguardarSincronizado();
 
@@ -124,13 +168,13 @@ describe('RF-075 indicador global e selo por registro', () => {
     act(() => {
       m.repo.salvarLote(COMPRA);
     });
-    await sincronizarAgora(user);
+    await sincronizarAgora();
 
     await waitFor(() => expect(pilula()).toHaveTextContent('Sem conexão · 1 pendente'));
     expect(screen.getAllByText('pendente').length).toBeGreaterThan(0);
 
     m.rede.cortada = false;
-    await sincronizarAgora(user);
+    await sincronizarAgora();
     await aguardarSincronizado();
     expect(screen.queryByText('pendente')).not.toBeInTheDocument();
   });
@@ -142,8 +186,11 @@ describe('RF-075 indicador global e selo por registro', () => {
     act(() => {
       m.repo.salvarLote(COMPRA);
     });
-    // O texto aparece no menu lateral e na pílula compacta do topo.
-    await waitFor(() => expect(screen.getAllByText('1 pendente').length).toBeGreaterThanOrEqual(2));
+    await sincronizarAgora();
+    // Sem rede, o texto aparece no menu lateral e na pílula compacta do topo.
+    await waitFor(() =>
+      expect(screen.getAllByText('Sem conexão · 1 pendente').length).toBeGreaterThanOrEqual(2),
+    );
   });
 
   it('erro do servidor aparece como "Erro ao sincronizar"', async () => {
@@ -151,12 +198,14 @@ describe('RF-075 indicador global e selo por registro', () => {
       listarLotes: async () => ({ ok: false, kind: 'servidor' }),
     });
     expect(m.repo).toBeTruthy();
-    await waitFor(() => expect(pilula()).toHaveTextContent('Erro ao sincronizar'), {
+    await waitFor(() => expect(shell()).toHaveAttribute('data-sync-status', 'erro'), {
       timeout: 5000,
     });
+    expect(pilula()).toBeUndefined();
+    expect(screen.queryByText(/Erro ao sincronizar/)).not.toBeInTheDocument();
   });
 
-  it('sem conta, o indicador não oferece "Sincronizar agora"', () => {
+  it('sem conta, nada do indicador aparece', () => {
     render(
       <RepoProvider repo={criarRepoLocal({ storage: () => criarStorageMemoria() })}>
         <ToastProvider>
@@ -167,7 +216,8 @@ describe('RF-075 indicador global e selo por registro', () => {
       </RepoProvider>,
     );
     expect(screen.queryByRole('button', { name: 'Sincronizar agora' })).not.toBeInTheDocument();
-    expect(screen.getByText('Seus dados ficam salvos neste navegador.')).toBeInTheDocument();
+    expect(screen.queryByText('Seus dados ficam salvos neste navegador.')).not.toBeInTheDocument();
+    expect(document.querySelector('.sync-ind')).toBeNull();
   });
 });
 
@@ -181,7 +231,7 @@ describe('RF-076 conflito entre aparelhos', () => {
     act(() => {
       id = m.repo.salvarLote(COMPRA).id;
     });
-    await sincronizarAgora(user);
+    await sincronizarAgora();
     await waitFor(() => expect(srv.lotes.has(id)).toBe(true));
     await aguardarSincronizado();
 
@@ -195,7 +245,7 @@ describe('RF-076 conflito entre aparelhos', () => {
     act(() => {
       m.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
     });
-    await sincronizarAgora(user);
+    await sincronizarAgora();
     await waitFor(
       () =>
         expect(
@@ -289,7 +339,7 @@ describe('RF-079 item recusado pelo servidor', () => {
       m.repo.salvarLote({ ...COMPRA, qtd: '1' });
       m.repo.salvarLote({ ...COMPRA, qtd: '8' });
     });
-    await sincronizarAgora(user);
+    await sincronizarAgora();
     await waitFor(() => expect(srv.lotes.size).toBe(1), { timeout: 5000 });
 
     await user.click(
@@ -329,7 +379,7 @@ describe('RF-079 item recusado pelo servidor', () => {
     act(() => {
       m.repo.salvarLote(COMPRA);
     });
-    await sincronizarAgora(user);
+    await sincronizarAgora();
     await user.click(
       await screen
         .findAllByRole('button', { name: '1 item precisa de atenção' })
@@ -344,9 +394,8 @@ describe('RF-079 item recusado pelo servidor', () => {
   });
 });
 
-describe('RF-074 Sincronizar agora', () => {
-  it('força uma rodada e envia o que estava esperando', async () => {
-    const user = userEvent.setup();
+describe('RF-074 rodada imediata', () => {
+  it('ao reconectar, envia o que estava esperando sem ação do usuário', async () => {
     const srv = criarServidor();
     const m = montar(srv);
     await aguardarSincronizado();
@@ -356,7 +405,7 @@ describe('RF-074 Sincronizar agora', () => {
     });
     m.rede.cortada = false;
 
-    await sincronizarAgora(user);
+    await sincronizarAgora();
 
     await waitFor(() => expect(srv.lotes.size).toBe(1), { timeout: 5000 });
   });
@@ -483,9 +532,7 @@ describe('RF-080 sessão expirada', () => {
     act(() => m.controller.markUnauthorized());
 
     expect(m.repo.exportar().lotes).toHaveLength(1);
-    await waitFor(() =>
-      expect(screen.getByText('Seus dados ficam salvos neste navegador.')).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(shell()).toHaveAttribute('data-sync-status', 'desligado'));
     expect(m.repo.exportar().lotes).toHaveLength(1);
 
     // Novo login: a sessão volta e a fila sobe.

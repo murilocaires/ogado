@@ -147,7 +147,7 @@ test('RF-073 lançar lote offline aparece na lista e sobe quando a conexão volt
   await esperarOffline(page);
   await irPara(page, 'Negócios');
   await expect(page.getByRole('heading', { name: 'Nenhum lote' })).toBeVisible();
-  await expect(page.getByText('Dados salvos na sua conta.')).toBeVisible();
+  await expect(page.locator('[data-sync-status="sincronizado"]')).toBeAttached();
 
   await context.setOffline(true);
   await expect(page.getByText(/sem internet/i).first()).toBeVisible();
@@ -175,5 +175,5 @@ test('RF-073 lançar lote offline aparece na lista e sobe quando a conexão volt
       { timeout: 60_000 },
     )
     .toBe(1);
-  await expect(page.getByText('Dados salvos na sua conta.')).toBeVisible();
+  await expect(page.locator('[data-sync-status="sincronizado"]')).toBeAttached();
 });
