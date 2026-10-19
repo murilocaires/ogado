@@ -735,8 +735,21 @@
   max-height: 92dvh;
   overflow: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
   padding: 24px;
+}
+/* barra sempre visível (igual no desktop e no celular) */
+.app .modal::-webkit-scrollbar {
+  width: 12px;
+}
+.app .modal::-webkit-scrollbar-track {
+  background: #e3ece6;
+  border-radius: 24px;
+  margin: 16px 0;
+}
+.app .modal::-webkit-scrollbar-thumb {
+  background: #8a9a90;
+  border-radius: 24px;
+  border: 2px solid #e3ece6;
 }
 .app .modal.estreito {
   max-width: 440px;
