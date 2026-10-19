@@ -14,9 +14,9 @@ export const TERMOS_VERSAO = '2026-10-19';
 export const TERMOS_MANIFESTO = {
   versao: TERMOS_VERSAO,
   arquivos: {
-    'termos-de-uso.md': 'af999f888837d6526705f0706dbb6450f4ea05d227c87deaa6f27d89a4cab900',
+    'termos-de-uso.md': '16c1e56dd82ee21dd3902d6f4e9ff169066f7eb7115d24d14d69d9365cd8fe8b',
     'politica-de-privacidade.md':
-      'b53e2b509790b5c487012dc425e856a2548df7573b8a85582fb53a51f2236274',
+      '2da33508eeffb6a1c85afc33f20d559ff3469d6594662f1b70f3b913311ea273',
   },
 } as const;
 

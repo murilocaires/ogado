@@ -49,7 +49,7 @@ Se isso acontecer, podemos limitar, suspender ou encerrar a conta, avisando voc�
 
 Os dados que você cadastra (lotes, cenários, nome da fazenda e demais informações) **continuam sendo seus**. Você nos autoriza apenas a guardá-los e processá-los para o serviço funcionar para você, como descrito na Política de Privacidade.
 
-Você pode baixar uma cópia dos seus dados a qualquer momento em **Conta > Meus dados > Baixar meus dados**.
+Você pode baixar uma cópia dos seus dados a qualquer momento em **Conta > Meus dados > Baixar meus dados**, ou recebê-la por e-mail, no endereço da sua conta, em **Enviar meus dados por e-mail**.
 
 O nome, a marca, o desenho das telas e o código do O Gado pertencem a nós ou a quem nos licenciou. Estes Termos não transferem esses direitos a você.
 

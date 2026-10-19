@@ -45,7 +45,7 @@ Contato para assuntos de privacidade e para exercer seus direitos: **[E-MAIL DE 
 | --- | --- | --- |
 | Criar e manter a sua conta, e deixar você entrar | e-mail, nome, hash da senha, identidade Google, sessão | execução do contrato (inciso V) |
 | Guardar e calcular os dados da sua fazenda | nome, área, lotes, cenários, recria | execução do contrato (inciso V) |
-| Enviar o e-mail de recuperação de senha | e-mail | execução do contrato (inciso V) |
+| Enviar e-mails que você pede (recuperação de senha, cópia dos seus dados) | e-mail e, na cópia dos dados, os dados da sua conta | execução do contrato (inciso V) e atendimento ao seu direito de acesso |
 | Proteger o serviço contra abuso e invasão | IP (só em memória), sessões | legítimo interesse (inciso IX), limitado ao necessário |
 | Registrar que você leu e aceitou estes documentos | versão e data do aceite | consentimento (inciso I) |
 
@@ -60,7 +60,7 @@ Usamos empresas que tratam dados em nosso nome, só para o serviço funcionar:
 - **Vercel**: hospeda o site (as telas do aplicativo).
 - **Railway**: hospeda a API e o banco de dados PostgreSQL, onde ficam os dados da conta e da fazenda. Os servidores ficam nos **Estados Unidos**.
 - **Google**: faz o login "Entrar com Google", se você escolher essa opção.
-- **Resend**: envia o e-mail de recuperação de senha. Ele recebe o seu e-mail e o texto da mensagem.
+- **Resend**: envia os e-mails do serviço: o de recuperação de senha e, se você pedir em **Conta > Meus dados > Enviar meus dados por e-mail**, a mensagem com a cópia dos seus dados em anexo (arquivo JSON). Ele recebe o seu e-mail e o conteúdo da mensagem, inclusive o anexo.
 
 Não compartilhamos dados com mais ninguém, exceto se a lei ou uma ordem judicial exigir.
 
@@ -105,7 +105,7 @@ Pelo art. 18 da LGPD, você pode, a qualquer momento:
 | Direito | Como fazer no O Gado |
 | --- | --- |
 | Confirmar que tratamos seus dados e **acessar** uma cópia | **Conta > Meus dados > Baixar meus dados** (arquivo JSON) |
-| **Portabilidade** | O mesmo arquivo, em formato aberto. Também há exportação de lotes e cenários em CSV/XLSX |
+| **Portabilidade** | O mesmo arquivo, em formato aberto. Você também pode **receber o arquivo por e-mail** (**Conta > Meus dados > Enviar meus dados por e-mail**, enviado só para o e-mail da sua conta; o envio passa pelo Resend). Há ainda exportação de lotes e cenários em CSV/XLSX |
 | **Corrigir** dados | **Conta > Perfil** (nome e e-mail) e **Conta > Fazenda** (nome e área), além de editar lotes e cenários |
 | **Eliminar** dados | **Conta > Apagar minha conta** |
 | **Revogar o consentimento** | **Conta > Termos e privacidade > Revogar consentimento**, que leva ao fluxo de apagar a conta |
