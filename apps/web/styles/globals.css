@@ -186,6 +186,12 @@ a {
   color: #4a3a0b;
 }
 
+.notice-ok {
+  background: var(--calculado);
+  border: 1px solid var(--nevoa-200);
+  color: var(--floresta-900);
+}
+
 .notice:focus {
   outline: 2px solid var(--folha-600);
   outline-offset: 2px;
@@ -216,7 +222,11 @@ a {
 .auth-hero .stripes {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(100deg, rgba(181, 224, 90, 0.08) 0 2px, transparent 2px 26px);
+  background: repeating-linear-gradient(
+    100deg,
+    rgba(181, 224, 90, 0.08) 0 2px,
+    transparent 2px 26px
+  );
 }
 
 .auth-hero .ring {
@@ -360,7 +370,11 @@ a {
     content: '';
     position: absolute;
     inset: 0;
-    background: repeating-linear-gradient(100deg, rgba(181, 224, 90, 0.08) 0 2px, transparent 2px 26px);
+    background: repeating-linear-gradient(
+      100deg,
+      rgba(181, 224, 90, 0.08) 0 2px,
+      transparent 2px 26px
+    );
     pointer-events: none;
   }
 

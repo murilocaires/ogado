@@ -178,6 +178,76 @@ describe('T-18 cliente HTTP: Conta', () => {
     });
   });
 
+  it('RF-002 POST /api/auth/senha/esqueci só é sucesso com 202; 429 e rede são distintos', async () => {
+    const corpo = { email: 'ana@fazenda.com' };
+    const f202 = vi.fn().mockResolvedValue(json(202, { mensagem: 'x' }));
+    expect(await createApiClient({ fetch: f202 }).forgotPassword(corpo)).toEqual({
+      ok: true,
+      data: undefined,
+    });
+    const [url, init] = f202.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/auth/senha/esqueci');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual(corpo);
+
+    const f429 = vi
+      .fn()
+      .mockResolvedValue(json(429, erro('muitas_tentativas'), { 'retry-after': '60' }));
+    expect(await createApiClient({ fetch: f429 }).forgotPassword(corpo)).toEqual({
+      ok: false,
+      kind: 'muitas-tentativas',
+      retryAfterSeconds: 60,
+    });
+    const f500 = vi.fn().mockResolvedValue(json(500, {}));
+    expect(await createApiClient({ fetch: f500 }).forgotPassword(corpo)).toEqual({
+      ok: false,
+      kind: 'servidor',
+    });
+    const fRede = vi.fn().mockRejectedValue(new TypeError('offline'));
+    expect(await createApiClient({ fetch: fRede }).forgotPassword(corpo)).toEqual({
+      ok: false,
+      kind: 'rede',
+    });
+  });
+
+  it('RF-002 POST /api/auth/senha/redefinir só é sucesso com 204; 400 requisicao_invalida é link inválido', async () => {
+    const corpo = { token: 'abc', novaSenha: 'Nova#Senha2027' };
+    const f204 = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    expect(await createApiClient({ fetch: f204 }).resetPassword(corpo)).toEqual({
+      ok: true,
+      data: undefined,
+    });
+    const [url, init] = f204.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/auth/senha/redefinir');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual(corpo);
+
+    const f400 = vi.fn().mockResolvedValue(json(400, erro('requisicao_invalida')));
+    expect(await createApiClient({ fetch: f400 }).resetPassword(corpo)).toEqual({
+      ok: false,
+      kind: 'link-invalido',
+    });
+
+    const campos = [{ caminho: 'novaSenha', regra: 'simbolo', mensagem: 'falta símbolo' }];
+    const fVal = vi
+      .fn()
+      .mockResolvedValue(
+        json(400, { erro: { codigo: 'validacao_invalida', mensagem: 'x', campos } }),
+      );
+    expect(await createApiClient({ fetch: fVal }).resetPassword(corpo)).toEqual({
+      ok: false,
+      kind: 'validacao',
+      campos,
+    });
+
+    const f429 = vi.fn().mockResolvedValue(json(429, erro('muitas_tentativas')));
+    expect(await createApiClient({ fetch: f429 }).resetPassword(corpo)).toEqual({
+      ok: false,
+      kind: 'muitas-tentativas',
+      retryAfterSeconds: null,
+    });
+  });
+
   it('RF-011 PATCH /api/fazenda: 409 devolve a fazenda atual', async () => {
     const f409 = vi
       .fn()

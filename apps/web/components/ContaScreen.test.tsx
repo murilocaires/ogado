@@ -67,6 +67,8 @@ async function setup({
     changePassword: vi.fn(),
     updateFazenda: vi.fn(),
     deleteAccount: vi.fn().mockResolvedValue(ok(undefined)),
+    forgotPassword: vi.fn(),
+    resetPassword: vi.fn(),
     ...api,
   };
   const controller = createSessionController({

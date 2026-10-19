@@ -40,6 +40,8 @@ function fakeApi(overrides: Partial<ApiClient> = {}): ApiClient {
     changePassword: vi.fn(),
     updateFazenda: vi.fn(),
     deleteAccount: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+    forgotPassword: vi.fn(),
+    resetPassword: vi.fn(),
     ...overrides,
   };
 }
