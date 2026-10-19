@@ -65,6 +65,61 @@ export function createAccountRepository(prisma: PrismaClient) {
       return row ? row.senhaHash : undefined;
     },
 
+    /**
+     * Redefinição de senha (RF-002): invalida os tokens ainda não usados do usuário e grava o novo
+     * (só o hash). Tudo ou nada.
+     */
+    async createResetToken(input: {
+      usuarioId: string;
+      tokenHash: string;
+      now: Date;
+      expiraEm: Date;
+    }): Promise<void> {
+      await prisma.$transaction(async (tx) => {
+        await tx.tokenRedefinicao.updateMany({
+          where: { usuarioId: input.usuarioId, usadoEm: null },
+          data: { usadoEm: input.now },
+        });
+        await tx.tokenRedefinicao.create({
+          data: {
+            tokenHash: input.tokenHash,
+            usuarioId: input.usuarioId,
+            criadoEm: input.now,
+            expiraEm: input.expiraEm,
+          },
+        });
+      });
+    },
+
+    /**
+     * Consome o token (existe, não usado, não expirado) e, na mesma transação, grava a nova senha e
+     * derruba todas as sessões do usuário. O consumo é um UPDATE condicional: duas requisições com o
+     * mesmo token nunca passam as duas. `false` = token inválido (sem dizer por quê).
+     */
+    async redeemResetToken(input: {
+      tokenHash: string;
+      senhaHash: string;
+      now: Date;
+    }): Promise<boolean> {
+      return prisma.$transaction(async (tx) => {
+        const consumed = await tx.tokenRedefinicao.updateMany({
+          where: { tokenHash: input.tokenHash, usadoEm: null, expiraEm: { gt: input.now } },
+          data: { usadoEm: input.now },
+        });
+        if (consumed.count !== 1) return false;
+        const token = await tx.tokenRedefinicao.findUniqueOrThrow({
+          where: { tokenHash: input.tokenHash },
+          select: { usuarioId: true },
+        });
+        await tx.usuario.update({
+          where: { id: token.usuarioId },
+          data: { senhaHash: input.senhaHash, atualizadoEm: input.now },
+        });
+        await tx.sessao.deleteMany({ where: { usuarioId: token.usuarioId } });
+        return true;
+      });
+    },
+
     /** Perfil (RF-004). E-mail já usado por outra conta -> `EmailTakenError`. */
     async updatePerfil(
       usuarioId: string,

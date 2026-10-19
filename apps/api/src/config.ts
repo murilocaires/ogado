@@ -25,6 +25,11 @@ export interface AppConfig {
     loginIpEmail: RateLimitRule;
     loginIp: RateLimitRule;
     signupIp: RateLimitRule;
+    /** Esqueci a senha: por IP e por e-mail (RF-002). */
+    forgotIp: RateLimitRule;
+    forgotEmail: RateLimitRule;
+    /** Redefinir senha (resgate do token): por IP. */
+    resetIp: RateLimitRule;
   };
   /** IPs/CIDRs do proxy reverso confiável (para ler o IP real); vazio = não confia em ninguém. */
   trustProxy: string[];
@@ -55,6 +60,9 @@ export const defaultConfig: AppConfig = {
     loginIpEmail: { max: 5, windowMs: 60_000 },
     loginIp: { max: 20, windowMs: 60_000 },
     signupIp: { max: 5, windowMs: 60 * 60_000 },
+    forgotIp: { max: 10, windowMs: 60 * 60_000 },
+    forgotEmail: { max: 3, windowMs: 60 * 60_000 },
+    resetIp: { max: 20, windowMs: 60 * 60_000 },
   },
   trustProxy: [],
 };
@@ -98,6 +106,9 @@ export function configFromEnv(env: Env): AppConfig {
       loginIpEmail: { max: env.RATE_LIMIT_LOGIN_IP_EMAIL_PER_MIN, windowMs: 60_000 },
       loginIp: { max: env.RATE_LIMIT_LOGIN_IP_PER_MIN, windowMs: 60_000 },
       signupIp: { max: env.RATE_LIMIT_SIGNUP_IP_PER_HOUR, windowMs: 60 * 60_000 },
+      forgotIp: { max: env.RATE_LIMIT_FORGOT_IP_PER_HOUR, windowMs: 60 * 60_000 },
+      forgotEmail: { max: env.RATE_LIMIT_FORGOT_EMAIL_PER_HOUR, windowMs: 60 * 60_000 },
+      resetIp: { max: env.RATE_LIMIT_RESET_IP_PER_HOUR, windowMs: 60 * 60_000 },
     },
     trustProxy: env.TRUST_PROXY,
     ...(env.PROXY_SECRET ? { proxySecret: env.PROXY_SECRET } : {}),

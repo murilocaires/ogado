@@ -6,7 +6,9 @@ import {
   type FazendaPatch,
   type FieldError,
   type LoginRequest,
+  type EsqueciSenhaRequest,
   type PerfilRequest,
+  type RedefinirSenhaRequest,
   type SenhaRequest,
   type SessionResponse,
   type SignupRequest,
@@ -22,6 +24,8 @@ export type ApiFailure =
   | { ok: false; kind: 'sessao-expirada' }
   | { ok: false; kind: 'muitas-tentativas'; retryAfterSeconds: number | null }
   | { ok: false; kind: 'bloqueada' }
+  /** Link de redefinição de senha inválido, expirado ou já usado (RF-002); a API não distingue. */
+  | { ok: false; kind: 'link-invalido' }
   | { ok: false; kind: 'rede' }
   | { ok: false; kind: 'servidor' }
   | { ok: false; kind: 'contrato' };
@@ -42,6 +46,10 @@ export interface ApiClient {
   updateFazenda(body: FazendaPatch): Promise<ApiResult<SessionResponse>>;
   /** DELETE /conta (RF-007): só é sucesso com 204; o chamador limpa o aparelho depois. */
   deleteAccount(): Promise<ApiResult<void>>;
+  /** POST /auth/senha/esqueci (RF-002): 202 é sempre o mesmo, exista a conta ou não. */
+  forgotPassword(body: EsqueciSenhaRequest): Promise<ApiResult<void>>;
+  /** POST /auth/senha/redefinir (RF-002): só é sucesso com 204; 400 vira `link-invalido`. */
+  resetPassword(body: RedefinirSenhaRequest): Promise<ApiResult<void>>;
 }
 
 export interface ApiClientOptions {
@@ -76,6 +84,8 @@ async function readFailure(res: Response): Promise<ApiFailure> {
       return { ok: false, kind: 'nao-autenticado' };
     case 'sessao_expirada':
       return { ok: false, kind: 'sessao-expirada' };
+    case 'requisicao_invalida':
+      return { ok: false, kind: 'link-invalido' };
     case 'requisicao_bloqueada':
       return { ok: false, kind: 'bloqueada' };
     case 'muitas_tentativas': {
@@ -128,6 +138,13 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
     return readFailure(res);
   }
 
+  async function acceptedCall(path: string, init: RequestInit): Promise<ApiResult<void>> {
+    const res = await call(path, init);
+    if (!res) return { ok: false, kind: 'rede' };
+    if (res.status === 202) return { ok: true, data: undefined };
+    return readFailure(res);
+  }
+
   return {
     signup: (body) => sessionCall('/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
     login: (body) => sessionCall('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
@@ -139,6 +156,10 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
       noContentCall('/conta/senha', { method: 'PUT', body: JSON.stringify(body) }),
     updateFazenda: (body) =>
       sessionCall('/fazenda', { method: 'PATCH', body: JSON.stringify(body) }),
+    forgotPassword: (body) =>
+      acceptedCall('/auth/senha/esqueci', { method: 'POST', body: JSON.stringify(body) }),
+    resetPassword: (body) =>
+      noContentCall('/auth/senha/redefinir', { method: 'POST', body: JSON.stringify(body) }),
     deleteAccount: () =>
       noContentCall('/conta', {
         method: 'DELETE',

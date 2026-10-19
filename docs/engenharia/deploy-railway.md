@@ -17,12 +17,14 @@ A API (`apps/api`) roda no Railway com o Postgres do mesmo projeto (`ogado`, amb
 | `WEB_ORIGIN` | `https://ogado.vercel.app` | lista de origens separadas por vírgula; vale para CORS e para a barreira de CSRF (`Origin`). Acrescente a URL de preview da Vercel só se for usar a API a partir dela |
 | `PROXY_SECRET` | segredo de 32+ caracteres | o mesmo valor na Vercel; ver "Limites de taxa" |
 | `TRUST_PROXY` | `100.64.0.0/10` | obrigatório em produção; faixa interna do proxy do Railway |
+| `RESEND_API_KEY` | chave da conta Resend (segredo) | e-mail de recuperação de senha (RF-002). Ausente: a API sobe, avisa no log e **não envia e-mails** (a resposta de "esqueci a senha" continua a mesma) |
+| `EMAIL_FROM` | `O Gado <nao-responda@seu-dominio>` | remetente; o domínio precisa estar verificado no Resend. Obrigatório se `RESEND_API_KEY` existir |
 
 `PORT` é injetada pelo Railway (o servidor usa `PORT` quando `API_PORT` não existe). A API não tem segredo próprio: a sessão é um token aleatório cujo hash fica no banco.
 
 ### Limites de taxa atrás de dois proxies
 
-O tráfego chega pela Vercel (rewrite) e depois pelo proxy do Railway, então `request.ip` na API é o egress da Vercel (igual para todos). O site (`apps/web/proxy.ts`) repassa o IP real em `x-ogado-client-ip` com o segredo compartilhado `PROXY_SECRET` em `x-ogado-proxy-secret`; a API (`plugins/client-ip.ts`) só confia no IP repassado quando o segredo confere (comparação em tempo constante) e o IP é válido. Cabeçalhos `x-ogado-*` vindos de fora são descartados pelo proxy do site. Os limites voltaram aos padrões (cadastro 5/h, login 20/min por IP, 5/min por IP+e-mail).
+O tráfego chega pela Vercel (rewrite) e depois pelo proxy do Railway, então `request.ip` na API é o egress da Vercel (igual para todos). O site (`apps/web/proxy.ts`) repassa o IP real em `x-ogado-client-ip` com o segredo compartilhado `PROXY_SECRET` em `x-ogado-proxy-secret`; a API (`plugins/client-ip.ts`) só confia no IP repassado quando o segredo confere (comparação em tempo constante) e o IP é válido. Cabeçalhos `x-ogado-*` vindos de fora são descartados pelo proxy do site. Os limites voltaram aos padrões (cadastro 5/h, login 20/min por IP, 5/min por IP+e-mail). Recuperação de senha: 10/h por IP e 3/h por e-mail em "esqueci", 20/h por IP em "redefinir" (`RATE_LIMIT_FORGOT_IP_PER_HOUR`, `RATE_LIMIT_FORGOT_EMAIL_PER_HOUR`, `RATE_LIMIT_RESET_IP_PER_HOUR`).
 
 `PROXY_SECRET` (mínimo 32 caracteres, igual nos dois lados): Railway (serviço `api`) e Vercel (Production e Preview). Para girar: gere outro, atualize os dois e faça novo deploy; durante a troca os limites caem para o IP do socket (nunca abrem).
 

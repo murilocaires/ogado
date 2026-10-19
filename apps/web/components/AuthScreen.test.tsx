@@ -33,6 +33,8 @@ function setup(
     changePassword: vi.fn(),
     updateFazenda: vi.fn(),
     deleteAccount: vi.fn(),
+    forgotPassword: vi.fn(),
+    resetPassword: vi.fn(),
     ...apiOverrides,
   };
   let current = stored;
@@ -69,6 +71,20 @@ beforeEach(() => {
 afterEach(() => setOnline(true));
 
 describe('RF-001 tela de entrar (CA-20)', () => {
+  it('RF-002 oferece o link "Esqueci minha senha" para /esqueci-senha, só em Entrar', async () => {
+    setup('entrar');
+    expect(await screen.findByRole('link', { name: 'Esqueci minha senha' })).toHaveAttribute(
+      'href',
+      '/esqueci-senha',
+    );
+  });
+
+  it('RF-002 Cadastrar não oferece o link de recuperação', async () => {
+    setup('cadastrar');
+    await screen.findByLabelText('E-mail');
+    expect(screen.queryByRole('link', { name: 'Esqueci minha senha' })).not.toBeInTheDocument();
+  });
+
   it('RF-001 credenciais válidas levam ao painel', async () => {
     const { api, user } = setup('entrar');
     await user.type(await screen.findByLabelText('E-mail'), 'Ana@Fazenda.com');

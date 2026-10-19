@@ -7,6 +7,8 @@ export const PUBLIC_ROUTE_ALLOWLIST: readonly string[] = [
   'POST /auth/signup',
   'POST /auth/login',
   'POST /auth/logout',
+  'POST /auth/senha/esqueci',
+  'POST /auth/senha/redefinir',
 ];
 
 export function assertPublicAllowlist(catalog: readonly RouteCatalogEntry[]): void {

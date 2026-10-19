@@ -414,6 +414,8 @@ describe('isolamento por fazenda (HTTP)', () => {
       'POST /auth/signup',
       'POST /auth/login',
       'POST /auth/logout',
+      'POST /auth/senha/esqueci',
+      'POST /auth/senha/redefinir',
     ]);
   });
 
