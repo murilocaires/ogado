@@ -41,7 +41,7 @@ test('o lote lançado no aparelho A aparece no aparelho B', async ({ browser }) 
   await expect(a).toHaveURL(/\/painel$/);
   await a.getByRole('link', { name: 'Negócios' }).filter({ visible: true }).click();
   await lancarCompra(a, { qtd: '10', peso: '3000', preco: '300' });
-  await expect(a.getByText('Dados salvos na sua conta.')).toBeVisible();
+  await expect(a.locator('[data-sync-status="sincronizado"]')).toBeAttached();
 
   const b = await (await browser.newContext()).newPage();
   await b.goto('/entrar');

@@ -2,39 +2,57 @@ import { describe, expect, it } from 'vitest';
 import { descreverConflito } from './conflitos';
 import type { Conflito } from './engine';
 import { aparelho, COMPRA, criarServidor } from './engine.test-support';
-import { rotuloSync } from './indicador';
+import { descreverSync, rotuloSync } from './indicador';
 import { sincronizar } from './engine';
 
-describe('rotuloSync (RF-075)', () => {
+describe('descreverSync (seção Sincronização da Conta)', () => {
   it('sem conta, é só neste aparelho', () => {
-    expect(rotuloSync('desligado', 0, true)).toMatchObject({ tom: 'neutro' });
+    expect(descreverSync('desligado', 0, true)).toMatchObject({ tom: 'neutro' });
   });
 
   it('sincronizado sem pendências', () => {
-    expect(rotuloSync('sincronizado', 0, true)).toMatchObject({
+    expect(descreverSync('sincronizado', 0, true)).toMatchObject({
       tom: 'ok',
       texto: 'Sincronizado',
     });
   });
 
   it('N pendentes (singular e plural)', () => {
-    expect(rotuloSync('sincronizado', 1, true).texto).toBe('1 pendente');
-    expect(rotuloSync('sincronizado', 3, true).texto).toBe('3 pendentes');
-  });
-
-  it('sem conexão, com ou sem pendências; offline do navegador vale mesmo com status ok', () => {
-    expect(rotuloSync('offline', 0, false).texto).toBe('Sem conexão');
-    expect(rotuloSync('offline', 2, false).texto).toBe('Sem conexão · 2 pendentes');
-    expect(rotuloSync('sincronizado', 1, false)).toMatchObject({
-      tom: 'offline',
-      texto: 'Sem conexão · 1 pendente',
-    });
+    expect(descreverSync('sincronizado', 1, true).texto).toBe('1 pendente');
+    expect(descreverSync('sincronizado', 3, true).texto).toBe('3 pendentes');
   });
 
   it('erro mantém a contagem', () => {
-    expect(rotuloSync('erro', 1, true)).toMatchObject({
+    expect(descreverSync('erro', 1, true)).toMatchObject({
       tom: 'erro',
       texto: 'Erro ao sincronizar · 1 pendente',
+    });
+  });
+});
+
+describe('rotuloSync (RF-075: indicador global só sem internet)', () => {
+  it('online e sincronizado não mostra nada', () => {
+    expect(rotuloSync('sincronizado', 0, true)).toBeNull();
+  });
+
+  it('online com pendentes, sincronizando ou erro também não mostra pílula', () => {
+    expect(rotuloSync('sincronizado', 3, true)).toBeNull();
+    expect(rotuloSync('sincronizando', 1, true)).toBeNull();
+    expect(rotuloSync('erro', 1, true)).toBeNull();
+  });
+
+  it('sem conta não mostra nada, mesmo offline', () => {
+    expect(rotuloSync('desligado', 0, true)).toBeNull();
+    expect(rotuloSync('desligado', 0, false)).toBeNull();
+  });
+
+  it('sem conexão, com ou sem pendências; offline do navegador vale mesmo com status ok', () => {
+    expect(rotuloSync('offline', 0, false)?.texto).toBe('Sem conexão');
+    expect(rotuloSync('offline', 2, false)?.texto).toBe('Sem conexão · 2 pendentes');
+    expect(rotuloSync('offline', 1, true)?.texto).toBe('Sem conexão · 1 pendente');
+    expect(rotuloSync('sincronizado', 1, false)).toMatchObject({
+      tom: 'offline',
+      texto: 'Sem conexão · 1 pendente',
     });
   });
 });
