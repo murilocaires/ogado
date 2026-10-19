@@ -14,6 +14,7 @@ import { ExportarDialog } from './ExportarDialog';
 import { Icon } from './Icon';
 import { InfoPopover } from './InfoPopover';
 import { LoteModal } from './LoteModal';
+import { OperacaoItem } from './OperacaoItem';
 import { SeloSync } from './SyncIndicador';
 import { useToast } from './Toast';
 
@@ -38,6 +39,23 @@ function descricaoItem(x: ItemNegocio): string {
     );
   }
   return partes.join(' · ');
+}
+
+/** Linha principal da lista compacta (celular): cabeças, @, preço e data. */
+function detalheCompacto(x: ItemNegocio): string {
+  return `${num(x.linha.qtd, 0)} cab. · ${num(x.linha.arrobas, 2)} @ · ${brl(x.linha.preco, 0)}/@ · ${dataBR(x.lote.data)}`;
+}
+
+/** Segunda linha da lista compacta: kg (líquido na venda), base e desconto. */
+function extraCompacto(x: ItemNegocio): string {
+  const individual = x.lote.modo === 'individual' ? ' · peso a peso' : '';
+  if (x.tipo === 'compra') return `${num(x.linha.kg, 0)} kg${individual}`;
+  const kg = x.linha.descontoKgCab;
+  const desconto = x.linha.kgDescontado.gt(0)
+    ? `desc. ${num(kg, kg.isInteger() ? 0 : 1)} kg/cab.`
+    : 'sem desconto';
+  const base = x.lote.base === 'carcaca' ? 'carcaça' : 'peso vivo';
+  return `${num(x.linha.kgLiquido, 0)} kg líq. de ${num(x.linha.kg, 0)} kg · ${base} · ${desconto}${individual}`;
 }
 
 function Etiqueta({ tipo }: { tipo: LoteTipo }) {
@@ -105,7 +123,6 @@ export function NegociosScreen() {
     resumoEsq = `${plural(itens.length, 'lançamento')} · ${plural(nCompras, 'compra')} · ${plural(nVendas, 'venda')}`;
   }
 
-  const novoPadrao: LoteTipo = aba === 'vendas' ? 'venda' : 'compra';
   const editando = modal?.loteId ? lotes.find((l) => l.id === modal.loteId) : undefined;
 
   function botoes(x: ItemNegocio) {
@@ -133,22 +150,25 @@ export function NegociosScreen() {
 
   const arrInfo = aba === 'vendas' ? 'arrV' : 'arrC';
 
+  // Botões de criar contextuais: a aba define o tipo (Todas oferece os dois).
+  const tiposNovos: LoteTipo[] = aba === 'compras' ? ['compra'] : aba === 'vendas' ? ['venda'] : ['compra', 'venda'];
+  const botoesNovo = tiposNovos.map((t) => (
+    <button key={t} type="button" className="btn sm" onClick={() => setModal({ tipo: t })}>
+      <Icon name="plus" size={18} />
+      {t === 'compra' ? 'Nova compra' : 'Nova venda'}
+    </button>
+  ));
+
   return (
     <>
       <PageHeader
         titulo="Compra e Venda"
         sub="Todos os lotes comprados e vendidos, com o saldo do giro."
         acoes={
-          <>
-            <button type="button" className="btn sec" onClick={() => setExportando(true)}>
-              <Icon name="baixar" size={20} />
-              Exportar
-            </button>
-            <button type="button" className="btn" onClick={() => setModal({ tipo: novoPadrao })}>
-              <Icon name="plus" size={20} />
-              Novo lote
-            </button>
-          </>
+          <button type="button" className="btn sec sm" onClick={() => setExportando(true)}>
+            <Icon name="baixar" size={18} />
+            Exportar
+          </button>
         }
       />
 
@@ -186,23 +206,21 @@ export function NegociosScreen() {
         </div>
       </div>
 
-      <div
-        className="seg"
-        role="tablist"
-        aria-label="Tipo de lançamento"
-        style={{ maxWidth: 420, margin: '16px 0 10px' }}
-      >
-        {ABAS.map((a) => (
-          <button
-            key={a.id}
-            type="button"
-            role="tab"
-            aria-selected={aba === a.id}
-            onClick={() => setAba(a.id)}
-          >
-            {a.rotulo}
-          </button>
-        ))}
+      <div className="abas-barra">
+        <div className="seg" role="tablist" aria-label="Tipo de lançamento">
+          {ABAS.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              role="tab"
+              aria-selected={aba === a.id}
+              onClick={() => setAba(a.id)}
+            >
+              {a.rotulo}
+            </button>
+          ))}
+        </div>
+        <div className="abas-acoes">{botoesNovo}</div>
       </div>
 
       <div className="resumo-aba">
@@ -265,39 +283,27 @@ export function NegociosScreen() {
               </tbody>
             </table>
           </div>
-          <div className="lotes-m clist">
-            {visiveis.map((x) => (
-              <div className="lrow" key={x.lote.id}>
-                <div className="l1">
-                  <b>
-                    {todas && <Etiqueta tipo={x.tipo} />}
-                    Lote {x.lote.numero} · {capitalizar(x.lote.categoria)}
-                    <SeloSync id={x.lote.id} />
-                  </b>
-                  <span
-                    style={todas && x.tipo === 'venda' ? { color: 'var(--folha-600)' } : undefined}
-                  >
-                    {brl(x.linha.total)}
-                  </span>
-                </div>
-                <div className="l2">
-                  <span>
-                    {num(x.linha.qtd, 0)} cab. · {num(x.linha.arrobas, 2)} @ ·{' '}
-                    {brl(x.linha.preco, 0)}/@ · {dataBR(x.lote.data)}
-                  </span>
-                  <span>{botoes(x)}</span>
-                </div>
-              </div>
-            ))}
+          <div className="card lotes-m">
+            <div className="ops">
+              {visiveis.map((x) => (
+                <OperacaoItem
+                  key={x.lote.id}
+                  item={x}
+                  detalhe={detalheCompacto(x)}
+                  extra={extraCompacto(x)}
+                  casasValor={2}
+                  mostrarTipo={todas}
+                  acoes={botoes(x)}
+                />
+              ))}
+            </div>
           </div>
         </>
       ) : (
         <div className="card empty">
           <h3>Nenhum lote{todas ? '' : ` de ${aba === 'compras' ? 'compra' : 'venda'}`}</h3>
           <p>Cadastre o primeiro para ver os totais e o saldo.</p>
-          <button type="button" className="btn" onClick={() => setModal({ tipo: novoPadrao })}>
-            Novo lote
-          </button>
+          <div className="empty-acoes">{botoesNovo}</div>
         </div>
       )}
 

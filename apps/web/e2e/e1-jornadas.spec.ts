@@ -12,9 +12,9 @@ const viewports = [
 ];
 
 async function lancar(page: Page, tipo: 'Compra' | 'Venda', v: { qtd: string; peso: string; preco: string }) {
-  await page.getByRole('button', { name: 'Novo lote' }).first().click();
-  const modal = page.getByRole('dialog', { name: /Novo lote de/ });
-  await modal.getByRole('button', { name: tipo, exact: true }).click();
+  const nome = tipo === 'Compra' ? 'Nova compra' : 'Nova venda';
+  await page.getByRole('button', { name: nome }).first().click();
+  const modal = page.getByRole('dialog', { name: nome });
   await modal.getByLabel('Quantidade', { exact: true }).fill(v.qtd);
   await modal.getByLabel('Peso total do lote', { exact: true }).fill(v.peso);
   await modal.getByLabel('Preço da arroba', { exact: true }).fill(v.preco);
@@ -108,7 +108,7 @@ test('RF-025/RF-026 modal de venda: desconto automático para fêmeas e pré-vis
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/negocios?novo=venda');
-  const modal = page.getByRole('dialog', { name: 'Novo lote de venda' });
+  const modal = page.getByRole('dialog', { name: 'Nova venda' });
   await expect(modal).toBeVisible();
   await expect(page).toHaveURL(/\/negocios$/);
   await modal.getByLabel('Categoria', { exact: true }).fill('novilhas');

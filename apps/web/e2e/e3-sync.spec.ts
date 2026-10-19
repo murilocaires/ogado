@@ -11,9 +11,8 @@ function uniqueEmail(prefix: string): string {
 }
 
 async function lancarCompra(page: Page, v: { qtd: string; peso: string; preco: string }) {
-  await page.getByRole('button', { name: 'Novo lote' }).first().click();
-  const modal = page.getByRole('dialog', { name: /Novo lote de/ });
-  await modal.getByRole('button', { name: 'Compra', exact: true }).click();
+  await page.getByRole('button', { name: 'Nova compra' }).first().click();
+  const modal = page.getByRole('dialog', { name: 'Nova compra' });
   await modal.getByLabel('Quantidade', { exact: true }).fill(v.qtd);
   await modal.getByLabel('Peso total do lote', { exact: true }).fill(v.peso);
   await modal.getByLabel('Preço da arroba', { exact: true }).fill(v.preco);

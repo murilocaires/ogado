@@ -60,19 +60,77 @@ describe('RF-024 estado vazio', () => {
   });
 });
 
+describe('RF-024 botões de criar contextuais por aba', () => {
+  const nomes = () =>
+    ['Nova compra', 'Nova venda'].filter((n) => screen.queryAllByRole('button', { name: n }).length);
+
+  it('RF-024 o topo não tem "Novo lote", só Exportar; a aba Todas oferece compra e venda', () => {
+    renderComApp(<NegociosScreen />);
+    expect(screen.queryByRole('button', { name: 'Novo lote' })).not.toBeInTheDocument();
+    const topo = document.querySelector('.top-actions') as HTMLElement;
+    expect(within(topo).getAllByRole('button').map((b) => b.textContent)).toEqual(['Exportar']);
+    const barra = document.querySelector('.abas-barra') as HTMLElement;
+    expect(within(barra).getAllByRole('tab').map((b) => b.textContent)).toEqual([
+      'Todas',
+      'Compras',
+      'Vendas',
+    ]);
+    expect(within(barra).getAllByRole('button').map((b) => b.textContent)).toEqual([
+      'Nova compra',
+      'Nova venda',
+    ]);
+  });
+
+  it('RF-024 Compras mostra só "Nova compra" e Vendas só "Nova venda"', async () => {
+    const user = userEvent.setup();
+    renderComApp(<NegociosScreen />);
+    await user.click(screen.getByRole('tab', { name: 'Compras' }));
+    expect(nomes()).toEqual(['Nova compra']);
+    await user.click(screen.getByRole('tab', { name: 'Vendas' }));
+    expect(nomes()).toEqual(['Nova venda']);
+    // o estado vazio também oferece o botão contextual
+    const vazio = document.querySelector('.empty-acoes') as HTMLElement;
+    expect(within(vazio).getByRole('button', { name: 'Nova venda' })).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Todas' }));
+    expect(nomes()).toEqual(['Nova compra', 'Nova venda']);
+  });
+
+  it('RF-024 o modal abre com o tipo do botão, sem seletor de tipo', async () => {
+    const user = userEvent.setup();
+    renderComApp(<NegociosScreen />);
+    await user.click(screen.getByRole('tab', { name: 'Vendas' }));
+    await user.click(screen.getAllByRole('button', { name: 'Nova venda' })[0]!);
+    const modal = screen.getByRole('dialog', { name: 'Nova venda' });
+    expect(within(modal).queryByRole('group', { name: 'Tipo de lançamento' })).not.toBeInTheDocument();
+    expect(within(modal).getByRole('checkbox', { name: /Aplicar desconto/ })).toBeInTheDocument();
+  });
+
+  it('RF-024 a lista compacta mostra kg líquido, desconto e base da venda de fêmea', async () => {
+    const user = userEvent.setup();
+    renderComApp(<NegociosScreen />);
+    await user.click(screen.getAllByRole('button', { name: 'Nova venda' })[0]!);
+    await preencherELancar(user, { qtd: '10', peso: '3000', preco: '300', categoria: 'NOVILHAS' });
+    await confirmarSalvar(user);
+    const lista = document.querySelector('.lotes-m .ops') as HTMLElement;
+    expect(within(lista).getByText('Lote 1 · Novilhas')).toBeInTheDocument();
+    expect(within(lista).getByText('2.900 kg líq. de 3.000 kg · peso vivo · desc. 10 kg/cab.')).toBeInTheDocument();
+    expect(within(lista).getByRole('button', { name: 'Editar lote 1 de venda' })).toBeInTheDocument();
+    expect(within(lista).getByRole('button', { name: 'Excluir lote 1 de venda' })).toBeInTheDocument();
+  });
+});
+
 describe('RF-020/RF-021/RF-023/RN-006 compra e venda geram o saldo do domínio', () => {
   it('RF-023 cadastra uma compra e uma venda e o saldo bate com @ogado/domain', async () => {
     const user = userEvent.setup();
     renderComApp(<NegociosScreen />);
 
-    await user.click(screen.getAllByRole('button', { name: 'Novo lote' })[0]!);
-    expect(screen.getByRole('dialog', { name: 'Novo lote de compra' })).toBeInTheDocument();
+    await user.click(screen.getAllByRole('button', { name: 'Nova compra' })[0]!);
+    expect(screen.getByRole('dialog', { name: 'Nova compra' })).toBeInTheDocument();
     await preencherELancar(user, { qtd: '10', peso: '3000', preco: '300' });
     await confirmarSalvar(user);
 
-    await user.click(screen.getAllByRole('button', { name: 'Novo lote' })[0]!);
-    await user.click(screen.getByRole('button', { name: 'Venda' }));
-    expect(screen.getByRole('dialog', { name: 'Novo lote de venda' })).toBeInTheDocument();
+    await user.click(screen.getAllByRole('button', { name: 'Nova venda' })[0]!);
+    expect(screen.getByRole('dialog', { name: 'Nova venda' })).toBeInTheDocument();
     await preencherELancar(user, { qtd: '10', peso: '4500', preco: '320' });
     await confirmarSalvar(user);
 
@@ -93,8 +151,7 @@ describe('RF-020/RF-021/RF-023/RN-006 compra e venda geram o saldo do domínio',
   it('RN-025 categoria feminina liga o desconto de 10 kg/cab. e o total segue o domínio', async () => {
     const user = userEvent.setup();
     renderComApp(<NegociosScreen />);
-    await user.click(screen.getAllByRole('button', { name: 'Novo lote' })[0]!);
-    await user.click(screen.getByRole('button', { name: 'Venda' }));
+    await user.click(screen.getAllByRole('button', { name: 'Nova venda' })[0]!);
     const modal = screen.getByRole('dialog');
     const desconto = within(modal).getByRole('checkbox', { name: /Aplicar desconto/ });
     expect(desconto).not.toBeChecked(); // BOIS
@@ -126,8 +183,7 @@ describe('RF-020/RF-021/RF-023/RN-006 compra e venda geram o saldo do domínio',
   it('RN-025 depois que o usuário mexe no desconto, trocar a categoria não o religa', async () => {
     const user = userEvent.setup();
     renderComApp(<NegociosScreen />);
-    await user.click(screen.getAllByRole('button', { name: 'Novo lote' })[0]!);
-    await user.click(screen.getByRole('button', { name: 'Venda' }));
+    await user.click(screen.getAllByRole('button', { name: 'Nova venda' })[0]!);
     const modal = screen.getByRole('dialog');
     const desconto = within(modal).getByRole('checkbox', { name: /Aplicar desconto/ });
     await user.click(desconto); // liga
@@ -143,7 +199,7 @@ describe('RN-027 modos de peso retêm o que foi digitado', () => {
   it('RN-027 alternar total, média e peso a peso não perde valores e marca o modo guardado', async () => {
     const user = userEvent.setup();
     renderComApp(<NegociosScreen />);
-    await user.click(screen.getAllByRole('button', { name: 'Novo lote' })[0]!);
+    await user.click(screen.getAllByRole('button', { name: 'Nova compra' })[0]!);
     const modal = screen.getByRole('dialog');
 
     await user.type(within(modal).getByLabelText('Peso total do lote'), '3000');
@@ -174,7 +230,7 @@ describe('RNF-007 / RN-022 entrada pt-BR estrita', () => {
   it('RNF-007 "1.500" é recusado com dica para usar vírgula e o total fica "—"', async () => {
     const user = userEvent.setup();
     renderComApp(<NegociosScreen />);
-    await user.click(screen.getAllByRole('button', { name: 'Novo lote' })[0]!);
+    await user.click(screen.getAllByRole('button', { name: 'Nova compra' })[0]!);
     const modal = screen.getByRole('dialog');
     await user.type(within(modal).getByLabelText('Quantidade'), '10');
     await user.type(within(modal).getByLabelText('Peso total do lote'), '1.500');
@@ -189,7 +245,7 @@ describe('RNF-007 / RN-022 entrada pt-BR estrita', () => {
   it('RF-025 sem o preço da arroba avisa e não pede confirmação', async () => {
     const user = userEvent.setup();
     renderComApp(<NegociosScreen />);
-    await user.click(screen.getAllByRole('button', { name: 'Novo lote' })[0]!);
+    await user.click(screen.getAllByRole('button', { name: 'Nova compra' })[0]!);
     const modal = screen.getByRole('dialog');
     await user.type(within(modal).getByLabelText('Quantidade'), '10');
     await user.type(within(modal).getByLabelText('Peso total do lote'), '3000');
@@ -272,7 +328,7 @@ describe('RF-041 exportar compras e vendas', () => {
     baixados.length = 0;
     const user = userEvent.setup();
     renderComApp(<NegociosScreen />);
-    await user.click(screen.getAllByRole('button', { name: 'Novo lote' })[0]!);
+    await user.click(screen.getAllByRole('button', { name: 'Nova compra' })[0]!);
     await preencherELancar(user, { qtd: '10', peso: '3000', preco: '300' });
     await confirmarSalvar(user);
 
