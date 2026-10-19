@@ -16,6 +16,7 @@
   "dependencies": {
     "@ogado/contracts": "workspace:*",
     "@ogado/domain": "workspace:*",
+    "fflate": "^0.8.3",
     "next": "^16.4.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
@@ -27,6 +28,7 @@
     "@testing-library/user-event": "^14.6.8",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "happy-dom": "^21.0.3"
+    "happy-dom": "^21.0.3",
+    "read-excel-file": "^9.3.12"
   }
 }

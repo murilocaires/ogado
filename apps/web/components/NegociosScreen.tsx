@@ -2,12 +2,15 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { baixarArquivo, gerarArquivo } from '../lib/exportacao/baixar';
+import { prepararNegocios, type ConteudoNegocios } from '../lib/exportacao/dados';
 import { brl, brlComSinal, capitalizar, dataBR, ehNegativo, num } from '../lib/format';
 import { ordenarPorData, resumirNegocios, type ItemNegocio } from '../lib/negocios';
 import { useRepo, useRepoState } from '../lib/repo/repo-provider';
 import type { LoteTipo } from '../lib/repo/types';
 import { Carregando, PageHeader } from './AppShell';
 import { ConfirmDialog } from './Dialog';
+import { ExportarDialog } from './ExportarDialog';
 import { Icon } from './Icon';
 import { InfoPopover } from './InfoPopover';
 import { LoteModal } from './LoteModal';
@@ -53,6 +56,7 @@ export function NegociosScreen() {
   const [aba, setAba] = useState<Aba>('todas');
   const [modal, setModal] = useState<ModalAberto>(null);
   const [excluindo, setExcluindo] = useState<ItemNegocio | null>(null);
+  const [exportando, setExportando] = useState(false);
 
   const pronto = dados.status === 'pronto';
   const novoParam = params.get('novo');
@@ -133,10 +137,16 @@ export function NegociosScreen() {
         titulo="Compra e Venda"
         sub="Todos os lotes comprados e vendidos, com o saldo do giro."
         acoes={
-          <button type="button" className="btn" onClick={() => setModal({ tipo: novoPadrao })}>
-            <Icon name="plus" size={20} />
-            Novo lote
-          </button>
+          <>
+            <button type="button" className="btn sec" onClick={() => setExportando(true)}>
+              <Icon name="baixar" size={20} />
+              Exportar
+            </button>
+            <button type="button" className="btn" onClick={() => setModal({ tipo: novoPadrao })}>
+              <Icon name="plus" size={20} />
+              Novo lote
+            </button>
+          </>
         }
       />
 
@@ -295,6 +305,25 @@ export function NegociosScreen() {
           tipo={modal.tipo}
           lote={editando}
           onClose={() => setModal(null)}
+        />
+      )}
+
+      {exportando && (
+        <ExportarDialog<ConteudoNegocios>
+          titulo="Exportar compras e vendas"
+          conteudos={[
+            { id: 'ambos', rotulo: 'Compras e vendas', quantidade: itens.length },
+            { id: 'compras', rotulo: 'Compras', quantidade: nCompras },
+            { id: 'vendas', rotulo: 'Vendas', quantidade: nVendas },
+          ]}
+          conteudoInicial={aba === 'compras' ? 'compras' : aba === 'vendas' ? 'vendas' : 'ambos'}
+          onClose={() => setExportando(false)}
+          onExportar={async (formato, conteudo) => {
+            const { tabelas, nomeBase } = prepararNegocios(lotes, conteudo, formato);
+            const arquivo = await gerarArquivo(formato, tabelas, nomeBase);
+            baixarArquivo(arquivo);
+            return `Arquivo ${arquivo.nome} baixado.`;
+          }}
         />
       )}
 
