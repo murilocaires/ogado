@@ -27,8 +27,10 @@ async function esperarOffline(page: Page): Promise<void> {
     .poll(
       () =>
         page.evaluate(async () => {
-          const c = await caches.open('ogado-paginas-v1');
-          return (await c.keys()).length;
+          // A versão do cache é o id do build (RF-077): procura pelo prefixo.
+          const nome = (await caches.keys()).find((k) => k.startsWith('ogado-paginas-'));
+          if (!nome) return 0;
+          return (await (await caches.open(nome)).keys()).length;
         }),
       { timeout: 60_000 },
     )
@@ -113,7 +115,10 @@ test('RF-072/RF-071 abre sem internet após a primeira visita e a Recria calcula
   ).toHaveText('R$ 102.408,05');
 });
 
-test('RF-071 nenhuma requisição /api/* entra no cache do service worker', async ({ page, context }) => {
+test('RF-071 nenhuma requisição /api/* entra no cache do service worker', async ({
+  page,
+  context,
+}) => {
   await cadastrar(page, 'off-cache');
   await esperarOffline(page);
   await irPara(page, 'Negócios');

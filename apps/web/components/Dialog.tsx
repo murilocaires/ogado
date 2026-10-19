@@ -5,6 +5,11 @@ import { useEffect, useId, useRef, type ReactNode } from 'react';
 /** Pilha de diálogos abertos: Esc e Tab só valem para o do topo (confirmação sobre o modal). */
 const pilha: symbol[] = [];
 
+/** Há algum diálogo aberto? (a nova versão do app não troca no meio de uma edição, RF-077) */
+export function haDialogoAberto(): boolean {
+  return pilha.length > 0;
+}
+
 const FOCAVEIS =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 

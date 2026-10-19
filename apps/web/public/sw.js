@@ -3,12 +3,14 @@ importScripts('/sw-policy.js');
 
 var P = self.OGadoSwPolicy;
 
+// Sem skipWaiting automático (RF-077): a versão nova instala em segundo plano e fica em espera até o
+// usuário aceitar "Atualizar" e não haver edição aberta. O app avisa com SKIP_WAITING.
 self.addEventListener('install', function (event) {
-  event.waitUntil(
-    preCarregar().then(function () {
-      return self.skipWaiting();
-    }),
-  );
+  event.waitUntil(preCarregar());
+});
+
+self.addEventListener('message', function (event) {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', function (event) {

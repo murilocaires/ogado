@@ -2,13 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSyncExternalStore, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useOptionalSessionController } from '../lib/auth/session-provider';
 import { useRepoState } from '../lib/repo/repo-provider';
+import { AtencaoDialog } from './AtencaoPainel';
+import { AtualizacaoBanner } from './AtualizacaoBanner';
 import { Icon, type IconName } from './Icon';
 import { InstalarApp } from './InstalarApp';
 import { LogoMark } from './Logo';
-import { useSyncStatus, type SyncStatus } from './SyncProvider';
+import { SyncIndicador, useOnline } from './SyncIndicador';
+import { useSyncInfo, useSyncStatus } from './SyncProvider';
 
 const ITENS: { href: string; rotulo: string; icone: IconName }[] = [
   { href: '/painel', rotulo: 'Painel', icone: 'home' },
@@ -17,37 +20,14 @@ const ITENS: { href: string; rotulo: string; icone: IconName }[] = [
   { href: '/conta', rotulo: 'Conta', icone: 'user' },
 ];
 
-function assinarRede(listener: () => void): () => void {
-  window.addEventListener('online', listener);
-  window.addEventListener('offline', listener);
-  return () => {
-    window.removeEventListener('online', listener);
-    window.removeEventListener('offline', listener);
-  };
-}
-
-function useOnline(): boolean {
-  return useSyncExternalStore(
-    assinarRede,
-    () => navigator.onLine,
-    () => true,
-  );
-}
-
-const TEXTO_SYNC: Record<SyncStatus, string> = {
-  desligado: 'Seus dados ficam salvos neste navegador.',
-  sincronizando: 'Sincronizando com a nuvem…',
-  sincronizado: 'Dados salvos na sua conta.',
-  offline: 'Sem conexão: salvo neste aparelho, sobe quando voltar.',
-  erro: 'Não foi possível sincronizar agora. Tentaremos de novo.',
-};
-
 /** Navegação lateral (desktop) e barra inferior (< 900 px); item ativo com `aria-current` (RF-053). */
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const online = useOnline();
   const dados = useRepoState();
   const sync = useSyncStatus();
+  const info = useSyncInfo();
+  const [revisando, setRevisando] = useState(false);
   const comConta = useOptionalSessionController() !== null;
   const ativo = (href: string): boolean => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -72,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
           <div className="side-foot">
             <div className="tagline">Cada arroba na ponta do lápis.</div>
-            <span role="status">{TEXTO_SYNC[sync]}</span>
+            <SyncIndicador variante="lateral" onRevisar={() => setRevisando(true)} />
             {comConta && sync === 'desligado' && (
               <div>
                 <Link href="/entrar">Entrar para guardar na nuvem</Link>
@@ -82,6 +62,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
         <main id="conteudo" className="app-main" tabIndex={-1}>
+          <AtualizacaoBanner />
+          <SyncIndicador variante="compacto" onRevisar={() => setRevisando(true)} />
+          {info.cotaQuaseCheia !== null && (
+            <div className="note erro banner" role="status">
+              O armazenamento deste aparelho está quase cheio (
+              {Math.round(info.cotaQuaseCheia * 100)}% usado). Libere espaço no navegador para não
+              perder lançamentos.
+            </div>
+          )}
           {!online && (
             <div className="note banner" role="status">
               Você está sem internet. Pode continuar: tudo funciona e fica salvo neste aparelho.
@@ -106,6 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
       </div>
+      {revisando && <AtencaoDialog onClose={() => setRevisando(false)} />}
     </div>
   );
 }

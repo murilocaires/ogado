@@ -1,3 +1,4 @@
+import { setTimeout } from 'node:timers';
 // Backup do Postgres do Railway sem expor o banco: roda `pg_dump` DENTRO do serviço Postgres
 // (railway ssh) e grava um .sql.gz em backups/ (ignorado pelo git; contém dados de clientes).
 // Uso: node scripts/backup-db.mjs [--manter=14]

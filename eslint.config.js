@@ -11,6 +11,7 @@ export default tseslint.config(
       '**/generated/**',
       'references/**',
       'coverage/**',
+      '.claude/worktrees/**',
       '**/next-env.d.ts',
     ],
   },
