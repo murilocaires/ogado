@@ -8,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { sessionBody } from '../lib/auth/fixtures';
 import { createSessionController } from '../lib/auth/session-controller';
 import { SessionProvider } from '../lib/auth/session-provider';
-import { criarControladorAtualizacao } from '../lib/pwa/atualizacao';
 import { criarRepoLocal } from '../lib/repo/local-repo';
 import { RepoProvider } from '../lib/repo/repo-provider';
 import type { SyncableRepo } from '../lib/repo/types';
@@ -16,8 +15,6 @@ import type { DadosClient } from '../lib/sync/data-client';
 import { sincronizar, type EstadoSyncStore } from '../lib/sync/engine';
 import { aparelho, COMPRA, criarEstado, criarServidor } from '../lib/sync/engine.test-support';
 import { AppShell } from './AppShell';
-import { AtualizacaoBanner } from './AtualizacaoBanner';
-import { Dialog } from './Dialog';
 import { NegociosScreen } from './NegociosScreen';
 import { SyncContext, SyncInfoContext, SyncProvider } from './SyncProvider';
 import { ToastProvider } from './Toast';
@@ -411,68 +408,6 @@ describe('RF-074 rodada imediata', () => {
     await sincronizarAgora();
 
     await waitFor(() => expect(srv.lotes.size).toBe(1), { timeout: 5000 });
-  });
-});
-
-describe('RF-077 nova versão', () => {
-  function bannerComWorker(edicaoAberta: () => boolean) {
-    const container = Object.assign(new EventTarget(), { controller: {} });
-    const w = Object.assign(new EventTarget(), { state: 'installed', postMessage: vi.fn() });
-    const reg = Object.assign(new EventTarget(), {
-      waiting: w,
-      installing: null,
-      update: async () => undefined,
-    });
-    const controlador = criarControladorAtualizacao({
-      container,
-      haEdicaoAberta: edicaoAberta,
-      recarregar: vi.fn(),
-    });
-    controlador.observar(reg as never);
-    return { controlador, w };
-  }
-
-  it('mostra "Nova versão disponível" e aplica ao clicar em Atualizar', async () => {
-    const user = userEvent.setup();
-    const { controlador, w } = bannerComWorker(() => false);
-    render(<AtualizacaoBanner controlador={controlador} />);
-
-    expect(screen.getByRole('status')).toHaveTextContent('Nova versão disponível');
-    await user.click(screen.getByRole('button', { name: 'Atualizar' }));
-
-    expect(w.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
-  });
-
-  it('com modal aberto não aplica e explica; nada é perdido', async () => {
-    const user = userEvent.setup();
-    const { haDialogoAberto } = await import('./Dialog');
-    const { controlador, w } = bannerComWorker(haDialogoAberto);
-    render(
-      <>
-        <AtualizacaoBanner controlador={controlador} />
-        <Dialog titulo="Editando" onClose={() => undefined}>
-          <input aria-label="campo" />
-        </Dialog>
-      </>,
-    );
-
-    // O diálogo é modal; o clique vai direto no botão como faria a tecnologia assistiva.
-    screen.getByRole('button', { name: 'Atualizar', hidden: true }).click();
-
-    expect(w.postMessage).not.toHaveBeenCalled();
-    expect(await screen.findByText(/Termine o que está aberto/)).toBeInTheDocument();
-    void user;
-  });
-
-  it('sem versão nova em espera, não mostra nada', () => {
-    const container = Object.assign(new EventTarget(), { controller: {} });
-    const controlador = criarControladorAtualizacao({
-      container,
-      haEdicaoAberta: () => false,
-      recarregar: vi.fn(),
-    });
-    render(<AtualizacaoBanner controlador={controlador} />);
-    expect(screen.queryByText(/Nova versão/)).not.toBeInTheDocument();
   });
 });
 

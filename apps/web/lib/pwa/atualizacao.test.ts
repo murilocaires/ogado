@@ -1,93 +1,168 @@
+// @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest';
-import { criarControladorAtualizacao, type RegistroLike } from './atualizacao';
+import {
+  CHAVE_MARCADOR_RECARGA,
+  criarAtualizadorSilencioso,
+  haCampoDigitadoEmFoco,
+  INTERVALO_MIN_RECARGA_MS,
+} from './atualizacao';
 
-function cenario(opts: { controlada?: boolean; edicaoAberta?: boolean } = {}) {
+function cenario(
+  opts: { controlada?: boolean; dialogo?: boolean; campo?: boolean; oculta?: boolean } = {},
+) {
   const container = Object.assign(new EventTarget(), {
     controller: opts.controlada === false ? null : {},
   });
-  const estado = { edicaoAberta: opts.edicaoAberta ?? false };
-  const recarregar = vi.fn();
-  const controlador = criarControladorAtualizacao({
-    container,
-    haEdicaoAberta: () => estado.edicaoAberta,
-    recarregar,
+  const documento = Object.assign(new EventTarget(), {
+    visibilityState: opts.oculta ? 'hidden' : 'visible',
   });
-  const novoWorker = (state: string) => {
-    const w = Object.assign(new EventTarget(), { state, postMessage: vi.fn() });
-    return w;
+  const estado = { dialogo: opts.dialogo ?? false, campo: opts.campo ?? false, agora: 1_000_000 };
+  const memoria = new Map<string, string>();
+  const armazenamento = {
+    getItem: (k: string) => memoria.get(k) ?? null,
+    setItem: (k: string, v: string) => void memoria.set(k, v),
   };
-  const registro = (waiting: ReturnType<typeof novoWorker> | null = null) => {
-    const r = Object.assign(new EventTarget(), {
-      waiting,
-      installing: null as ReturnType<typeof novoWorker> | null,
-      update: async () => undefined,
-    });
-    return r;
+  const recarregar = vi.fn();
+  const atualizador = criarAtualizadorSilencioso({
+    container,
+    documento,
+    haDialogoAberto: () => estado.dialogo,
+    haCampoDigitado: () => estado.campo,
+    recarregar,
+    armazenamento,
+    agora: () => estado.agora,
+  });
+  const trocarWorker = () => container.dispatchEvent(new Event('controllerchange'));
+  const ocultarAba = () => {
+    documento.visibilityState = 'hidden';
+    documento.dispatchEvent(new Event('visibilitychange'));
   };
-  return { container, estado, recarregar, controlador, novoWorker, registro };
+  return { container, estado, memoria, recarregar, atualizador, trocarWorker, ocultarAba };
 }
 
-const comoRegistro = (r: object): RegistroLike => r as RegistroLike;
-
-describe('atualização do app (RF-077)', () => {
-  it('worker novo em espera acende o aviso; sem atualização, não', () => {
+describe('RF-077 atualização silenciosa do app', () => {
+  it('worker novo assume em momento seguro: recarrega na hora, sem pendência', () => {
     const t = cenario();
-    expect(t.controlador.getSnapshot()).toBe(false);
-    const w = t.novoWorker('installed');
-    t.controlador.observar(comoRegistro(t.registro(w)));
-    expect(t.controlador.getSnapshot()).toBe(true);
+    t.trocarWorker();
+    expect(t.recarregar).toHaveBeenCalledTimes(1);
+    expect(t.atualizador.pendente()).toBe(false);
+    expect(t.memoria.get(CHAVE_MARCADOR_RECARGA)).toBe(String(t.estado.agora));
   });
 
-  it('instalação que termina depois (updatefound -> installed) também avisa e notifica', () => {
-    const t = cenario();
-    const r = t.registro();
-    const ouvinte = vi.fn();
-    t.controlador.subscribe(ouvinte);
-    t.controlador.observar(comoRegistro(r));
-
-    const w = t.novoWorker('installing');
-    r.installing = w;
-    r.dispatchEvent(new Event('updatefound'));
-    expect(t.controlador.getSnapshot()).toBe(false);
-    w.state = 'installed';
-    w.dispatchEvent(new Event('statechange'));
-
-    expect(t.controlador.getSnapshot()).toBe(true);
-    expect(ouvinte).toHaveBeenCalled();
-  });
-
-  it('primeira instalação (sem controlador) não é "nova versão"', () => {
+  it('primeira instalação (sem controlador antes) não recarrega; a atualização seguinte sim', () => {
     const t = cenario({ controlada: false });
-    t.controlador.observar(comoRegistro(t.registro(t.novoWorker('installed'))));
-    expect(t.controlador.getSnapshot()).toBe(false);
-  });
-
-  it('só aplica quando não há modal/edição aberta; com edição aberta bloqueia e nada é enviado', () => {
-    const t = cenario({ edicaoAberta: true });
-    const w = t.novoWorker('installed');
-    t.controlador.observar(comoRegistro(t.registro(w)));
-
-    expect(t.controlador.aplicar()).toBe('bloqueado');
-    expect(w.postMessage).not.toHaveBeenCalled();
-
-    t.estado.edicaoAberta = false;
-    expect(t.controlador.aplicar()).toBe('aplicando');
-    expect(w.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
-  });
-
-  it('recarrega uma única vez, só depois de aceito; troca vinda de outra aba não recarrega', () => {
-    const t = cenario();
-    t.container.dispatchEvent(new Event('controllerchange'));
+    t.trocarWorker(); // clients.claim da primeira visita
     expect(t.recarregar).not.toHaveBeenCalled();
+    expect(t.atualizador.pendente()).toBe(false);
 
-    t.controlador.observar(comoRegistro(t.registro(t.novoWorker('installed'))));
-    t.controlador.aplicar();
-    t.container.dispatchEvent(new Event('controllerchange'));
-    t.container.dispatchEvent(new Event('controllerchange'));
+    t.trocarWorker(); // uma versão nova depois, na mesma página
     expect(t.recarregar).toHaveBeenCalledTimes(1);
   });
 
-  it('sem versão em espera não há o que aplicar', () => {
-    expect(cenario().controlador.aplicar()).toBe('indisponivel');
+  it('com diálogo aberto adia; recarrega na próxima navegação entre telas', () => {
+    const t = cenario({ dialogo: true });
+    t.trocarWorker();
+    expect(t.recarregar).not.toHaveBeenCalled();
+    expect(t.atualizador.pendente()).toBe(true);
+
+    t.atualizador.aoNavegar(); // ainda com diálogo: continua adiado
+    expect(t.recarregar).not.toHaveBeenCalled();
+
+    t.estado.dialogo = false;
+    t.atualizador.aoNavegar();
+    expect(t.recarregar).toHaveBeenCalledTimes(1);
+  });
+
+  it('com campo digitado em foco adia; ao navegar (foco saiu do campo) recarrega', () => {
+    const t = cenario({ campo: true });
+    t.trocarWorker();
+    expect(t.recarregar).not.toHaveBeenCalled();
+    t.estado.campo = false;
+    t.atualizador.aoNavegar();
+    expect(t.recarregar).toHaveBeenCalledTimes(1);
+  });
+
+  it('adiado por campo digitado: recarrega quando a aba fica oculta', () => {
+    const t = cenario({ campo: true });
+    t.trocarWorker();
+    t.ocultarAba();
+    expect(t.recarregar).toHaveBeenCalledTimes(1);
+  });
+
+  it('aba oculta com diálogo aberto não recarrega (rascunho do diálogo) e segue pendente', () => {
+    const t = cenario({ dialogo: true });
+    t.trocarWorker();
+    t.ocultarAba();
+    expect(t.recarregar).not.toHaveBeenCalled();
+    expect(t.atualizador.pendente()).toBe(true);
+  });
+
+  it('aba já oculta quando o worker assume: recarrega mesmo com campo digitado', () => {
+    const t = cenario({ campo: true, oculta: true });
+    t.trocarWorker();
+    expect(t.recarregar).toHaveBeenCalledTimes(1);
+  });
+
+  it('sem versão nova pendente, navegar ou ocultar a aba não faz nada', () => {
+    const t = cenario();
+    t.atualizador.aoNavegar();
+    t.ocultarAba();
+    expect(t.recarregar).not.toHaveBeenCalled();
+  });
+
+  it('nunca entra em laço: segunda troca logo após uma recarga não recarrega de novo', () => {
+    const t = cenario();
+    t.trocarWorker();
+    expect(t.recarregar).toHaveBeenCalledTimes(1);
+
+    t.estado.agora += 1_000; // a página "recarregada" volta a trocar de worker em seguida
+    t.trocarWorker();
+    t.atualizador.aoNavegar();
+    t.ocultarAba();
+    expect(t.recarregar).toHaveBeenCalledTimes(1);
+
+    t.estado.agora += INTERVALO_MIN_RECARGA_MS; // uma atualização legítima bem depois
+    t.trocarWorker();
+    expect(t.recarregar).toHaveBeenCalledTimes(2);
+  });
+
+  it('o marcador de sessionStorage vale entre recargas reais (memória nova, mesmo marcador)', () => {
+    const t = cenario();
+    t.memoria.set(CHAVE_MARCADOR_RECARGA, String(t.estado.agora - 500));
+    t.trocarWorker();
+    expect(t.recarregar).not.toHaveBeenCalled();
+  });
+
+  it('só recarrega uma vez por pendência', () => {
+    const t = cenario({ dialogo: true });
+    t.trocarWorker();
+    t.estado.dialogo = false;
+    t.atualizador.aoNavegar();
+    t.atualizador.aoNavegar();
+    t.ocultarAba();
+    expect(t.recarregar).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('RF-077 campo digitado em foco', () => {
+  it('input de texto com conteúdo em foco conta; vazio, checkbox e botão não', () => {
+    document.body.innerHTML = `<input id="t" type="text"><input id="c" type="checkbox"><button id="b">x</button><textarea id="a"></textarea>`;
+    const t = document.getElementById('t') as HTMLInputElement;
+    t.focus();
+    expect(haCampoDigitadoEmFoco()).toBe(false);
+    t.value = '12';
+    expect(haCampoDigitadoEmFoco()).toBe(true);
+
+    (document.getElementById('c') as HTMLInputElement).focus();
+    (document.getElementById('c') as HTMLInputElement).checked = true;
+    expect(haCampoDigitadoEmFoco()).toBe(false);
+
+    (document.getElementById('b') as HTMLButtonElement).focus();
+    expect(haCampoDigitadoEmFoco()).toBe(false);
+
+    const a = document.getElementById('a') as HTMLTextAreaElement;
+    a.focus();
+    a.value = 'texto';
+    expect(haCampoDigitadoEmFoco()).toBe(true);
   });
 });

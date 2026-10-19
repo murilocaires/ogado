@@ -108,7 +108,7 @@ describe('service worker: versão do cache por build (RF-077)', () => {
   });
 });
 
-describe('sw.js: atualização só com aceite do usuário (RF-077)', () => {
+describe('sw.js: atualização silenciosa (RF-077, ADR-0014)', () => {
   const fonte = readFileSync(fileURLToPath(new URL('../../public/sw.js', import.meta.url)), 'utf8');
 
   /** Trecho de um listener: do `addEventListener('<tipo>'` até o `});` que fecha a função. */
@@ -118,10 +118,14 @@ describe('sw.js: atualização só com aceite do usuário (RF-077)', () => {
     return ini < 0 || fim < 0 ? '' : fonte.slice(ini, fim);
   };
 
-  it('não chama skipWaiting no install; só ao receber SKIP_WAITING', () => {
-    expect(listener('install')).not.toBe('');
-    expect(listener('install')).not.toContain('skipWaiting');
-    expect(listener('message')).toContain("'SKIP_WAITING'");
-    expect(listener('message')).toContain('skipWaiting()');
+  it('a versão nova assume sozinha: skipWaiting no install (depois do pré-carregamento) e claim no activate', () => {
+    expect(listener('install')).toContain('preCarregar()');
+    expect(listener('install')).toContain('skipWaiting()');
+    expect(listener('activate')).toContain('clients.claim()');
+  });
+
+  it('não espera mensagem do app (não há botão "Atualizar")', () => {
+    expect(fonte).not.toContain('SKIP_WAITING');
+    expect(listener('message')).toBe('');
   });
 });
