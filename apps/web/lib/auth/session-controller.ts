@@ -62,6 +62,10 @@ export interface SessionController {
   deleteAccount(): Promise<ApiResult<void>>;
   /** RNF-009: baixa a cópia dos dados do titular; 401 expira a sessão sem apagar nada. */
   exportData(): Promise<ApiResult<ExportacaoDados>>;
+  /** RNF-009: aceita a versão vigente dos termos; em sucesso o estado passa a `aceiteVigente`. */
+  acceptTerms(versao: string): Promise<ApiResult<SessionResponse>>;
+  /** RNF-009: pede o envio da cópia dos dados ao e-mail da conta (202 sempre igual). */
+  sendDataByEmail(): Promise<ApiResult<void>>;
   /** Qualquer 401 vindo de outra chamada (sync, dados): expira sem apagar nada (RF-080). */
   markUnauthorized(): void;
 }
@@ -199,6 +203,8 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
       ),
     updateFazenda: (body) => accountCall(() => deps.api.updateFazenda(body), applySession),
     exportData: () => accountCall(() => deps.api.exportData()),
+    acceptTerms: (versao) => accountCall(() => deps.api.aceitarTermos(versao), applySession),
+    sendDataByEmail: () => accountCall(() => deps.api.enviarDadosPorEmail()),
     async deleteAccount() {
       const result = await accountCall(() => deps.api.deleteAccount());
       if (result.ok) {

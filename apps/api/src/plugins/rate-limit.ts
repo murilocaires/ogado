@@ -24,6 +24,8 @@ export interface Limiters {
   googleIp(request: FastifyRequest): Promise<void>;
   /** Exportação dos dados do titular: por usuário, de qualquer IP (~10/h). */
   exportUser(request: FastifyRequest, usuarioId: string): Promise<void>;
+  /** Envio dos dados por e-mail: por usuário, de qualquer IP (~3/h). */
+  exportEmailUser(request: FastifyRequest, usuarioId: string): Promise<void>;
 }
 
 /**
@@ -88,6 +90,13 @@ export const rateLimitPlugin = fp<{ config: Pick<AppConfig, 'rateLimit' | 'proxy
       false,
     );
 
+    const exportEmailUser = make(
+      'export-email-user',
+      rules.exportEmailUser,
+      (request) => emailByRequest.get(request) ?? '',
+      false,
+    );
+
     const enforce = async (
       check: ReturnType<typeof make>,
       request: FastifyRequest,
@@ -109,6 +118,10 @@ export const rateLimitPlugin = fp<{ config: Pick<AppConfig, 'rateLimit' | 'proxy
       exportUser(request, usuarioId) {
         emailByRequest.set(request, usuarioId);
         return enforce(exportUser, request);
+      },
+      exportEmailUser(request, usuarioId) {
+        emailByRequest.set(request, usuarioId);
+        return enforce(exportEmailUser, request);
       },
       passwordChange(request, usuarioId) {
         emailByRequest.set(request, usuarioId);

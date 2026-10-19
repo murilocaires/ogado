@@ -3,6 +3,8 @@ export interface EmailMessage {
   to: string;
   subject: string;
   text: string;
+  /** Anexos (conteúdo em base64). */
+  attachments?: { filename: string; content: string }[];
 }
 
 /** Fronteira de saída de e-mail. Rejeita quando o provedor falha; o chamador decide o que fazer. */

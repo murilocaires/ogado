@@ -17,6 +17,7 @@ const relaxedRateLimit = {
   resetIp: { max: 100000, windowMs: 60_000 },
   googleIp: { max: 100000, windowMs: 60_000 },
   exportUser: { max: 100000, windowMs: 60_000 },
+  exportEmailUser: { max: 100000, windowMs: 60_000 },
 };
 
 export const prisma: PrismaClient = createPrisma(testDatabaseUrl);
@@ -101,7 +102,7 @@ export async function signup(
   email = uniqueEmail(),
   senha = VALID_PASSWORD,
 ): Promise<{ email: string; senha: string; cookie: string; res: LightMyRequestResponse }> {
-  const res = await postJson(app, '/auth/signup', { email, senha });
+  const res = await postJson(app, '/auth/signup', { email, senha, aceiteTermos: true });
   if (res.statusCode !== 201) throw new Error(`signup falhou: ${res.statusCode} ${res.body}`);
   return { email, senha, cookie: cookieFrom(res), res };
 }

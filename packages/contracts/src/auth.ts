@@ -34,7 +34,17 @@ export const loginPasswordSchema = z
   .min(1, 'Informe a senha.')
   .max(128, 'A senha deve ter no máximo 128 caracteres.');
 
-export const signupRequestSchema = z.object({ email: emailSchema, senha: newPasswordSchema });
+/**
+ * Cadastro por e-mail (RF-001, RNF-009): exige o aceite explícito dos Termos de Uso e da Política
+ * de Privacidade. A API grava a versão vigente (`TERMOS_VERSAO`); o cliente só diz "aceitei".
+ */
+export const signupRequestSchema = z.strictObject({
+  email: emailSchema,
+  senha: newPasswordSchema,
+  aceiteTermos: z.literal(true, {
+    error: 'Aceite os Termos de Uso e a Política de Privacidade para criar a conta.',
+  }),
+});
 export type SignupRequest = z.infer<typeof signupRequestSchema>;
 
 export const loginRequestSchema = z.object({ email: emailSchema, senha: loginPasswordSchema });
@@ -49,5 +59,11 @@ export const usuarioSchema = z.object({
   temSenha: z.boolean(),
   /** Selo "Google vinculado" (RF-006). */
   googleVinculado: z.boolean(),
+  /** RNF-009: a versão aceita é a vigente (`TERMOS_VERSAO`)? Falso = a web bloqueia até aceitar. */
+  aceiteVigente: z.boolean(),
+  /** Versão dos termos que o usuário aceitou (AAAA-MM-DD); nulo = nunca aceitou. */
+  aceiteTermosVersao: z.string().nullable(),
+  /** Quando aceitou (ISO 8601); nulo = nunca aceitou. */
+  aceiteTermosEm: z.iso.datetime().nullable(),
 });
 export type UsuarioDto = z.infer<typeof usuarioSchema>;

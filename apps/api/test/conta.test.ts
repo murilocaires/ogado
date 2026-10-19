@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
-import { errorEnvelopeSchema, fazendaSchema, sessionResponseSchema } from '@ogado/contracts';
+import {
+  errorEnvelopeSchema,
+  fazendaSchema,
+  sessionResponseSchema,
+  TERMOS_VERSAO,
+} from '@ogado/contracts';
 import { TEST_ORIGIN } from './support/env';
 import {
   buildTestApp,
@@ -74,6 +79,9 @@ describe('PATCH /conta/perfil (RF-004)', () => {
       nome: 'Ana Souza',
       temSenha: true,
       googleVinculado: false,
+      aceiteVigente: true,
+      aceiteTermosVersao: TERMOS_VERSAO,
+      aceiteTermosEm: expect.any(String),
     });
     expect(res.body).not.toMatch(/senhaHash|argon2/i);
 
@@ -104,7 +112,10 @@ describe('PATCH /conta/perfil (RF-004)', () => {
   it('RF-004: e-mail de outra conta = 409 genérico, sem revelar o dono, e nada muda', async () => {
     const a = await conta();
     const b = await conta();
-    const res = await send(app, 'PATCH', '/conta/perfil', a.cookie, { nome: 'Ana', email: b.email });
+    const res = await send(app, 'PATCH', '/conta/perfil', a.cookie, {
+      nome: 'Ana',
+      email: b.email,
+    });
     expect(res.statusCode).toBe(409);
     expect(errorEnvelopeSchema.parse(res.json()).erro.codigo).toBe('conflito');
     expect(res.body).not.toContain(b.email);
@@ -390,6 +401,9 @@ describe('isolamento entre contas (RF-010)', () => {
       nome: null,
       temSenha: true,
       googleVinculado: false,
+      aceiteVigente: true,
+      aceiteTermosVersao: TERMOS_VERSAO,
+      aceiteTermosEm: expect.any(String),
     });
     expect(sessaoB.fazenda).toMatchObject({
       id: b.fazendaId,

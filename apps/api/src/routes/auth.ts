@@ -9,6 +9,7 @@ import {
   redefinirSenhaRequestSchema,
   sessionResponseSchema,
   signupRequestSchema,
+  TERMOS_VERSAO,
 } from '@ogado/contracts';
 import type { AppConfig } from '../config';
 import type { EmailSender } from '../email/email-sender';
@@ -29,6 +30,7 @@ import type { FazendaRepository } from '../repositories/fazenda-repository';
 import { clearSessionCookie, sessionCookieName, setSessionCookie } from '../session/cookie';
 import type { SessionService } from '../session/session-service';
 import { sha256Hex } from '../session/tokens';
+import { toUsuarioDto } from '../usuario-dto';
 import { toFazendaDto } from './dto';
 
 export interface AuthRoutesDeps {
@@ -68,6 +70,7 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AuthRoutesDeps): 
         const { usuario, fazenda } = await deps.accounts.createAccount({
           email,
           senhaHash,
+          aceiteTermosVersao: TERMOS_VERSAO,
           fazendaId: deps.newFazendaId(),
           session,
           now: deps.clock(),
@@ -117,13 +120,10 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AuthRoutesDeps): 
       const session = await deps.sessions.create(usuario.id);
       setSessionCookie(reply, deps.config, session.token, session.maxAgeSeconds);
       return reply.code(200).send({
-        usuario: {
-          id: usuario.id,
-          email: usuario.email,
-          nome: usuario.nome,
-          temSenha: true,
-          googleVinculado: usuario.googleVinculado,
-        },
+        usuario: toUsuarioDto({
+          ...usuario,
+          identidadeGoogle: usuario.googleVinculado ? { id: 'vinculada' } : null,
+        }),
         fazenda: toFazendaDto(fazenda),
       });
     },

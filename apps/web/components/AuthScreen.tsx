@@ -17,7 +17,7 @@ import { PasswordRules } from './PasswordRules';
 
 export type AuthMode = 'entrar' | 'cadastrar';
 
-type FieldName = 'email' | 'senha' | 'confirmacao';
+type FieldName = 'email' | 'senha' | 'confirmacao' | 'aceiteTermos';
 type FieldErrors = Partial<Record<FieldName, string>>;
 type FocusTarget = FieldName | 'alert';
 
@@ -31,6 +31,7 @@ const MSG = {
   senhaRequisitos: 'A senha ainda não cumpre os requisitos abaixo.',
   confirmacaoVazia: 'Repita a senha.',
   confirmacaoDiferente: 'As senhas não coincidem.',
+  aceiteObrigatorio: 'Marque que leu e aceita os Termos de Uso e a Política de Privacidade.',
   googleContaExistente:
     'Já existe uma conta com este e-mail. Entre com a senha e vincule o Google em Conta.',
   google: 'Não foi possível entrar com o Google. Tente de novo.',
@@ -59,7 +60,12 @@ function failureMessage(failure: ApiFailure): string {
 function fieldsFromServer(campos: FieldError[]): FieldErrors {
   const errors: FieldErrors = {};
   for (const campo of campos) {
-    if ((campo.caminho === 'email' || campo.caminho === 'senha') && !errors[campo.caminho]) {
+    if (
+      (campo.caminho === 'email' ||
+        campo.caminho === 'senha' ||
+        campo.caminho === 'aceiteTermos') &&
+      !errors[campo.caminho]
+    ) {
       errors[campo.caminho] = campo.mensagem;
     }
   }
@@ -68,20 +74,32 @@ function fieldsFromServer(campos: FieldError[]): FieldErrors {
 
 type Validation = { ok: true; body: LoginRequest } | { ok: false; errors: FieldErrors };
 
+const LINK_NOVA_ABA = { target: '_blank', rel: 'noopener noreferrer' } as const;
+
 /** Valida com os mesmos schemas da API; o corpo enviado é o normalizado (e-mail sem espaços/maiúsculas). */
-function validate(mode: AuthMode, email: string, senha: string, confirmacao: string): Validation {
-  const schema = mode === 'entrar' ? loginRequestSchema : signupRequestSchema;
-  const parsed = schema.safeParse({ email, senha });
+function validate(
+  mode: AuthMode,
+  email: string,
+  senha: string,
+  confirmacao: string,
+  aceite: boolean,
+): Validation {
+  const parsed =
+    mode === 'entrar'
+      ? loginRequestSchema.safeParse({ email, senha })
+      : signupRequestSchema.safeParse({ email, senha, aceiteTermos: aceite });
   const errors: FieldErrors = {};
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
       const field = issue.path[0];
-      if (field !== 'email' && field !== 'senha') continue;
+      if (field !== 'email' && field !== 'senha' && field !== 'aceiteTermos') continue;
       if (errors[field]) continue;
       errors[field] =
         field === 'senha' && mode === 'cadastrar' && senha !== ''
           ? MSG.senhaRequisitos
-          : issue.message;
+          : field === 'aceiteTermos'
+            ? MSG.aceiteObrigatorio
+            : issue.message;
     }
   }
   // A confirmação é só da tela: nunca vai para a API.
@@ -89,7 +107,9 @@ function validate(mode: AuthMode, email: string, senha: string, confirmacao: str
     if (confirmacao === '') errors.confirmacao = MSG.confirmacaoVazia;
     else if (confirmacao !== senha) errors.confirmacao = MSG.confirmacaoDiferente;
   }
-  if (parsed.success && !errors.confirmacao) return { ok: true, body: parsed.data };
+  if (parsed.success && !errors.confirmacao) {
+    return { ok: true, body: { email: parsed.data.email, senha: parsed.data.senha } };
+  }
   return { ok: false, errors };
 }
 
@@ -103,6 +123,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmacao, setConfirmacao] = useState('');
+  const [aceite, setAceite] = useState(false);
   const [googleErro, setGoogleErro] = useState<string | null>(null);
   const [verSenha, setVerSenha] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -113,6 +134,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
   const emailRef = useRef<HTMLInputElement>(null);
   const senhaRef = useRef<HTMLInputElement>(null);
   const confirmacaoRef = useRef<HTMLInputElement>(null);
+  const aceiteRef = useRef<HTMLInputElement>(null);
   const alertRef = useRef<HTMLDivElement>(null);
   const submitting = useRef(false);
 
@@ -120,6 +142,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
   const emailId = `${ids}-email`;
   const senhaId = `${ids}-senha`;
   const confirmacaoId = `${ids}-confirmacao`;
+  const aceiteId = `${ids}-aceite`;
   const rulesId = `${ids}-regras`;
 
   useEffect(() => {
@@ -152,7 +175,9 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
           ? senhaRef.current
           : focusRequest.target === 'confirmacao'
             ? confirmacaoRef.current
-            : alertRef.current;
+            : focusRequest.target === 'aceiteTermos'
+              ? aceiteRef.current
+              : alertRef.current;
     element?.focus();
   }, [focusRequest]);
 
@@ -173,13 +198,19 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
       return;
     }
 
-    const validation = validate(mode, email, senha, confirmacao);
+    const validation = validate(mode, email, senha, confirmacao, aceite);
     setFailure(null);
     setGoogleErro(null);
     if (!validation.ok) {
       setFieldErrors(validation.errors);
       requestFocus(
-        validation.errors.email ? 'email' : validation.errors.senha ? 'senha' : 'confirmacao',
+        validation.errors.email
+          ? 'email'
+          : validation.errors.senha
+            ? 'senha'
+            : validation.errors.confirmacao
+              ? 'confirmacao'
+              : 'aceiteTermos',
       );
       return;
     }
@@ -188,7 +219,9 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
     submitting.current = true;
     setLoading(true);
     const { body } = validation;
-    const result = await (isLogin ? controller.login(body) : controller.signup(body));
+    const result = await (isLogin
+      ? controller.login(body)
+      : controller.signup({ ...body, aceiteTermos: true }));
     submitting.current = false;
     setLoading(false);
 
@@ -196,8 +229,8 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
     if (result.kind === 'validacao') {
       const serverErrors = fieldsFromServer(result.campos);
       setFieldErrors(serverErrors);
-      if (serverErrors.email || serverErrors.senha) {
-        requestFocus(serverErrors.email ? 'email' : 'senha');
+      if (serverErrors.email || serverErrors.senha || serverErrors.aceiteTermos) {
+        requestFocus(serverErrors.email ? 'email' : serverErrors.senha ? 'senha' : 'aceiteTermos');
         return;
       }
     }
@@ -208,6 +241,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
   const emailError = fieldErrors.email;
   const senhaError = fieldErrors.senha;
   const confirmacaoError = fieldErrors.confirmacao;
+  const aceiteError = fieldErrors.aceiteTermos;
 
   return (
     <AuthShell mobileTitle={isLogin ? 'Bem-vindo de volta' : 'Crie sua conta'}>
@@ -222,6 +256,17 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
         {!isLogin && (
           <>
             <GoogleLink texto="Cadastrar com Google" />
+            <p className="auth-legal">
+              Ao continuar com o Google você aceita os{' '}
+              <Link href="/termos" {...LINK_NOVA_ABA}>
+                Termos de Uso
+              </Link>{' '}
+              e a{' '}
+              <Link href="/privacidade" {...LINK_NOVA_ABA}>
+                Política de Privacidade
+              </Link>
+              .
+            </p>
             <p className="auth-sep" aria-hidden="true">
               ou cadastre com e-mail
             </p>
@@ -360,6 +405,37 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
           </div>
         )}
 
+        {!isLogin && (
+          <div className="lbl">
+            <div className="check">
+              <input
+                ref={aceiteRef}
+                id={aceiteId}
+                type="checkbox"
+                checked={aceite}
+                onChange={(e) => setAceite(e.target.checked)}
+                aria-invalid={aceiteError ? true : undefined}
+                aria-describedby={aceiteError ? `${aceiteId}-erro` : undefined}
+              />
+              <label htmlFor={aceiteId}>
+                Li e aceito os{' '}
+                <Link href="/termos" {...LINK_NOVA_ABA}>
+                  Termos de Uso
+                </Link>{' '}
+                e a{' '}
+                <Link href="/privacidade" {...LINK_NOVA_ABA}>
+                  Política de Privacidade
+                </Link>
+              </label>
+            </div>
+            {aceiteError && (
+              <span className="err" id={`${aceiteId}-erro`}>
+                {aceiteError}
+              </span>
+            )}
+          </div>
+        )}
+
         {isLogin && (
           <p style={{ margin: '-14px 0 0', textAlign: 'right', fontSize: 14.5 }}>
             <Link
@@ -394,6 +470,17 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
               ou
             </p>
             <GoogleLink texto="Entrar com Google" />
+            <p className="auth-legal">
+              Ao continuar com o Google você aceita os{' '}
+              <Link href="/termos" {...LINK_NOVA_ABA}>
+                Termos de Uso
+              </Link>{' '}
+              e a{' '}
+              <Link href="/privacidade" {...LINK_NOVA_ABA}>
+                Política de Privacidade
+              </Link>
+              .
+            </p>
           </>
         )}
 

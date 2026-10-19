@@ -73,7 +73,7 @@ describe('rate limit', () => {
       const res = await postJson(
         app,
         '/auth/signup',
-        { email: uniqueEmail(), senha: VALID_PASSWORD },
+        { email: uniqueEmail(), senha: VALID_PASSWORD, aceiteTermos: true },
         { remoteAddress: ip },
       );
       expect(res.statusCode, `cadastro ${i}`).toBe(201);
@@ -81,7 +81,7 @@ describe('rate limit', () => {
     const sexta = await postJson(
       app,
       '/auth/signup',
-      { email: uniqueEmail(), senha: VALID_PASSWORD },
+      { email: uniqueEmail(), senha: VALID_PASSWORD, aceiteTermos: true },
       { remoteAddress: ip },
     );
     expect(sexta.statusCode).toBe(429);

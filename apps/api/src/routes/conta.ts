@@ -1,15 +1,22 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import {
+  aceiteRequestSchema,
   contaDeleteSchema,
   EXPORTACAO_VERSAO_DO_FORMATO,
+  EXPORTACAO_ENVIO_MENSAGEM,
   exportacaoDadosSchema,
+  exportacaoEnvioSchema,
+  type ExportacaoDados,
   fazendaPatchSchema,
   perfilRequestSchema,
   senhaRequestSchema,
   sessionResponseSchema,
+  TERMOS_VERSAO,
 } from '@ogado/contracts';
 import type { AppConfig } from '../config';
+import { dadosPorEmail } from '../email/export-email';
+import type { EmailSender } from '../email/email-sender';
 import { AppError, genericConflict, notFound, versionConflict } from '../http-errors';
 import type { PasswordHasher } from '../password';
 import { EmailTakenError, type AccountRepository } from '../repositories/account-repository';
@@ -19,11 +26,12 @@ import type { LoteRepository } from '../repositories/lote-repository';
 import type { RecriaRepository } from '../repositories/recria-repository';
 import { clearSessionCookie, sessionCookieName } from '../session/cookie';
 import type { SessionService } from '../session/session-service';
-import { requireTenant } from '../tenant';
+import { requireTenant, type TenantContext } from '../tenant';
 import { toCenarioDto, toFazendaDto, toLoteDto, toRecriaEntradaDto } from './dto';
 
 export interface ContaRoutesDeps {
   config: AppConfig;
+  email: EmailSender;
   accounts: AccountRepository;
   fazendas: FazendaRepository;
   lotes: LoteRepository;
@@ -59,6 +67,30 @@ export function registerContaRoutes(app: FastifyInstance, deps: ContaRoutesDeps)
         if (error instanceof EmailTakenError) throw genericConflict();
         throw error;
       }
+      const fazenda = await deps.fazendas.findById(tenant, tenant.fazendaId);
+      if (!fazenda) throw notFound();
+      return { usuario, fazenda: toFazendaDto(fazenda) };
+    },
+  );
+
+  // RNF-009: novo aceite (conta do Google ou termos atualizados). Só a versão vigente é aceita.
+  typed.post(
+    '/conta/aceite',
+    { schema: { body: aceiteRequestSchema, response: { 200: sessionResponseSchema } } },
+    async (request) => {
+      const tenant = requireTenant(request);
+      if (request.body.versao !== TERMOS_VERSAO) {
+        throw new AppError(
+          409,
+          'conflito',
+          'Os termos foram atualizados. Recarregue a página para ler a versão atual.',
+        );
+      }
+      const usuario = await deps.accounts.registrarAceite(
+        tenant.usuarioId,
+        TERMOS_VERSAO,
+        deps.clock(),
+      );
       const fazenda = await deps.fazendas.findById(tenant, tenant.fazendaId);
       if (!fazenda) throw notFound();
       return { usuario, fazenda: toFazendaDto(fazenda) };
@@ -113,6 +145,50 @@ export function registerContaRoutes(app: FastifyInstance, deps: ContaRoutesDeps)
     },
   );
 
+  /** Monta o JSON da exportação (RNF-009) do tenant da sessão; `null` se o titular sumiu. */
+  async function montarExportacao(
+    tenant: TenantContext,
+    agora: Date,
+  ): Promise<ExportacaoDados | null> {
+    const titular = await deps.accounts.loadTitularParaExportar(tenant);
+    if (!titular) return null;
+    const [lotes, cenarios, recria] = await Promise.all([
+      deps.lotes.list(tenant, { incluirExcluidos: false }),
+      deps.cenarios.list(tenant, false),
+      deps.recria.get(tenant),
+    ]);
+    const { usuario, fazenda } = titular;
+    return {
+      versaoDoFormato: EXPORTACAO_VERSAO_DO_FORMATO,
+      geradoEm: agora.toISOString(),
+      observacao:
+        'Este arquivo traz apenas os registros não excluídos. Registros excluídos, senhas, ' +
+        'sessões e outros dados de segurança não fazem parte da exportação.',
+      perfil: {
+        id: usuario.id,
+        email: usuario.email,
+        nome: usuario.nome,
+        criadoEm: usuario.criadoEm.toISOString(),
+        temSenha: usuario.senhaHash !== null,
+        googleVinculado: usuario.identidadeGoogle !== null,
+        aceiteTermosVersao: usuario.aceiteTermosVersao,
+        aceiteTermosEm: usuario.aceiteTermosEm ? usuario.aceiteTermosEm.toISOString() : null,
+      },
+      fazenda: {
+        id: fazenda.id,
+        nome: fazenda.nome,
+        areaHa: fazenda.areaHa ? fazenda.areaHa.toFixed() : null,
+        criadoEm: fazenda.createdAt.toISOString(),
+      },
+      lotes: lotes.map(toLoteDto),
+      cenarios: cenarios.map(toCenarioDto),
+      recriaEntrada: recria && !recria.deletedAt ? toRecriaEntradaDto(recria) : null,
+    };
+  }
+
+  const nomeArquivoExportacao = (agora: Date): string =>
+    `ogado-meus-dados-${agora.toISOString().slice(0, 10)}.json`;
+
   // RNF-009: cópia dos dados do titular. Só leitura, só do tenant da sessão, sem segredos.
   typed.get(
     '/conta/exportar',
@@ -121,46 +197,42 @@ export function registerContaRoutes(app: FastifyInstance, deps: ContaRoutesDeps)
       const tenant = requireTenant(request);
       await app.limiters.exportUser(request, tenant.usuarioId);
 
-      const titular = await deps.accounts.loadTitularParaExportar(tenant);
-      if (!titular) throw notFound();
-      const [lotes, cenarios, recria] = await Promise.all([
-        deps.lotes.list(tenant, { incluirExcluidos: false }),
-        deps.cenarios.list(tenant, false),
-        deps.recria.get(tenant),
-      ]);
       const agora = deps.clock();
-      const { usuario, fazenda } = titular;
-
+      const dados = await montarExportacao(tenant, agora);
+      if (!dados) throw notFound();
       return reply
-        .header(
-          'content-disposition',
-          `attachment; filename="ogado-meus-dados-${agora.toISOString().slice(0, 10)}.json"`,
-        )
+        .header('content-disposition', `attachment; filename="${nomeArquivoExportacao(agora)}"`)
         .header('cache-control', 'no-store')
-        .send({
-          versaoDoFormato: EXPORTACAO_VERSAO_DO_FORMATO,
-          geradoEm: agora.toISOString(),
-          observacao:
-            'Este arquivo traz apenas os registros não excluídos. Registros excluídos, senhas, ' +
-            'sessões e outros dados de segurança não fazem parte da exportação.',
-          perfil: {
-            id: usuario.id,
-            email: usuario.email,
-            nome: usuario.nome,
-            criadoEm: usuario.criadoEm.toISOString(),
-            temSenha: usuario.senhaHash !== null,
-            googleVinculado: usuario.identidadeGoogle !== null,
-          },
-          fazenda: {
-            id: fazenda.id,
-            nome: fazenda.nome,
-            areaHa: fazenda.areaHa ? fazenda.areaHa.toFixed() : null,
-            criadoEm: fazenda.createdAt.toISOString(),
-          },
-          lotes: lotes.map(toLoteDto),
-          cenarios: cenarios.map(toCenarioDto),
-          recriaEntrada: recria && !recria.deletedAt ? toRecriaEntradaDto(recria) : null,
+        .send(dados);
+    },
+  );
+
+  // RNF-009: o mesmo JSON, enviado como anexo ao e-mail da própria conta. Resposta sempre 202; falha
+  // do provedor só é registrada (sem PII), como na recuperação de senha.
+  typed.post(
+    '/conta/exportar/enviar',
+    { schema: { response: { 202: exportacaoEnvioSchema } } },
+    async (request, reply) => {
+      const tenant = requireTenant(request);
+      await app.limiters.exportEmailUser(request, tenant.usuarioId);
+
+      const agora = deps.clock();
+      const dados = await montarExportacao(tenant, agora);
+      if (!dados) throw notFound();
+      deps.email
+        .send(
+          dadosPorEmail(dados.perfil.email, {
+            filename: nomeArquivoExportacao(agora),
+            content: Buffer.from(JSON.stringify(dados, null, 2), 'utf8').toString('base64'),
+          }),
+        )
+        .catch((error: unknown) => {
+          request.log.error(
+            { motivo: error instanceof Error ? error.message : 'erro desconhecido' },
+            'falha ao enviar e-mail com os dados do titular',
+          );
         });
+      return reply.code(202).send({ mensagem: EXPORTACAO_ENVIO_MENSAGEM });
     },
   );
 

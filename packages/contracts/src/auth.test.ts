@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { signupRequestSchema, loginRequestSchema, type ErrorEnvelope } from './index';
 
-const ok = { email: 'ana@exemplo.com', senha: 'Boi#2026a' };
+const ok = { email: 'ana@exemplo.com', senha: 'Boi#2026a', aceiteTermos: true };
 
 function failedRules(senha: string): string[] {
-  const r = signupRequestSchema.safeParse({ email: ok.email, senha });
+  const r = signupRequestSchema.safeParse({ ...ok, senha });
   if (r.success) return [];
   return r.error.issues.map((i) => String((i as { params?: { regra?: string } }).params?.regra));
 }
@@ -49,7 +49,7 @@ describe('signupRequestSchema', () => {
 
   it('RF-001 CA-06: mensagens em pt-BR não ecoam a senha', () => {
     const senha = 'segredosecreto';
-    const r = signupRequestSchema.safeParse({ email: ok.email, senha });
+    const r = signupRequestSchema.safeParse({ ...ok, senha });
     expect(r.success).toBe(false);
     if (!r.success) {
       for (const issue of r.error.issues) expect(issue.message).not.toContain(senha);
@@ -85,5 +85,25 @@ describe('ErrorEnvelope', () => {
       erro: { codigo: 'nao_autenticado', mensagem: 'Entre para continuar.' },
     };
     expect(e.erro.codigo).toBe('nao_autenticado');
+  });
+});
+
+describe('signupRequestSchema · aceite dos termos (RNF-009)', () => {
+  it('sem aceiteTermos, ou com false, reprova com mensagem clara em aceiteTermos', () => {
+    for (const corpo of [
+      { email: ok.email, senha: ok.senha },
+      { ...ok, aceiteTermos: false },
+    ]) {
+      const r = signupRequestSchema.safeParse(corpo);
+      expect(r.success).toBe(false);
+      if (!r.success) {
+        expect(r.error.issues.map((i) => i.path[0])).toEqual(['aceiteTermos']);
+        expect(r.error.issues[0]?.message).toMatch(/Aceite os Termos de Uso/);
+      }
+    }
+  });
+
+  it('recusa chaves desconhecidas (strict)', () => {
+    expect(signupRequestSchema.safeParse({ ...ok, admin: true }).success).toBe(false);
   });
 });

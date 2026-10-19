@@ -37,6 +37,8 @@ function setup(
     deleteAccount: vi.fn(),
     forgotPassword: vi.fn(),
     resetPassword: vi.fn(),
+    aceitarTermos: vi.fn(),
+    enviarDadosPorEmail: vi.fn(),
     ...apiOverrides,
   };
   let current = stored;
@@ -238,10 +240,15 @@ describe('RF-001 tela de cadastro (CA-06, parte de tela)', () => {
     await user.type(await screen.findByLabelText('E-mail'), ' Ana@Fazenda.com ');
     await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
     await user.type(screen.getByLabelText('Confirmar senha'), SENHA_BOA);
+    await user.click(screen.getByLabelText(/Li e aceito/));
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/painel'));
-    expect(api.signup).toHaveBeenCalledWith({ email: 'ana@fazenda.com', senha: SENHA_BOA });
+    expect(api.signup).toHaveBeenCalledWith({
+      email: 'ana@fazenda.com',
+      senha: SENHA_BOA,
+      aceiteTermos: true,
+    });
   });
 
   it('RF-001 e-mail já cadastrado mostra a mensagem do ADR-0010 Q4 com link para Entrar', async () => {
@@ -251,6 +258,7 @@ describe('RF-001 tela de cadastro (CA-06, parte de tela)', () => {
     await user.type(await screen.findByLabelText('E-mail'), 'ana@fazenda.com');
     await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
     await user.type(screen.getByLabelText('Confirmar senha'), SENHA_BOA);
+    await user.click(screen.getByLabelText(/Li e aceito/));
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
 
     const alert = await screen.findByRole('alert');
@@ -308,9 +316,14 @@ describe('RF-001 confirmação de senha no cadastro', () => {
     await user.type(await screen.findByLabelText('E-mail'), 'ana@fazenda.com');
     await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
     await user.type(screen.getByLabelText('Confirmar senha'), SENHA_BOA);
+    await user.click(screen.getByLabelText(/Li e aceito/));
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
     await waitFor(() => expect(api.signup).toHaveBeenCalledTimes(1));
-    expect(api.signup).toHaveBeenCalledWith({ email: 'ana@fazenda.com', senha: SENHA_BOA });
+    expect(api.signup).toHaveBeenCalledWith({
+      email: 'ana@fazenda.com',
+      senha: SENHA_BOA,
+      aceiteTermos: true,
+    });
   });
 
   it('Mostrar/Ocultar cobre os dois campos', async () => {
@@ -364,5 +377,75 @@ describe('RF-001 entrar com Google', () => {
     await screen.findByLabelText('Senha');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     window.history.replaceState(null, '', '/');
+  });
+});
+
+describe('RNF-009 aceite dos termos na tela de cadastro', () => {
+  it('Cadastrar mostra o checkbox obrigatório com links que abrem em nova aba; Entrar não', async () => {
+    setup('cadastrar');
+    const caixa = await screen.findByLabelText(/Li e aceito/);
+    expect(caixa).not.toBeChecked();
+    const rotulo = caixa.closest('.check') as HTMLElement;
+    const termos = within(rotulo).getByRole('link', { name: 'Termos de Uso' });
+    const privacidade = within(rotulo).getByRole('link', { name: 'Política de Privacidade' });
+    expect(termos).toHaveAttribute('href', '/termos');
+    expect(termos).toHaveAttribute('target', '_blank');
+    expect(termos.getAttribute('rel')).toContain('noopener');
+    expect(privacidade).toHaveAttribute('href', '/privacidade');
+    expect(privacidade).toHaveAttribute('target', '_blank');
+  });
+
+  it('Entrar não pede o checkbox', async () => {
+    setup('entrar');
+    await screen.findByLabelText('Senha');
+    expect(screen.queryByLabelText(/Li e aceito/)).not.toBeInTheDocument();
+  });
+
+  it('desmarcado: não envia, mostra erro acessível, marca o campo e leva o foco', async () => {
+    const { api, user } = setup('cadastrar');
+    await user.type(await screen.findByLabelText('E-mail'), 'ana@fazenda.com');
+    await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
+    await user.type(screen.getByLabelText('Confirmar senha'), SENHA_BOA);
+    await user.click(screen.getByRole('button', { name: 'Criar conta' }));
+
+    expect(api.signup).not.toHaveBeenCalled();
+    const caixa = screen.getByLabelText(/Li e aceito/);
+    const erro = 'Marque que leu e aceita os Termos de Uso e a Política de Privacidade.';
+    expect(await screen.findByText(erro)).toBeVisible();
+    expect(caixa).toHaveAttribute('aria-invalid', 'true');
+    expect(caixa).toHaveAccessibleDescription(erro);
+    expect(caixa).toHaveFocus();
+  });
+
+  it('marcado: envia aceiteTermos true e o erro some', async () => {
+    const { api, user } = setup('cadastrar');
+    await user.type(await screen.findByLabelText('E-mail'), 'ana@fazenda.com');
+    await user.type(screen.getByLabelText('Senha'), SENHA_BOA);
+    await user.type(screen.getByLabelText('Confirmar senha'), SENHA_BOA);
+    await user.click(screen.getByRole('button', { name: 'Criar conta' }));
+    await user.click(screen.getByLabelText(/Li e aceito/));
+    await user.click(screen.getByRole('button', { name: 'Criar conta' }));
+    await waitFor(() => expect(api.signup).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText(/Marque que leu/)).not.toBeInTheDocument();
+  });
+
+  it('o aviso do Google (com links) aparece em Entrar e em Cadastrar, sem checkbox próprio', async () => {
+    for (const modo of ['entrar', 'cadastrar'] as const) {
+      const { unmount } = (() => {
+        setup(modo);
+        return { unmount: () => undefined };
+      })();
+      const aviso = await screen.findByText(/Ao continuar com o Google você aceita/);
+      expect(within(aviso).getByRole('link', { name: 'Termos de Uso' })).toHaveAttribute(
+        'target',
+        '_blank',
+      );
+      expect(within(aviso).getByRole('link', { name: 'Política de Privacidade' })).toHaveAttribute(
+        'href',
+        '/privacidade',
+      );
+      unmount();
+      document.body.innerHTML = '';
+    }
   });
 });

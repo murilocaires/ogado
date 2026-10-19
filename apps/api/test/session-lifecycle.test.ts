@@ -30,7 +30,11 @@ afterAll(async () => {
 
 async function newSession() {
   const email = uniqueEmail('ciclo');
-  const res = await postJson(app, '/auth/signup', { email, senha: VALID_PASSWORD });
+  const res = await postJson(app, '/auth/signup', {
+    email,
+    senha: VALID_PASSWORD,
+    aceiteTermos: true,
+  });
   expect(res.statusCode).toBe(201);
   return { email, res, cookie: cookieFrom(res) };
 }
@@ -45,6 +49,9 @@ describe('GET /auth/session', () => {
     expect(body.usuario.email).toBe(email);
     expect(Object.keys(res.json()).sort()).toEqual(['fazenda', 'usuario']);
     expect(Object.keys(res.json().usuario).sort()).toEqual([
+      'aceiteTermosEm',
+      'aceiteTermosVersao',
+      'aceiteVigente',
       'email',
       'googleVinculado',
       'id',
@@ -94,6 +101,7 @@ describe('expiração da sessão', () => {
     const res = await postJson(curta, '/auth/signup', {
       email: uniqueEmail('curta'),
       senha: VALID_PASSWORD,
+      aceiteTermos: true,
     });
     const cookie = cookieFrom(res);
     expect(setCookieLine(res)).toMatch(/Max-Age=172800\b/); // cookie dura o que a sessão dura

@@ -37,6 +37,7 @@ test('o lote lançado no aparelho A aparece no aparelho B', async ({ browser }) 
   await a.getByLabel('E-mail', { exact: true }).fill(email);
   await a.getByLabel('Senha', { exact: true }).fill(SENHA);
   await a.getByLabel('Confirmar senha', { exact: true }).fill(SENHA);
+  await a.getByLabel(/Li e aceito/).check();
   await a.getByRole('button', { name: 'Criar conta' }).click();
   await expect(a).toHaveURL(/\/painel$/);
   await a.getByRole('link', { name: 'Negócios' }).filter({ visible: true }).click();

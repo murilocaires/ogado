@@ -15,6 +15,7 @@ async function cadastrar(page: Page, email: string): Promise<void> {
   await page.getByLabel('E-mail', { exact: true }).fill(email);
   await page.getByLabel('Senha', { exact: true }).fill(SENHA);
   await page.getByLabel('Confirmar senha', { exact: true }).fill(SENHA);
+  await page.getByLabel(/Li e aceito/).check();
   await page.getByRole('button', { name: 'Criar conta' }).click();
   await expect(page).toHaveURL(/\/painel$/);
 }

@@ -44,6 +44,8 @@ function fakeApi(overrides: Partial<ApiClient> = {}): ApiClient {
     deleteAccount: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     forgotPassword: vi.fn(),
     resetPassword: vi.fn(),
+    aceitarTermos: vi.fn(),
+    enviarDadosPorEmail: vi.fn(),
     ...overrides,
   };
 }
@@ -334,6 +336,44 @@ describe('T-18 ações da Conta no controlador', () => {
       status: 'autenticado',
       usuario: { googleVinculado: false },
     });
+  });
+
+  it('RNF-009 acceptTerms (200) atualiza o estado para aceiteVigente; 401 expira sem apagar nada', async () => {
+    const desatualizada = {
+      ...sessionBody,
+      usuario: { ...sessionBody.usuario, aceiteVigente: false, aceiteTermosVersao: '2020-01-01' },
+    };
+    const getSession = vi.fn().mockResolvedValue({ ok: true, data: desatualizada });
+    const aceitarTermos = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, kind: 'rede' })
+      .mockResolvedValueOnce({ ok: true, data: sessionBody });
+    const { c } = await autenticado(fakeApi({ aceitarTermos, getSession }));
+    expect(c.getState()).toMatchObject({ usuario: { aceiteVigente: false } });
+    expect((await c.acceptTerms('2026-10-19')).ok).toBe(false);
+    expect(c.getState()).toMatchObject({ usuario: { aceiteVigente: false } });
+    expect((await c.acceptTerms('2026-10-19')).ok).toBe(true);
+    expect(aceitarTermos).toHaveBeenLastCalledWith('2026-10-19');
+    expect(c.getState()).toMatchObject({ status: 'autenticado', usuario: { aceiteVigente: true } });
+  });
+
+  it('RNF-009 acceptTerms com 401 expira a sessão sem apagar o aparelho', async () => {
+    const aceitarTermos = vi.fn().mockResolvedValue({ ok: false, kind: 'nao-autenticado' });
+    const { c, clearLocalData } = await autenticado(fakeApi({ aceitarTermos }));
+    await c.acceptTerms('2026-10-19');
+    expect(c.getState().status).toBe('expirada');
+    expect(clearLocalData).not.toHaveBeenCalled();
+  });
+
+  it('RNF-009 sendDataByEmail repassa o resultado e expira só em 401', async () => {
+    const enviarDadosPorEmail = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, data: undefined })
+      .mockResolvedValueOnce({ ok: false, kind: 'muitas-tentativas', retryAfterSeconds: 5 });
+    const { c } = await autenticado(fakeApi({ enviarDadosPorEmail }));
+    expect((await c.sendDataByEmail()).ok).toBe(true);
+    expect((await c.sendDataByEmail()).ok).toBe(false);
+    expect(c.getState().status).toBe('autenticado');
   });
 
   it('RF-005 senha atual errada (400) não expira a sessão', async () => {

@@ -711,10 +711,11 @@ function FazendaSecao({ fazenda }: { fazenda: FazendaDto }) {
 
 /* ---------- Meus dados (RNF-009) ---------- */
 
-function MeusDadosSecao() {
+function MeusDadosSecao({ email }: { email: string }) {
   const controller = useSessionController();
   const toast = useToast();
   const [baixando, setBaixando] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const [falha, setFalha] = useState<string | null>(null);
   const ocupado = useRef(false);
 
@@ -743,6 +744,25 @@ function MeusDadosSecao() {
     toast(`Arquivo ${arquivo.nome} baixado.`);
   }
 
+  async function enviar(): Promise<void> {
+    if (ocupado.current) return;
+    setFalha(null);
+    if (!navigator.onLine) {
+      setFalha(MSG_CONTA.offline);
+      return;
+    }
+    ocupado.current = true;
+    setEnviando(true);
+    const res = await controller.sendDataByEmail();
+    ocupado.current = false;
+    setEnviando(false);
+    if (!res.ok) {
+      setFalha(mensagemFalha(res));
+      return;
+    }
+    toast(`Pedido enviado. Se tudo deu certo, a cópia chega em ${email} em alguns minutos.`);
+  }
+
   return (
     <div className="panel">
       <div className="bd">
@@ -753,16 +773,80 @@ function MeusDadosSecao() {
         <Alerta texto={falha} />
       </div>
       <div className="ft">
-        <span className="hint">Precisa de internet. Limite de 10 downloads por hora.</span>
-        <button
-          type="button"
-          className="btn sec sm"
-          aria-disabled={baixando}
-          aria-busy={baixando}
-          onClick={() => void baixar()}
-        >
-          <Icon name="baixar" size={18} />
-          {baixando ? 'Preparando…' : 'Baixar meus dados (JSON)'}
+        <span className="hint">
+          Precisa de internet. Limites por hora: 10 downloads e 3 envios por e-mail.
+        </span>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn sec sm"
+            aria-disabled={enviando}
+            aria-busy={enviando}
+            onClick={() => void enviar()}
+          >
+            {enviando ? 'Enviando…' : 'Enviar meus dados por e-mail'}
+          </button>
+          <button
+            type="button"
+            className="btn sec sm"
+            aria-disabled={baixando}
+            aria-busy={baixando}
+            onClick={() => void baixar()}
+          >
+            <Icon name="baixar" size={18} />
+            {baixando ? 'Preparando…' : 'Baixar meus dados (JSON)'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Termos e privacidade (RNF-009) ---------- */
+
+function dataAceite(iso: string | null): string | null {
+  if (!iso) return null;
+  const data = new Date(iso);
+  return Number.isNaN(data.getTime()) ? null : data.toLocaleDateString('pt-BR');
+}
+
+function TermosSecao({ usuario, onRevogar }: { usuario: UsuarioDto; onRevogar: () => void }) {
+  const quando = dataAceite(usuario.aceiteTermosEm);
+  return (
+    <div className="panel">
+      <div className="bd">
+        <p style={{ margin: 0, lineHeight: 1.5 }} data-testid="aceite-atual">
+          {usuario.aceiteTermosVersao ? (
+            <>
+              Você aceitou a versão <b>{usuario.aceiteTermosVersao}</b>
+              {quando ? ` em ${quando}` : ''}.
+            </>
+          ) : (
+            'Você ainda não aceitou os termos.'
+          )}
+        </p>
+        <p style={{ margin: '8px 0 0', fontSize: 14.5 }}>
+          <Link href="/termos" target="_blank" rel="noopener noreferrer" className="legal-link">
+            Termos de Uso
+          </Link>
+          {' · '}
+          <Link
+            href="/privacidade"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="legal-link"
+          >
+            Política de Privacidade
+          </Link>
+        </p>
+      </div>
+      <div className="ft">
+        <span className="hint">
+          Revogar o consentimento equivale a apagar a conta: sem o aceite não é possível usar o
+          serviço.
+        </span>
+        <button type="button" className="btn danger sm" onClick={onRevogar}>
+          Revogar consentimento
         </button>
       </div>
     </div>
@@ -845,7 +929,7 @@ function SairDialog({ onClose, onFalha }: { onClose: () => void; onFalha: () => 
 
 /* ---------- Apagar conta (RF-007) ---------- */
 
-function ApagarDialog({ onClose }: { onClose: () => void }) {
+export function ApagarDialog({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const controller = useSessionController();
   const inputId = useId();
@@ -1080,7 +1164,14 @@ function ContaAutenticada({ usuario, fazenda }: { usuario: UsuarioDto; fazenda: 
           titulo="Meus dados"
           descricao="Leve uma cópia de tudo o que está na sua conta."
         >
-          <MeusDadosSecao />
+          <MeusDadosSecao email={usuario.email} />
+        </Secao>
+        <Secao
+          icone="lock"
+          titulo="Termos e privacidade"
+          descricao="A versão dos termos que você aceitou e como retirar o consentimento."
+        >
+          <TermosSecao usuario={usuario} onRevogar={() => setApagando(true)} />
         </Secao>
         <Secao icone="trash" titulo="Zona de perigo" descricao="Ações sem volta." perigo>
           <div className="panel danger">

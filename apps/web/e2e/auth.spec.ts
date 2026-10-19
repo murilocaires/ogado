@@ -85,6 +85,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByLabel('Confirmar senha', { exact: true }).fill(SENHA);
+    await page.getByLabel(/Li e aceito/).check();
     await page.getByRole('button', { name: 'Criar conta' }).click();
     await expect(page).toHaveURL(/\/painel$/);
     await abrirConta(page, email);
@@ -175,6 +176,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     // Corrigida a confirmação, o cadastro segue e a confirmação não vai no corpo da requisição.
     const corpo = page.waitForRequest((r) => r.url().endsWith('/api/auth/signup'));
     await confirmacao.fill(SENHA);
+    await page.getByLabel(/Li e aceito/).check();
     await page.getByRole('button', { name: 'Criar conta' }).click();
     expect(JSON.parse((await corpo).postData() ?? '{}')).not.toHaveProperty('confirmacao');
     await expect(page).toHaveURL(/\/painel$/);
@@ -189,6 +191,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByLabel('Confirmar senha', { exact: true }).fill(SENHA);
+    await page.getByLabel(/Li e aceito/).check();
     await page.getByRole('button', { name: 'Criar conta' }).click();
     await expect(page).toHaveURL(/\/painel$/);
     await abrirConta(page, email);
@@ -228,6 +231,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByLabel('Confirmar senha', { exact: true }).fill(SENHA);
+    await page.getByLabel(/Li e aceito/).check();
     await page.getByRole('button', { name: 'Criar conta' }).click();
     await expect(page).toHaveURL(/\/painel$/);
     await abrirConta(page, email);

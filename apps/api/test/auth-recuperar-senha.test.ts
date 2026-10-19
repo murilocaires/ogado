@@ -332,6 +332,25 @@ describe('adaptador Resend', () => {
     });
   });
 
+  it('RNF-009: anexos seguem para o Resend como attachments (filename + content em base64)', async () => {
+    let corpo: unknown;
+    const sender = createResendEmailSender({
+      apiKey: 'k',
+      from: 'x@y.invalid',
+      fetch: (_url, init) => {
+        corpo = JSON.parse(String(init?.body));
+        return Promise.resolve(new Response('{}', { status: 200 }));
+      },
+    });
+    await sender.send({
+      to: 'a@b.invalid',
+      subject: 's',
+      text: 't',
+      attachments: [{ filename: 'dados.json', content: Buffer.from('{}').toString('base64') }],
+    });
+    expect(corpo).toMatchObject({ attachments: [{ filename: 'dados.json', content: 'e30=' }] });
+  });
+
   it('RF-002: resposta de erro do provedor rejeita sem ecoar o corpo', async () => {
     const sender = createResendEmailSender({
       apiKey: 'k',
