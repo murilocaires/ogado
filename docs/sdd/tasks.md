@@ -14,8 +14,8 @@ Formato: `T-nn · título · bloqueado por · requisitos`
 | T-08 | Cenários por safra (salvar, duplicar, renomear) | T-07 | RF-032, RN-023 |
 | T-09 | Painel | T-08, T-17 | RF-040 |
 | T-10 | Estados globais (vazio/erro/confirmação) + a11y + responsivo | T-06, T-07, T-17 | RF-050, RNF-005, RNF-006, RNF-007 |
-| T-11 | Exportação CSV/XLSX (nível S) | T-08, T-17 | RF-041 |
-| T-12 | Endurecimento: segurança, logs, LGPD mínima, desempenho da API, e2e das 3 jornadas (inclui offline) | T-09, T-10, T-15, T-16 | RNF-002, RNF-003, RNF-008, RNF-009, RNF-014 |
+| T-11 | Exportação CSV/XLSX (nível S) — **pronta na web (2026-10-19; falta revisão humana)** | T-08, T-17 | RF-041 |
+| T-12 | Endurecimento: segurança, logs, LGPD mínima, desempenho da API, e2e das 3 jornadas (inclui offline) — **parcial: exportação dos dados do titular (RNF-009) pronta; o consentimento (termos de uso e política de privacidade) segue pendente de decisão do dono** | T-09, T-10, T-15, T-16 | RNF-002, RNF-003, RNF-008, RNF-009, RNF-014 |
 | T-13 | PWA instalável: manifest, ícones, SW (shell offline), botão Instalar (+ instruções iOS); simulador e cálculos funcionam offline | T-07 | RF-070, RF-071, RF-072, RNF-012, RNF-016 |
 | T-14 | Dados locais + sincronização: Dexie, outbox, `/sync/push` e `/sync/pull`, idempotência, conflitos, itens rejeitados, sessão expirada | T-06, T-08, T-13, T-17 | RF-073, RF-074, RF-076, RF-079, RF-080, RNF-013, RNF-017 |
 | T-15 | UX de sincronização: indicador global, selo pendente, atualização de versão, logout seguro, aviso de cota | T-14, T-10 | RF-075, RF-077, RF-078, RNF-014, RNF-015 |

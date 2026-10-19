@@ -285,6 +285,51 @@ describe('T-18 cliente HTTP: Conta', () => {
     });
   });
 
+  it('RNF-009 GET /api/conta/exportar valida o contrato e traduz as falhas', async () => {
+    const corpo = {
+      versaoDoFormato: 1,
+      geradoEm: '2026-10-19T12:00:00.000Z',
+      observacao: 'Só não excluídos.',
+      perfil: {
+        id: sessionBody.usuario.id,
+        email: 'ana@fazenda.com',
+        nome: null,
+        criadoEm: '2026-10-01T12:00:00.000Z',
+        temSenha: true,
+        googleVinculado: false,
+      },
+      fazenda: {
+        id: sessionBody.fazenda.id,
+        nome: 'Boa Vista',
+        areaHa: '10',
+        criadoEm: '2026-10-01T12:00:00.000Z',
+      },
+      lotes: [],
+      cenarios: [],
+      recriaEntrada: null,
+    };
+    const f200 = vi.fn().mockResolvedValue(json(200, corpo));
+    const result = await createApiClient({ fetch: f200 }).exportData();
+    expect(result).toEqual({ ok: true, data: corpo });
+    const [url, init] = f200.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/conta/exportar');
+    expect(init.method).toBe('GET');
+
+    const ruim = vi.fn().mockResolvedValue(json(200, { qualquer: 'coisa' }));
+    expect(await createApiClient({ fetch: ruim }).exportData()).toEqual({
+      ok: false,
+      kind: 'contrato',
+    });
+    const limite = vi.fn().mockResolvedValue(json(429, erro('muitas_tentativas'), { 'retry-after': '30' }));
+    expect(await createApiClient({ fetch: limite }).exportData()).toEqual({
+      ok: false,
+      kind: 'muitas-tentativas',
+      retryAfterSeconds: 30,
+    });
+    const net = vi.fn().mockRejectedValue(new TypeError('offline'));
+    expect(await createApiClient({ fetch: net }).exportData()).toEqual({ ok: false, kind: 'rede' });
+  });
+
   it('RF-007 DELETE /api/conta envia a confirmação e só é sucesso com 204', async () => {
     const f204 = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
     const result = await createApiClient({ fetch: f204 }).deleteAccount();

@@ -22,6 +22,8 @@ import {
 import type { ApiFailure } from '../lib/auth/api-client';
 import { MSG_CONTA, mensagemFalha } from '../lib/auth/falhas';
 import { useSessionController, useSessionState } from '../lib/auth/session-provider';
+import { baixarArquivo } from '../lib/exportacao/baixar';
+import { dataParaArquivo } from '../lib/exportacao/tabela';
 import { lerCampo, paraCampo } from '../lib/format';
 import { useOpcaoInstalacao } from '../lib/pwa/instalacao';
 import { Carregando, PageHeader } from './AppShell';
@@ -707,6 +709,66 @@ function FazendaSecao({ fazenda }: { fazenda: FazendaDto }) {
   );
 }
 
+/* ---------- Meus dados (RNF-009) ---------- */
+
+function MeusDadosSecao() {
+  const controller = useSessionController();
+  const toast = useToast();
+  const [baixando, setBaixando] = useState(false);
+  const [falha, setFalha] = useState<string | null>(null);
+  const ocupado = useRef(false);
+
+  async function baixar(): Promise<void> {
+    if (ocupado.current) return;
+    setFalha(null);
+    if (!navigator.onLine) {
+      setFalha(MSG_CONTA.offline);
+      return;
+    }
+    ocupado.current = true;
+    setBaixando(true);
+    const res = await controller.exportData();
+    ocupado.current = false;
+    setBaixando(false);
+    if (!res.ok) {
+      setFalha(mensagemFalha(res));
+      return;
+    }
+    const arquivo = {
+      nome: `ogado-meus-dados-${dataParaArquivo()}.json`,
+      tipo: 'application/json;charset=utf-8',
+      conteudo: JSON.stringify(res.data, null, 2),
+    };
+    baixarArquivo(arquivo);
+    toast(`Arquivo ${arquivo.nome} baixado.`);
+  }
+
+  return (
+    <div className="panel">
+      <div className="bd">
+        <p style={{ margin: 0, color: 'var(--tinta-2)', fontSize: 14, lineHeight: 1.5 }}>
+          Uma cópia dos dados da sua conta em JSON: perfil, fazenda, lotes, cenários e as entradas
+          da recria. Traz só o que não foi excluído; senhas e dados de acesso não fazem parte.
+        </p>
+        <Alerta texto={falha} />
+      </div>
+      <div className="ft">
+        <span className="hint">Precisa de internet. Limite de 10 downloads por hora.</span>
+        <button
+          type="button"
+          className="btn sec sm"
+          aria-disabled={baixando}
+          aria-busy={baixando}
+          onClick={() => void baixar()}
+        >
+          <Icon name="baixar" size={18} />
+          {baixando ? 'Preparando…' : 'Baixar meus dados (JSON)'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Sair (RF-002, RF-078) ---------- */
 
 function SairDialog({ onClose, onFalha }: { onClose: () => void; onFalha: () => void }) {
@@ -1013,6 +1075,13 @@ function ContaAutenticada({ usuario, fazenda }: { usuario: UsuarioDto; fazenda: 
           <SincronizacaoPainel />
         </Secao>
         <InstalarSecao />
+        <Secao
+          icone="baixar"
+          titulo="Meus dados"
+          descricao="Leve uma cópia de tudo o que está na sua conta."
+        >
+          <MeusDadosSecao />
+        </Secao>
         <Secao icone="trash" titulo="Zona de perigo" descricao="Ações sem volta." perigo>
           <div className="panel danger">
             <div className="bd">

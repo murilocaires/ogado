@@ -39,6 +39,7 @@ function fakeApi(overrides: Partial<ApiClient> = {}): ApiClient {
     updatePerfil: vi.fn(),
     changePassword: vi.fn(),
     unlinkGoogle: vi.fn(),
+    exportData: vi.fn(),
     updateFazenda: vi.fn(),
     deleteAccount: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     forgotPassword: vi.fn(),

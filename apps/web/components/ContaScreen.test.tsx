@@ -26,6 +26,15 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+// O download de verdade (Blob + link) é do navegador; aqui se captura o arquivo gerado.
+const baixados = vi.hoisted(() => [] as { nome: string; tipo: string; conteudo: unknown }[]);
+vi.mock('../lib/exportacao/baixar', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../lib/exportacao/baixar')>()),
+  baixarArquivo: (arquivo: { nome: string; tipo: string; conteudo: unknown }) => {
+    baixados.push(arquivo);
+  },
+}));
+
 const identity: LocalIdentity = {
   usuarioId: sessionBody.usuario.id,
   fazendaId: sessionBody.fazenda.id,
@@ -67,6 +76,7 @@ async function setup({
     updatePerfil: vi.fn(),
     changePassword: vi.fn(),
     unlinkGoogle: vi.fn(),
+    exportData: vi.fn(),
     updateFazenda: vi.fn(),
     deleteAccount: vi.fn().mockResolvedValue(ok(undefined)),
     forgotPassword: vi.fn(),
@@ -708,5 +718,72 @@ describe('RF-006 Entrar com Google na Conta', () => {
     await waitFor(() => expect(alerta).toHaveFocus());
     expect(window.location.search).toBe('');
     window.history.replaceState(null, '', '/');
+  });
+});
+
+describe('RNF-009 Meus dados', () => {
+  const secaoDados = () => screen.getByRole('region', { name: 'Meus dados' });
+  const botaoBaixar = () =>
+    within(secaoDados()).getByRole('button', { name: 'Baixar meus dados (JSON)' });
+  const exportacao = {
+    versaoDoFormato: 1 as const,
+    geradoEm: '2026-10-19T12:00:00.000Z',
+    observacao: 'Só não excluídos.',
+    perfil: {
+      id: sessionBody.usuario.id,
+      email: sessionBody.usuario.email,
+      nome: null,
+      criadoEm: '2026-10-01T12:00:00.000Z',
+      temSenha: true,
+      googleVinculado: false,
+    },
+    fazenda: {
+      id: sessionBody.fazenda.id,
+      nome: 'Boa Vista',
+      areaHa: null,
+      criadoEm: '2026-10-01T12:00:00.000Z',
+    },
+    lotes: [],
+    cenarios: [],
+    recriaEntrada: null,
+  };
+
+  it('baixa o JSON dos dados e avisa com um toast', async () => {
+    baixados.length = 0;
+    const exportData = vi.fn().mockResolvedValue(ok(exportacao));
+    const { user } = await setup({ api: { exportData } });
+    await pronto();
+    await user.click(botaoBaixar());
+    expect(
+      await screen.findByText(/^Arquivo ogado-meus-dados-\d{4}-\d{2}-\d{2}\.json baixado\.$/),
+    ).toBeVisible();
+    expect(exportData).toHaveBeenCalledTimes(1);
+    expect(baixados[0]!.nome).toMatch(/^ogado-meus-dados-\d{4}-\d{2}-\d{2}\.json$/);
+    expect(baixados[0]!.tipo).toContain('application/json');
+    expect(JSON.parse(String(baixados[0]!.conteudo))).toEqual(exportacao);
+  });
+
+  it('sem internet avisa e não chama a API', async () => {
+    const exportData = vi.fn();
+    const { user } = await setup({ api: { exportData } });
+    await pronto();
+    setOnline(false);
+    await user.click(botaoBaixar());
+    expect(await within(secaoDados()).findByRole('alert')).toHaveTextContent(/sem internet/);
+    expect(exportData).not.toHaveBeenCalled();
+  });
+
+  it('limite de downloads vira aviso, sem arquivo', async () => {
+    baixados.length = 0;
+    const exportData = vi
+      .fn()
+      .mockResolvedValue({ ok: false, kind: 'muitas-tentativas', retryAfterSeconds: 120 });
+    const { user } = await setup({ api: { exportData } });
+    await pronto();
+    await user.click(botaoBaixar());
+    expect(await within(secaoDados()).findByRole('alert')).toHaveTextContent(
+      'Muitas tentativas. Tente de novo em 120 segundos.',
+    );
+    expect(baixados).toHaveLength(0);
   });
 });

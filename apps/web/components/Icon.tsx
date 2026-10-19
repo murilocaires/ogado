@@ -38,6 +38,7 @@ const PATHS = {
       <path d="M8 11V8a4 4 0 018 0v3" />
     </>
   ),
+  baixar: <path d="M12 4v11M7 11l5 5 5-5M5 20h14" />,
   user: (
     <>
       <circle cx="12" cy="8" r="4" />

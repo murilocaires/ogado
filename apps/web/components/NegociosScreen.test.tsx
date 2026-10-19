@@ -4,6 +4,7 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { BOM } from '../lib/exportacao/csv';
 import { brlComSinal } from '../lib/format';
 import { NegociosScreen } from './NegociosScreen';
 import { renderComApp } from './test-utils';
@@ -17,6 +18,15 @@ vi.mock('next/link', () => ({
   default: ({ href, children }: { href: string; children: ReactNode }) => (
     <a href={href}>{children}</a>
   ),
+}));
+
+// O download de verdade (Blob + link) é do navegador; aqui se captura o arquivo gerado.
+const baixados = vi.hoisted(() => [] as { nome: string; tipo: string; conteudo: unknown }[]);
+vi.mock('../lib/exportacao/baixar', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../lib/exportacao/baixar')>()),
+  baixarArquivo: (arquivo: { nome: string; tipo: string; conteudo: unknown }) => {
+    baixados.push(arquivo);
+  },
 }));
 
 type User = ReturnType<typeof userEvent.setup>;
@@ -234,6 +244,64 @@ describe('RF-020 exclusão com confirmação', () => {
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(screen.getByTestId('saldo')).toHaveTextContent('−R$ 30.000,00');
+  });
+});
+
+describe('RF-041 exportar compras e vendas', () => {
+  it('RF-041 sem lotes o diálogo avisa que não há nada a exportar e bloqueia o botão', async () => {
+    const user = userEvent.setup();
+    renderComApp(<NegociosScreen />);
+    await user.click(screen.getByRole('button', { name: 'Exportar' }));
+    const dialogo = screen.getByRole('dialog', { name: 'Exportar compras e vendas' });
+    expect(within(dialogo).getByText(/Nada para exportar ainda/)).toBeInTheDocument();
+    expect(within(dialogo).getByRole('button', { name: 'Exportar' })).toBeDisabled();
+  });
+
+  it('RF-041 Esc fecha o diálogo e devolve o foco ao botão Exportar', async () => {
+    const user = userEvent.setup();
+    renderComApp(<NegociosScreen />);
+    const gatilho = screen.getByRole('button', { name: 'Exportar' });
+    await user.click(gatilho);
+    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'CSV' })).toHaveFocus();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(gatilho).toHaveFocus();
+  });
+
+  it('RF-041 baixa o CSV (nome com a data, BOM, ;) e o XLSX, e avisa com um toast', async () => {
+    baixados.length = 0;
+    const user = userEvent.setup();
+    renderComApp(<NegociosScreen />);
+    await user.click(screen.getAllByRole('button', { name: 'Novo lote' })[0]!);
+    await preencherELancar(user, { qtd: '10', peso: '3000', preco: '300' });
+    await confirmarSalvar(user);
+
+    await user.click(screen.getByRole('button', { name: 'Exportar' }));
+    let dialogo = screen.getByRole('dialog', { name: 'Exportar compras e vendas' });
+    expect(within(dialogo).getByRole('button', { name: 'Compras e vendas' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await user.click(within(dialogo).getByRole('button', { name: 'Compras' }));
+    await user.click(within(dialogo).getByRole('button', { name: 'Exportar' }));
+
+    await screen.findByText(/^Arquivo ogado-compras-\d{4}-\d{2}-\d{2}\.csv baixado\.$/);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(baixados).toHaveLength(1);
+    const csv = baixados[0]!;
+    expect(csv.nome).toMatch(/^ogado-compras-\d{4}-\d{2}-\d{2}\.csv$/);
+    expect(csv.tipo).toContain('text/csv');
+    expect(String(csv.conteudo).startsWith(`${BOM}Tipo;Lote;Data;`)).toBe(true);
+    expect(String(csv.conteudo)).toContain('Compra;1;');
+    expect(String(csv.conteudo)).toContain('\r\n');
+
+    await user.click(screen.getByRole('button', { name: 'Exportar' }));
+    dialogo = screen.getByRole('dialog', { name: 'Exportar compras e vendas' });
+    await user.click(within(dialogo).getByRole('button', { name: 'XLSX' }));
+    await user.click(within(dialogo).getByRole('button', { name: 'Exportar' }));
+    await screen.findByText(/^Arquivo ogado-negocios-\d{4}-\d{2}-\d{2}\.xlsx baixado\.$/);
+    expect(baixados[1]!.nome).toMatch(/\.xlsx$/);
+    expect(baixados[1]!.conteudo).toBeInstanceOf(Uint8Array);
   });
 });
 

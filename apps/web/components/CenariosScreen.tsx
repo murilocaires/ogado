@@ -14,10 +14,13 @@ import {
   type OrdemCenarios,
 } from '../lib/cenarios';
 import { CUSTO_CORES } from '../lib/custo-cores';
+import { baixarArquivo, gerarArquivo } from '../lib/exportacao/baixar';
+import { tabelaDeCenarios } from '../lib/exportacao/dados';
 import { brl, dataBR, ehNegativo, num, valorCampo } from '../lib/format';
 import { useRepo } from '../lib/repo/repo-provider';
 import type { CenarioEntity } from '../lib/repo/types';
 import { ConfirmDialog } from './Dialog';
+import { ExportarDialog } from './ExportarDialog';
 import { Icon } from './Icon';
 import { InfoPopover } from './InfoPopover';
 import { NomeDialog } from './NomeDialog';
@@ -74,6 +77,7 @@ export function CenariosScreen({
   const [comparando, setComparando] = useState(false);
   const [renomeando, setRenomeando] = useState<CenarioEntity | null>(null);
   const [excluindo, setExcluindo] = useState<CenarioEntity | null>(null);
+  const [exportando, setExportando] = useState(false);
   const painelComparacao = useRef<HTMLElement>(null);
 
   // Cenário excluído (ou duplicado em outra aba) sai da seleção.
@@ -188,6 +192,10 @@ export function CenariosScreen({
             <Icon name="grid" size={20} />
           </button>
         </div>
+        <button type="button" className="btn sec sm" onClick={() => setExportando(true)}>
+          <Icon name="baixar" size={18} />
+          Exportar
+        </button>
         <span className="hint tb-count" aria-live="polite">
           {contagem}
         </span>
@@ -394,6 +402,20 @@ export function CenariosScreen({
             Limpar
           </button>
         </div>
+      )}
+
+      {exportando && (
+        <ExportarDialog<'todos'>
+          titulo="Exportar cenários"
+          conteudos={[{ id: 'todos', rotulo: 'Todos os cenários', quantidade: cenarios.length }]}
+          conteudoInicial="todos"
+          onClose={() => setExportando(false)}
+          onExportar={async (formato) => {
+            const arquivo = await gerarArquivo(formato, [tabelaDeCenarios(cenarios)], 'cenarios');
+            baixarArquivo(arquivo);
+            return `Arquivo ${arquivo.nome} baixado.`;
+          }}
+        />
       )}
 
       {renomeando && (

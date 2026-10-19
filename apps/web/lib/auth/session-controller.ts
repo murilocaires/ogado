@@ -1,4 +1,5 @@
 import type {
+  ExportacaoDados,
   FazendaDto,
   FazendaPatch,
   LoginRequest,
@@ -59,6 +60,8 @@ export interface SessionController {
   updateFazenda(body: FazendaPatch): Promise<ApiResult<SessionResponse>>;
   /** RF-007: apaga a conta no servidor e, só depois do 204, o aparelho (como no logout). */
   deleteAccount(): Promise<ApiResult<void>>;
+  /** RNF-009: baixa a cópia dos dados do titular; 401 expira a sessão sem apagar nada. */
+  exportData(): Promise<ApiResult<ExportacaoDados>>;
   /** Qualquer 401 vindo de outra chamada (sync, dados): expira sem apagar nada (RF-080). */
   markUnauthorized(): void;
 }
@@ -195,6 +198,7 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
         () => patchUsuario({ googleVinculado: false }),
       ),
     updateFazenda: (body) => accountCall(() => deps.api.updateFazenda(body), applySession),
+    exportData: () => accountCall(() => deps.api.exportData()),
     async deleteAccount() {
       const result = await accountCall(() => deps.api.deleteAccount());
       if (result.ok) {

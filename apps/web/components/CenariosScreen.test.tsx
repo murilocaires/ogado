@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { snapshotDaRecria } from '../lib/cenarios';
+import { BOM } from '../lib/exportacao/csv';
 import { criarRepoLocal, recriaFormPadrao } from '../lib/repo/local-repo';
 import type { OGadoRepo, RecriaEntity, RecriaForm } from '../lib/repo/types';
 import { PainelScreen } from './PainelScreen';
@@ -28,6 +29,15 @@ vi.mock('next/link', () => ({
       {children}
     </a>
   ),
+}));
+
+// O download de verdade (Blob + link) é do navegador; aqui se captura o arquivo gerado.
+const baixados = vi.hoisted(() => [] as { nome: string; tipo: string; conteudo: unknown }[]);
+vi.mock('../lib/exportacao/baixar', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../lib/exportacao/baixar')>()),
+  baixarArquivo: (arquivo: { nome: string; tipo: string; conteudo: unknown }) => {
+    baixados.push(arquivo);
+  },
 }));
 
 function novoRepo(): OGadoRepo {
@@ -227,6 +237,39 @@ describe('RF-032/RF-034/RF-035/RF-036 lista de cenários', () => {
     expect(screen.getByText('Cenário excluído.')).toBeInTheDocument();
     expect(nomesNaLista()).toEqual(['Base']);
     expect(screen.getByRole('tab', { name: /^Cenários\s*1$/ })).toBeInTheDocument();
+  });
+});
+
+describe('RF-041 exportar cenários', () => {
+  it('RF-041 sem cenários não há botão Exportar (estado vazio)', () => {
+    renderComApp(<RecriaScreen abaInicial="cenarios" />, novoRepo());
+    expect(screen.queryByRole('button', { name: 'Exportar' })).not.toBeInTheDocument();
+  });
+
+  it('RF-041 baixa o CSV e o XLSX dos cenários, com o nome do arquivo e o toast', async () => {
+    baixados.length = 0;
+    const user = userEvent.setup();
+    const repo = novoRepo();
+    semear(repo, 'Safra 26/27');
+    semear(repo, 'Preço baixo', { precoVenda: '250' });
+    renderComApp(<RecriaScreen abaInicial="cenarios" />, repo);
+
+    await user.click(screen.getByRole('button', { name: 'Exportar' }));
+    let dialogo = screen.getByRole('dialog', { name: 'Exportar cenários' });
+    await user.click(within(dialogo).getByRole('button', { name: 'Exportar' }));
+    await screen.findByText(/^Arquivo ogado-cenarios-\d{4}-\d{2}-\d{2}\.csv baixado\.$/);
+    const csv = String(baixados[0]!.conteudo);
+    expect(csv.startsWith(`${BOM}Cenário;Criado em;Faturamento líquido;`)).toBe(true);
+    expect(csv).toContain('Safra 26/27;');
+    expect(csv).toContain('Preço baixo;');
+    expect(csv.split('\r\n').filter(Boolean)).toHaveLength(3);
+
+    await user.click(screen.getByRole('button', { name: 'Exportar' }));
+    dialogo = screen.getByRole('dialog', { name: 'Exportar cenários' });
+    await user.click(within(dialogo).getByRole('button', { name: 'XLSX' }));
+    await user.click(within(dialogo).getByRole('button', { name: 'Exportar' }));
+    await screen.findByText(/^Arquivo ogado-cenarios-\d{4}-\d{2}-\d{2}\.xlsx baixado\.$/);
+    expect(baixados[1]!.nome).toMatch(/\.xlsx$/);
   });
 });
 

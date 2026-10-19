@@ -3,6 +3,7 @@ import type { LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   errorEnvelopeSchema,
+  exportacaoDadosSchema,
   fazendaListResponseSchema,
   fazendaSchema,
   sessionResponseSchema,
@@ -329,6 +330,19 @@ const isolationCasesConta: Record<string, (a: Farm, b: Farm) => Promise<number>>
     const depois = await prisma.fazenda.findUniqueOrThrow({ where: { id: b.fazendaId } });
     expect(depois).toEqual(antes);
     return 2;
+  },
+  'GET /conta/exportar': async (a, b) => {
+    const { lote, cenario } = await dadosDeB(b);
+    // a query não escolhe o alvo: um id de B na query é ignorado
+    const res = await getWithCookie(app, `/conta/exportar?usuarioId=${b.usuarioId}`, a.cookie);
+    expect(res.statusCode).toBe(200);
+    const dados = exportacaoDadosSchema.parse(res.json());
+    expect(dados.perfil.id).toBe(a.usuarioId);
+    expect(dados.fazenda.id).toBe(a.fazendaId);
+    for (const proibido of [lote, cenario, b.usuarioId, b.fazendaId]) {
+      expect(res.body).not.toContain(proibido);
+    }
+    return 1;
   },
   // antes de 'DELETE /conta': os casos compartilham A e B, e este apaga a conta de A
   'DELETE /conta/google': async (a, b) => {

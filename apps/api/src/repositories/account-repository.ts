@@ -214,6 +214,24 @@ export function createAccountRepository(prisma: PrismaClient) {
       });
     },
 
+    /**
+     * Perfil e fazenda do titular para a exportação (RNF-009). Seleção explícita: o hash da senha
+     * só vira `temSenha`, e a identidade Google só vira `googleVinculado` (sem `sub` nem e-mail).
+     */
+    async loadTitularParaExportar(ctx: { usuarioId: string; fazendaId: string }) {
+      const [usuario, fazenda] = await Promise.all([
+        prisma.usuario.findUnique({
+          where: { id: ctx.usuarioId },
+          select: { ...usuarioDtoSelect, criadoEm: true },
+        }),
+        prisma.fazenda.findFirst({
+          where: { id: ctx.fazendaId, donoId: ctx.usuarioId, deletedAt: null },
+          select: { id: true, nome: true, areaHa: true, createdAt: true },
+        }),
+      ]);
+      return usuario && fazenda ? { usuario, fazenda } : null;
+    },
+
     async loadFazendaDoUsuario(usuarioId: string): Promise<FazendaRecord | null> {
       return prisma.fazenda.findFirst({
         where: { donoId: usuarioId, deletedAt: null },
