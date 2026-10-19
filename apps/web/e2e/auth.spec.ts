@@ -173,15 +173,15 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await context.clearCookies();
     await page.reload();
 
-    await expect(page.getByText('Entre de novo')).toBeVisible();
+    // A barreira das telas leva a /entrar, que avisa que a sessão terminou.
+    await expect(page).toHaveURL(/\/entrar$/);
+    await expect(page.getByText(/Entre de novo/)).toBeVisible();
     expect(await page.evaluate(() => window.localStorage.getItem('fila-teste'))).toBe(
       'lancamento-pendente',
     );
     expect(await page.evaluate(() => window.localStorage.getItem('ogado.identidade'))).toBe(antes);
 
     // Entrar de novo retoma o uso.
-    await page.getByRole('link', { name: 'Entrar', exact: true }).click();
-    await expect(page.getByText(/Entre de novo/)).toBeVisible();
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Entrar' }).click();
@@ -215,8 +215,8 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     );
     await page.evaluate(() => window.dispatchEvent(new Event('online')));
 
-    await expect(page.getByText('Entre de novo')).toBeVisible();
-    await expect(page).toHaveURL(/\/conta$/);
+    await expect(page).toHaveURL(/\/entrar$/);
+    await expect(page.getByText(/Entre de novo/)).toBeVisible();
     expect(await page.evaluate(() => window.localStorage.getItem('fila-teste'))).toBe(
       'lancamento-pendente',
     );
