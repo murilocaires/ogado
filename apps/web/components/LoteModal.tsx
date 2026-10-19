@@ -252,7 +252,7 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
                 </div>
               </div>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <div className="desc-linha">
                   <label className="chk">
                     <input
                       type="checkbox"
@@ -274,10 +274,12 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
                       aria-invalid={erroDe('desconto') ? true : undefined}
                       onChange={(e) => atualizar({ descontoKg: e.target.value })}
                     />
-                    kg por cabeça
+                    kg/cab.
                   </span>
-                  <span className="hint">descontados do peso (fêmeas; desmarque para machos)</span>
                 </div>
+                <span className="hint">
+                  kg descontados do peso por cabeça (fêmeas; desmarque para machos)
+                </span>
                 {erroDe('desconto') && (
                   <span className="err" role="alert">
                     {erroDe('desconto')}

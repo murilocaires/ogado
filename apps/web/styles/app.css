@@ -813,6 +813,21 @@
   height: 20px;
   accent-color: var(--folha-600);
 }
+.app .desc-linha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.app .desc-linha .chk {
+  flex: 0 1 auto;
+  white-space: nowrap;
+}
+.app .desc-linha .pct {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 13.5px;
+}
 .app .pct {
   display: inline-flex;
   align-items: center;
@@ -828,7 +843,7 @@
   outline-offset: 1px;
 }
 .app .pct input {
-  width: 56px;
+  width: 44px;
   border: 0;
   outline: 0;
   font-weight: 600;
