@@ -13,8 +13,12 @@ import { registerErrorHandling } from './plugins/error-handler';
 import { registerRouteCatalog } from './plugins/route-catalog';
 import { rateLimitPlugin } from './plugins/rate-limit';
 import { createAccountRepository } from './repositories/account-repository';
+import { createCenarioRepository } from './repositories/cenario-repository';
 import { createFazendaRepository } from './repositories/fazenda-repository';
+import { createLoteRepository } from './repositories/lote-repository';
+import { createRecriaRepository } from './repositories/recria-repository';
 import { registerAuthRoutes } from './routes/auth';
+import { registerDadosRoutes } from './routes/dados';
 import { registerFazendaRoutes } from './routes/fazendas';
 import { registerHealthRoutes } from './routes/health';
 import { createSessionService } from './session/session-service';
@@ -124,6 +128,11 @@ export function buildApp(options: AppOptions): FastifyInstance {
   });
 
   registerFazendaRoutes(app, { fazendas });
+  registerDadosRoutes(app, {
+    lotes: createLoteRepository(prisma),
+    cenarios: createCenarioRepository(prisma),
+    recria: createRecriaRepository(prisma),
+  });
 
   return app;
 }

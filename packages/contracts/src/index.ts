@@ -4,3 +4,5 @@ export * from './password-rules';
 export * from './auth';
 export * from './fazenda';
 export * from './session';
+export * from './decimal';
+export * from './dados';

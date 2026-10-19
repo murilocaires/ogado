@@ -90,12 +90,10 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AuthRoutesDeps): 
       // Sessão sempre nova; um cookie anterior enviado junto nunca é reaproveitado (sem fixação).
       const session = await deps.sessions.create(usuario.id);
       setSessionCookie(reply, deps.config, session.token, session.maxAgeSeconds);
-      return reply
-        .code(200)
-        .send({
-          usuario: { id: usuario.id, email: usuario.email },
-          fazenda: toFazendaDto(fazenda),
-        });
+      return reply.code(200).send({
+        usuario: { id: usuario.id, email: usuario.email },
+        fazenda: toFazendaDto(fazenda),
+      });
     },
   );
 

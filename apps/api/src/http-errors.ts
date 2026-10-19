@@ -6,7 +6,12 @@ export class AppError extends Error {
     readonly statusCode: number,
     readonly codigo: ErrorCode,
     mensagem: string,
-    readonly options: { headers?: Record<string, string>; campos?: FieldError[] } = {},
+    readonly options: {
+      headers?: Record<string, string>;
+      campos?: FieldError[];
+      /** Campos extras no corpo ao lado de `erro` (409: `atual`, ADR-0011 §4). */
+      extra?: Record<string, unknown>;
+    } = {},
   ) {
     super(mensagem);
     this.name = 'AppError';
@@ -42,3 +47,12 @@ export const tooManyAttempts = (retryAfterSeconds: number): AppError =>
   new AppError(429, 'muitas_tentativas', 'Muitas tentativas. Aguarde um pouco e tente de novo.', {
     headers: { 'retry-after': String(Math.max(1, Math.ceil(retryAfterSeconds))) },
   });
+
+/** 409 de versão otimista: devolve o estado atual do servidor em `atual` (ADR-0011 §4). */
+export const versionConflict = (atual: unknown): AppError =>
+  new AppError(
+    409,
+    'conflito',
+    'Este registro foi alterado em outro aparelho. Confira a versão atual e tente de novo.',
+    { extra: { atual } },
+  );

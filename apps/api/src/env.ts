@@ -53,7 +53,8 @@ const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const env = envSchema.parse(source);
+  // Plataformas (Railway, Heroku) injetam `PORT`; `API_PORT` explícito tem prioridade.
+  const env = envSchema.parse({ ...source, API_PORT: source['API_PORT'] ?? source['PORT'] });
   if (isProduction(env.NODE_ENV) && !source['TRUST_PROXY']?.trim()) {
     throw new Error(
       'TRUST_PROXY é obrigatório em produção: informe o IP/CIDR do proxy reverso ou "none".',

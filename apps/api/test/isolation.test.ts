@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   errorEnvelopeSchema,
@@ -5,6 +6,7 @@ import {
   fazendaSchema,
   sessionResponseSchema,
 } from '@ogado/contracts';
+import { TEST_ORIGIN } from './support/env';
 import { buildTestApp, getWithCookie, prisma, signup } from './support/harness';
 import {
   assertPublicAllowlist,
@@ -70,6 +72,198 @@ const isolationCases: Record<string, (a: Farm, b: Farm) => Promise<number>> = {
   },
 };
 
+/** Cria, como B, um recurso por tipo e devolve as rotas de A contra eles (RNF-004). */
+async function dadosDeB(b: Farm) {
+  const headers = { cookie: b.cookie, origin: TEST_ORIGIN, 'content-type': 'application/json' };
+  const post = async (url: string, payload: object) => {
+    const res = await app.inject({
+      method: 'POST',
+      url,
+      headers,
+      payload: JSON.stringify(payload),
+    });
+    expect(res.statusCode).toBe(201);
+    return (res.json() as { id: string }).id;
+  };
+  const lote = await post('/lotes', {
+    id: randomUUID(),
+    tipo: 'compra',
+    categoria: 'B',
+    modo: 'total',
+    qtd: '1',
+    peso: '1',
+    preco: '1',
+  });
+  const cenario = await post('/cenarios', {
+    id: randomUUID(),
+    nome: 'B',
+    criadoEm: '2026-10-18T00:00:00.000Z',
+    entradas: {},
+    variantes: {},
+    parametros: {},
+    resultado: {},
+  });
+  return { lote, cenario };
+}
+
+async function tentaComoA(
+  a: Farm,
+  method: 'GET' | 'PATCH' | 'DELETE',
+  url: string,
+  payload?: object,
+) {
+  const res = await app.inject({
+    method,
+    url,
+    headers: {
+      cookie: a.cookie,
+      origin: TEST_ORIGIN,
+      ...(payload ? { 'content-type': 'application/json' } : {}),
+    },
+    ...(payload ? { payload: JSON.stringify(payload) } : {}),
+  });
+  expect(res.statusCode).toBe(404);
+  expect(errorEnvelopeSchema.parse(res.json()).erro.codigo).toBe('nao_encontrado');
+  return res;
+}
+
+const listaVaziaDeA = (path: '/lotes' | '/cenarios') => async (a: Farm, b: Farm) => {
+  const { lote, cenario } = await dadosDeB(b);
+  const res = await getWithCookie(app, path, a.cookie);
+  expect(res.statusCode).toBe(200);
+  expect(res.body).not.toContain(lote);
+  expect(res.body).not.toContain(cenario);
+  return 1;
+};
+
+const isolationCasesDados: Record<string, (a: Farm, b: Farm) => Promise<number>> = {
+  'GET /lotes': listaVaziaDeA('/lotes'),
+  'GET /cenarios': listaVaziaDeA('/cenarios'),
+  'GET /lotes/:id': async (a, b) => {
+    const { lote } = await dadosDeB(b);
+    await tentaComoA(a, 'GET', `/lotes/${lote}`);
+    return 1;
+  },
+  'PATCH /lotes/:id': async (a, b) => {
+    const { lote } = await dadosDeB(b);
+    await tentaComoA(a, 'PATCH', `/lotes/${lote}`, { version: 1, categoria: 'X' });
+    return 1;
+  },
+  'DELETE /lotes/:id': async (a, b) => {
+    const { lote } = await dadosDeB(b);
+    await tentaComoA(a, 'DELETE', `/lotes/${lote}?version=1`);
+    return 1;
+  },
+  'GET /cenarios/:id': async (a, b) => {
+    const { cenario } = await dadosDeB(b);
+    await tentaComoA(a, 'GET', `/cenarios/${cenario}`);
+    return 1;
+  },
+  'PATCH /cenarios/:id': async (a, b) => {
+    const { cenario } = await dadosDeB(b);
+    await tentaComoA(a, 'PATCH', `/cenarios/${cenario}`, { version: 1, nome: 'X' });
+    return 1;
+  },
+  'DELETE /cenarios/:id': async (a, b) => {
+    const { cenario } = await dadosDeB(b);
+    await tentaComoA(a, 'DELETE', `/cenarios/${cenario}?version=1`);
+    return 1;
+  },
+  // POST/PUT criam no tenant do chamador; o isolamento delas (colisão de UUID, sem vazar) está em dados.test.ts
+  'POST /lotes': async (a, b) => {
+    const id = randomUUID();
+    const headers = { origin: TEST_ORIGIN, 'content-type': 'application/json' };
+    const corpo = {
+      id,
+      tipo: 'compra',
+      categoria: 'B',
+      modo: 'total',
+      qtd: '1',
+      peso: '1',
+      preco: '1',
+    };
+    const deB = await app.inject({
+      method: 'POST',
+      url: '/lotes',
+      headers: { ...headers, cookie: b.cookie },
+      payload: JSON.stringify(corpo),
+    });
+    const deA = await app.inject({
+      method: 'POST',
+      url: '/lotes',
+      headers: { ...headers, cookie: a.cookie },
+      payload: JSON.stringify(corpo),
+    });
+    expect(deB.statusCode).toBe(201);
+    expect(deA.statusCode).toBe(409);
+    expect(deA.body).not.toContain(b.fazendaId);
+    return 1;
+  },
+  'POST /cenarios': async (a, b) => {
+    const id = randomUUID();
+    const headers = { origin: TEST_ORIGIN, 'content-type': 'application/json' };
+    const corpo = {
+      id,
+      nome: 'B',
+      criadoEm: '2026-10-18T00:00:00.000Z',
+      entradas: {},
+      variantes: {},
+      parametros: {},
+      resultado: {},
+    };
+    const deB = await app.inject({
+      method: 'POST',
+      url: '/cenarios',
+      headers: { ...headers, cookie: b.cookie },
+      payload: JSON.stringify(corpo),
+    });
+    const deA = await app.inject({
+      method: 'POST',
+      url: '/cenarios',
+      headers: { ...headers, cookie: a.cookie },
+      payload: JSON.stringify(corpo),
+    });
+    expect(deB.statusCode).toBe(201);
+    expect(deA.statusCode).toBe(409);
+    return 1;
+  },
+  'GET /recria-entrada': async (a, b) => {
+    const headers = { origin: TEST_ORIGIN, 'content-type': 'application/json', cookie: b.cookie };
+    await app.inject({
+      method: 'PUT',
+      url: '/recria-entrada',
+      headers,
+      payload: JSON.stringify({
+        id: randomUUID(),
+        entradas: { area: '1' },
+        lotacaoInicial: 'fixa80',
+      }),
+    });
+    const res = await getWithCookie(app, '/recria-entrada', a.cookie);
+    expect(res.statusCode).toBe(404);
+    return 1;
+  },
+  'PUT /recria-entrada': async (a, b) => {
+    const headers = { origin: TEST_ORIGIN, 'content-type': 'application/json' };
+    const put = (cookie: string, id: string) =>
+      app.inject({
+        method: 'PUT',
+        url: '/recria-entrada',
+        headers: { ...headers, cookie },
+        payload: JSON.stringify({ id, entradas: { area: '1' }, lotacaoInicial: 'fixa80' }),
+      });
+    // B garante que tem registro (outro caso pode ter criado antes: 201 ou 409) e A usa o id dele
+    await put(b.cookie, randomUUID());
+    const idDeB = (await getWithCookie(app, '/recria-entrada', b.cookie)).json<{ id: string }>().id;
+    const deA = await put(a.cookie, idDeB);
+    expect(deA.statusCode).toBe(409);
+    expect(deA.json()).not.toHaveProperty('atual');
+    expect(deA.body).not.toContain(b.fazendaId);
+    return 1;
+  },
+};
+Object.assign(isolationCases, isolationCasesDados);
+
 describe('isolamento por fazenda (HTTP)', () => {
   it('RF-010 CA-11: o usuário A não lê, nem lista a fazenda de B, e os dados de B ficam intactos', async () => {
     const a = await createFarm();
@@ -99,7 +293,13 @@ describe('isolamento por fazenda (HTTP)', () => {
     await app.ready();
     for (const rota of app.routeCatalog.filter((r) => !r.public)) {
       const url = rota.url.replace(':id', '2f1c6d6e-5b7a-4c1e-9d55-0d1c2b3a4f5e');
-      const res = await app.inject({ method: rota.method, url });
+      // métodos que alteram estado passam antes pela barreira de CSRF (Origin + JSON); DELETE sem corpo
+      const res = await app.inject({
+        method: rota.method,
+        url,
+        headers: { origin: TEST_ORIGIN, 'content-type': 'application/json' },
+        ...(['POST', 'PUT', 'PATCH'].includes(rota.method) ? { payload: '{}' } : {}),
+      });
       expect(res.statusCode, `${rota.method} ${rota.url}`).toBe(401);
     }
   });
@@ -122,7 +322,10 @@ describe('isolamento por fazenda (HTTP)', () => {
   it('RNF-004 CA-12: o guardião falha para uma rota pública nova fora da allowlist', async () => {
     await app.ready();
     expect(() => assertPublicAllowlist(app.routeCatalog)).not.toThrow();
-    const comNova = [...app.routeCatalog, { method: 'GET' as const, url: '/relatorios', public: true }];
+    const comNova = [
+      ...app.routeCatalog,
+      { method: 'GET' as const, url: '/relatorios', public: true },
+    ];
     expect(() => assertPublicAllowlist(comNova)).toThrow(/allowlist/);
     expect(PUBLIC_ROUTE_ALLOWLIST).toEqual([
       'GET /health',

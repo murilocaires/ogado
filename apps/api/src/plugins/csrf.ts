@@ -9,7 +9,8 @@ const SAME_SITE_VALUES = new Set(['same-origin', 'same-site']);
  * CSRF sem token sincronizador (ADR-0010 e), quatro barreiras somadas: SameSite=Lax no cookie e,
  * aqui, em todo método que altera estado: (1) `Origin` presente e na lista permitida;
  * (2) `Sec-Fetch-Site`, quando presente, `same-origin` ou `same-site`; (3) `Content-Type:
- * application/json`, que força preflight de CORS entre origens. GET nunca altera estado.
+ * application/json`, que força preflight de CORS entre origens (DELETE sem corpo é isento, ADR-0011 §7).
+ * GET nunca altera estado.
  */
 export const csrfPlugin = fp<{ allowedOrigins: string[] }>(
   async (app: FastifyInstance, { allowedOrigins }) => {
@@ -23,6 +24,16 @@ export const csrfPlugin = fp<{ allowedOrigins: string[] }>(
 
       const fetchSite = request.headers['sec-fetch-site'];
       if (typeof fetchSite === 'string' && !SAME_SITE_VALUES.has(fetchSite)) throw forbidden();
+
+      // DELETE sem corpo (ADR-0011 §7): não é método "simples" do CORS (sempre faz preflight) e
+      // formulário HTML não envia DELETE; então o Content-Type não acrescenta barreira. Com corpo, bloqueia.
+      if (request.method === 'DELETE') {
+        const comCorpo =
+          Number(request.headers['content-length'] ?? 0) > 0 ||
+          request.headers['transfer-encoding'] !== undefined;
+        if (comCorpo) throw forbidden();
+        return;
+      }
 
       const mediaType = (request.headers['content-type'] ?? '').split(';')[0]?.trim().toLowerCase();
       if (mediaType !== 'application/json') throw forbidden();

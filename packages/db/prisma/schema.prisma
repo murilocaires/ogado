@@ -51,5 +51,92 @@ model Fazenda {
 
   dono Usuario @relation(fields: [donoId], references: [id], onDelete: Restrict)
 
+  lotes         Lote[]
+  cenarios      Cenario[]
+  recriaEntrada RecriaEntrada?
+
   @@index([updatedAt])
+}
+
+// E3 (ADR-0007, ADR-0011 §3-4): dados do site no servidor, por fazenda. Convenção sincronizável:
+// `id` UUID gerado pelo cliente, `version` e `updatedAt` só do servidor, `deletedAt` = lápide.
+// Decimais: Decimal exato (ADR-0003); a API os trafega como string canônica.
+enum LoteTipo {
+  compra
+  venda
+}
+
+enum ModoPeso {
+  total
+  medio
+  individual
+}
+
+enum BaseArroba {
+  vivo
+  carcaca
+}
+
+model Lote {
+  id              String     @id @db.Uuid
+  fazendaId       String     @db.Uuid
+  tipo            LoteTipo
+  // sequencial por fazenda + tipo, atribuído pelo servidor; lápides mantêm o número (nunca reutiliza)
+  numero          Int
+  categoria       String
+  data            DateTime?  @db.Date
+  modo            ModoPeso
+  qtd             Decimal    @db.Decimal(12, 3)
+  peso            Decimal    @db.Decimal(12, 3)
+  pesos           Decimal[]  @db.Decimal(12, 3)
+  preco           Decimal    @db.Decimal(14, 2)
+  base            BaseArroba @default(vivo)
+  aplicarDesconto Boolean    @default(false)
+  // fração (0.1 = 10%); só venda
+  desconto        Decimal?   @db.Decimal(7, 6)
+  version         Int        @default(1)
+  createdAt       DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime   @default(now()) @db.Timestamptz(3)
+  deletedAt       DateTime?  @db.Timestamptz(3)
+
+  fazenda Fazenda @relation(fields: [fazendaId], references: [id], onDelete: Cascade)
+
+  @@unique([fazendaId, tipo, numero])
+  @@index([fazendaId, updatedAt])
+}
+
+model Cenario {
+  id         String    @id @db.Uuid
+  fazendaId  String    @db.Uuid
+  nome       String
+  // data de criação do cenário (vinda do cliente, preserva a data de quando foi salvo offline)
+  criadoEm   DateTime  @db.Timestamptz(3)
+  // snapshots imutáveis: objetos JSON cujas folhas são strings decimais (nunca number)
+  entradas   Json
+  variantes  Json
+  parametros Json
+  resultado  Json
+  version    Int       @default(1)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime  @default(now()) @db.Timestamptz(3)
+  deletedAt  DateTime? @db.Timestamptz(3)
+
+  fazenda Fazenda @relation(fields: [fazendaId], references: [id], onDelete: Cascade)
+
+  @@index([fazendaId, criadoEm])
+  @@index([fazendaId, updatedAt])
+}
+
+// Entradas do simulador da recria: uma por fazenda (campos como string decimal).
+model RecriaEntrada {
+  id             String    @id @db.Uuid
+  fazendaId      String    @unique @db.Uuid
+  entradas       Json
+  lotacaoInicial String
+  version        Int       @default(1)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime  @default(now()) @db.Timestamptz(3)
+  deletedAt      DateTime? @db.Timestamptz(3)
+
+  fazenda Fazenda @relation(fields: [fazendaId], references: [id], onDelete: Cascade)
 }
