@@ -8,6 +8,7 @@ import { useRepoState } from '../lib/repo/repo-provider';
 import { AtencaoDialog } from './AtencaoPainel';
 import { Icon, type IconName } from './Icon';
 import { InstalarApp } from './InstalarApp';
+import { SugestaoInstalar } from './SugestaoInstalar';
 import { LogoMark } from './Logo';
 import { SyncIndicador, useOnline } from './SyncIndicador';
 import { useSyncInfo, useSyncStatus } from './SyncProvider';
@@ -61,6 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
         <main id="conteudo" className="app-main" tabIndex={-1}>
+          <SugestaoInstalar />
           <SyncIndicador variante="compacto" onRevisar={() => setRevisando(true)} />
           {info.cotaQuaseCheia !== null && (
             <div className="note erro banner" role="status">
