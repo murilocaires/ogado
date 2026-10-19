@@ -125,8 +125,10 @@ model Lote {
   preco           Decimal    @db.Decimal(14, 2)
   base            BaseArroba @default(vivo)
   aplicarDesconto Boolean    @default(false)
-  // fração (0.1 = 10%); só venda
+  // LEGADO (fração, 0.1 = 10%): não é mais lido nem escrito (ADR-0013); remoção exige ADR própria
   desconto        Decimal?   @db.Decimal(7, 6)
+  // kg descontados por cabeça (ADR-0013); só venda
+  descontoKg      Decimal?   @db.Decimal(8, 3)
   version         Int        @default(1)
   createdAt       DateTime   @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime   @default(now()) @db.Timestamptz(3)
