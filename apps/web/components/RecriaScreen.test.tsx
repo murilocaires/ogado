@@ -31,9 +31,9 @@ describe('RF-030/RF-031 simulador de recria', () => {
   it('RF-031 mostra por mês, por hectare, total em caixa, custos, números do lote e alerta de cabeças', () => {
     renderComPlanilha();
     const r = calcularRecria(ENTRADA_PADRAO);
-    expect(within(hero()).getByText(formatarBRL(r.liquidoMes, 0))).toBeInTheDocument();
-    expect(within(hero()).getByText(formatarBRL(r.liquidoHa, 0))).toBeInTheDocument();
-    expect(within(hero()).getByText(formatarBRL(r.totalEmCaixa, 0))).toBeInTheDocument();
+    expect(within(hero()).getByText(formatarBRL(r.liquidoMes))).toBeInTheDocument();
+    expect(within(hero()).getByText(formatarBRL(r.liquidoHa))).toBeInTheDocument();
+    expect(within(hero()).getByText(formatarBRL(r.totalEmCaixa))).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Custo operacional/ })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Da venda ao líquido' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Dados do lote' })).toBeInTheDocument();
