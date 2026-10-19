@@ -6,6 +6,7 @@ import { useSyncExternalStore, type ReactNode } from 'react';
 import { useOptionalSessionController } from '../lib/auth/session-provider';
 import { useRepoState } from '../lib/repo/repo-provider';
 import { Icon, type IconName } from './Icon';
+import { InstalarApp } from './InstalarApp';
 import { LogoMark } from './Logo';
 import { useSyncStatus, type SyncStatus } from './SyncProvider';
 
@@ -77,6 +78,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Link href="/entrar">Entrar para guardar na nuvem</Link>
               </div>
             )}
+            <InstalarApp className="btn ghost sm block" />
           </div>
         </aside>
         <main id="conteudo" className="app-main" tabIndex={-1}>

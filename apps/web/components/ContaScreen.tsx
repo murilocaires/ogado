@@ -15,9 +15,11 @@ import type { ApiFailure } from '../lib/auth/api-client';
 import { MSG_CONTA, mensagemFalha } from '../lib/auth/falhas';
 import { useSessionController, useSessionState } from '../lib/auth/session-provider';
 import { lerCampo, paraCampo } from '../lib/format';
+import { useOpcaoInstalacao } from '../lib/pwa/instalacao';
 import { Carregando, PageHeader } from './AppShell';
 import { ConfirmDialog, Dialog } from './Dialog';
 import { Icon, type IconName } from './Icon';
+import { InstalarApp } from './InstalarApp';
 import { PasswordRules } from './PasswordRules';
 import { useSyncStatus } from './SyncProvider';
 import { useToast } from './Toast';
@@ -732,6 +734,32 @@ function iniciais(nome: string): string {
   return letras || 'P';
 }
 
+/** Seção "Instalar o app" (RF-070): some quando o app já está instalado ou o navegador não oferece. */
+function InstalarSecao() {
+  const opcao = useOpcaoInstalacao();
+  if (opcao === 'nenhuma') return null;
+  return (
+    <Secao
+      icone="home"
+      titulo="Instalar o app"
+      descricao="Abra o O Gado como um aplicativo, até sem internet."
+    >
+      <div className="panel">
+        <div className="bd">
+          <p style={{ margin: 0, color: 'var(--tinta-2)', fontSize: 14, lineHeight: 1.5 }}>
+            O app abre em janela própria e continua calculando e guardando seus lançamentos sem
+            sinal. O que você lançar sem internet sobe quando a conexão voltar.
+          </p>
+        </div>
+        <div className="ft">
+          <span className="hint">Funciona no Chrome, Edge e, no iPhone, pelo Safari.</span>
+          <InstalarApp />
+        </div>
+      </div>
+    </Secao>
+  );
+}
+
 function ContaAutenticada({ usuario, fazenda }: { usuario: UsuarioDto; fazenda: FazendaDto }) {
   const [saindo, setSaindo] = useState(false);
   const [apagando, setApagando] = useState(false);
@@ -803,6 +831,7 @@ function ContaAutenticada({ usuario, fazenda }: { usuario: UsuarioDto; fazenda: 
         <Secao icone="home" titulo="Fazenda" descricao="Dados usados nos seus cálculos.">
           <FazendaSecao fazenda={fazenda} />
         </Secao>
+        <InstalarSecao />
         <Secao icone="trash" titulo="Zona de perigo" descricao="Ações sem volta." perigo>
           <div className="panel danger">
             <div className="bd">
@@ -891,6 +920,7 @@ export function ContaScreen() {
           continuar usando o resto: tudo fica salvo neste aparelho.
         </div>
       )}
+      <InstalarSecao />
     </>
   );
 }
