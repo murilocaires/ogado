@@ -15,6 +15,7 @@ const relaxedRateLimit = {
   forgotIp: { max: 100000, windowMs: 60_000 },
   forgotEmail: { max: 100000, windowMs: 60_000 },
   resetIp: { max: 100000, windowMs: 60_000 },
+  googleIp: { max: 100000, windowMs: 60_000 },
 };
 
 export const prisma: PrismaClient = createPrisma(testDatabaseUrl);

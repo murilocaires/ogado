@@ -42,6 +42,8 @@ export interface ApiClient {
   updatePerfil(body: PerfilRequest): Promise<ApiResult<SessionResponse>>;
   /** PUT /conta/senha (RF-005): só é sucesso com 204. */
   changePassword(body: SenhaRequest): Promise<ApiResult<void>>;
+  /** DELETE /conta/google (RF-006): só é sucesso com 204; 409 = conta sem senha definida. */
+  unlinkGoogle(): Promise<ApiResult<void>>;
   /** PATCH /fazenda (RF-011): 409 devolve a fazenda atual em `atual`. */
   updateFazenda(body: FazendaPatch): Promise<ApiResult<SessionResponse>>;
   /** DELETE /conta (RF-007): só é sucesso com 204; o chamador limpa o aparelho depois. */
@@ -154,6 +156,7 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
       sessionCall('/conta/perfil', { method: 'PATCH', body: JSON.stringify(body) }),
     changePassword: (body) =>
       noContentCall('/conta/senha', { method: 'PUT', body: JSON.stringify(body) }),
+    unlinkGoogle: () => noContentCall('/conta/google', { method: 'DELETE', body: '{}' }),
     updateFazenda: (body) =>
       sessionCall('/fazenda', { method: 'PATCH', body: JSON.stringify(body) }),
     forgotPassword: (body) =>

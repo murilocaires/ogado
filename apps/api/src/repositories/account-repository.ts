@@ -1,4 +1,6 @@
+import type { UsuarioDto } from '@ogado/contracts';
 import type { PrismaClient } from '@ogado/db';
+import { toUsuarioDto, usuarioDtoSelect } from '../usuario-dto';
 import type { FazendaRecord } from './fazenda-repository';
 
 export class EmailTakenError extends Error {
@@ -28,6 +30,7 @@ export interface UsuarioRecord {
   email: string;
   nome: string | null;
   senhaHash: string | null;
+  googleVinculado: boolean;
 }
 
 const fazendaSelect = {
@@ -45,11 +48,71 @@ function isUniqueViolation(error: unknown): boolean {
 
 export function createAccountRepository(prisma: PrismaClient) {
   return {
-    findUsuarioByEmail(email: string): Promise<UsuarioRecord | null> {
-      return prisma.usuario.findUnique({
-        where: { email },
-        select: { id: true, email: true, nome: true, senhaHash: true },
+    async findUsuarioByEmail(email: string): Promise<UsuarioRecord | null> {
+      const row = await prisma.usuario.findUnique({ where: { email }, select: usuarioDtoSelect });
+      if (!row) return null;
+      return {
+        id: row.id,
+        email: row.email,
+        nome: row.nome,
+        senhaHash: row.senhaHash,
+        googleVinculado: row.identidadeGoogle !== null,
+      };
+    },
+
+    /** Usuário vinculado a este `sub` do Google (identidade já conhecida) ou `null`. */
+    async findUsuarioIdByGoogleSub(sub: string): Promise<string | null> {
+      const row = await prisma.identidadeGoogle.findUnique({
+        where: { sub },
+        select: { usuarioId: true },
       });
+      return row ? row.usuarioId : null;
+    },
+
+    /**
+     * Vincula o Google à conta (RF-006). `sub_em_uso` = o `sub` já pertence a outra conta;
+     * `ja_vinculada` = esta conta já tem outra identidade Google. Corrida resolvida pela unicidade.
+     */
+    async linkGoogle(input: {
+      usuarioId: string;
+      sub: string;
+      email: string;
+      now: Date;
+    }): Promise<'ok' | 'sub_em_uso' | 'ja_vinculada'> {
+      try {
+        await prisma.identidadeGoogle.create({
+          data: {
+            usuarioId: input.usuarioId,
+            sub: input.sub,
+            email: input.email,
+            criadoEm: input.now,
+          },
+        });
+        return 'ok';
+      } catch (error) {
+        if (!isUniqueViolation(error)) throw error;
+        const dono = await prisma.identidadeGoogle.findUnique({
+          where: { sub: input.sub },
+          select: { usuarioId: true },
+        });
+        return dono && dono.usuarioId !== input.usuarioId ? 'sub_em_uso' : 'ja_vinculada';
+      }
+    },
+
+    /**
+     * Desvincula o Google (RF-006). Atômico: só apaga se a conta tem senha (UPDATE/DELETE
+     * condicional), então nunca deixa a conta sem nenhum jeito de entrar.
+     */
+    async unlinkGoogle(usuarioId: string): Promise<'ok' | 'sem_senha' | 'nao_vinculado'> {
+      const removed = await prisma.identidadeGoogle.deleteMany({
+        where: { usuarioId, usuario: { senhaHash: { not: null } } },
+      });
+      if (removed.count > 0) return 'ok';
+      const existe = await prisma.identidadeGoogle.findUnique({
+        where: { usuarioId },
+        select: { id: true },
+      });
+      return existe ? 'sem_senha' : 'nao_vinculado';
     },
 
     async updateSenhaHash(usuarioId: string, senhaHash: string): Promise<void> {
@@ -125,13 +188,15 @@ export function createAccountRepository(prisma: PrismaClient) {
       usuarioId: string,
       perfil: { nome: string; email: string },
       now: Date,
-    ): Promise<{ id: string; email: string; nome: string | null }> {
+    ): Promise<UsuarioDto> {
       try {
-        return await prisma.usuario.update({
-          where: { id: usuarioId },
-          data: { nome: perfil.nome, email: perfil.email, atualizadoEm: now },
-          select: { id: true, email: true, nome: true },
-        });
+        return toUsuarioDto(
+          await prisma.usuario.update({
+            where: { id: usuarioId },
+            data: { nome: perfil.nome, email: perfil.email, atualizadoEm: now },
+            select: usuarioDtoSelect,
+          }),
+        );
       } catch (error) {
         if (isUniqueViolation(error)) throw new EmailTakenError();
         throw error;
@@ -162,22 +227,37 @@ export function createAccountRepository(prisma: PrismaClient) {
      */
     async createAccount(input: {
       email: string;
-      senhaHash: string;
+      /** Nulo = conta criada pelo Google, sem senha (RF-001). */
+      senhaHash: string | null;
+      nome?: string | null;
+      /** Identidade Google criada na mesma transação (entrada com Google). */
+      google?: { sub: string };
       fazendaId: string;
       session: NewSessionData;
       now: Date;
-    }): Promise<{ usuario: { id: string; email: string }; fazenda: FazendaRecord }> {
+    }): Promise<{ usuario: UsuarioDto; fazenda: FazendaRecord }> {
       try {
         return await prisma.$transaction(async (tx) => {
           const usuario = await tx.usuario.create({
             data: {
               email: input.email,
               senhaHash: input.senhaHash,
+              nome: input.nome ?? null,
               criadoEm: input.now,
               atualizadoEm: input.now,
             },
-            select: { id: true, email: true },
+            select: usuarioDtoSelect,
           });
+          if (input.google) {
+            await tx.identidadeGoogle.create({
+              data: {
+                usuarioId: usuario.id,
+                sub: input.google.sub,
+                email: input.email,
+                criadoEm: input.now,
+              },
+            });
+          }
           const fazenda = await tx.fazenda.create({
             data: {
               id: input.fazendaId,
@@ -197,7 +277,13 @@ export function createAccountRepository(prisma: PrismaClient) {
               expiraEm: input.session.expiraEm,
             },
           });
-          return { usuario, fazenda };
+          return {
+            usuario: toUsuarioDto({
+              ...usuario,
+              identidadeGoogle: input.google ? { id: 'novo' } : null,
+            }),
+            fazenda,
+          };
         });
       } catch (error) {
         if (!isUniqueViolation(error)) throw error;

@@ -38,6 +38,7 @@ function fakeApi(overrides: Partial<ApiClient> = {}): ApiClient {
     logout: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     updatePerfil: vi.fn(),
     changePassword: vi.fn(),
+    unlinkGoogle: vi.fn(),
     updateFazenda: vi.fn(),
     deleteAccount: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     forgotPassword: vi.fn(),
@@ -296,6 +297,42 @@ describe('T-18 ações da Conta no controlador', () => {
     expect(c.getState().status).toBe('expirada');
     expect(store.current).toEqual(identity);
     expect(clearLocalData).not.toHaveBeenCalled();
+  });
+
+  it('RF-006 definir a senha (204) marca temSenha no usuário autenticado, sem tocar na identidade', async () => {
+    const semSenha = {
+      ...sessionBody,
+      usuario: { ...sessionBody.usuario, temSenha: false, googleVinculado: true },
+    };
+    const changePassword = vi.fn().mockResolvedValue({ ok: true, data: undefined });
+    const getSession = vi.fn().mockResolvedValue({ ok: true, data: semSenha });
+    const { c, store } = await autenticado(fakeApi({ changePassword, getSession }));
+    await c.changePassword({ novaSenha: 'Nova#Senha2027' });
+    expect(c.getState()).toMatchObject({
+      status: 'autenticado',
+      usuario: { temSenha: true, googleVinculado: true },
+    });
+    expect(store.current).toEqual(identity);
+  });
+
+  it('RF-006 unlinkGoogle (204) zera googleVinculado; 409 mantém o vínculo', async () => {
+    const vinculada = {
+      ...sessionBody,
+      usuario: { ...sessionBody.usuario, googleVinculado: true },
+    };
+    const getSession = vi.fn().mockResolvedValue({ ok: true, data: vinculada });
+    const unlinkGoogle = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, kind: 'conflito' })
+      .mockResolvedValueOnce({ ok: true, data: undefined });
+    const { c } = await autenticado(fakeApi({ unlinkGoogle, getSession }));
+    expect((await c.unlinkGoogle()).ok).toBe(false);
+    expect(c.getState()).toMatchObject({ usuario: { googleVinculado: true } });
+    expect((await c.unlinkGoogle()).ok).toBe(true);
+    expect(c.getState()).toMatchObject({
+      status: 'autenticado',
+      usuario: { googleVinculado: false },
+    });
   });
 
   it('RF-005 senha atual errada (400) não expira a sessão', async () => {

@@ -66,6 +66,7 @@ async function setup({
     logout: vi.fn().mockResolvedValue(ok(undefined)),
     updatePerfil: vi.fn(),
     changePassword: vi.fn(),
+    unlinkGoogle: vi.fn(),
     updateFazenda: vi.fn(),
     deleteAccount: vi.fn().mockResolvedValue(ok(undefined)),
     forgotPassword: vi.fn(),
@@ -158,6 +159,7 @@ describe('RF-004 estados da tela Conta', () => {
     expect(within(hero).getByText('ana@fazenda.com')).toBeVisible();
     expect(within(hero).getByText('Boa Vista · 250,5 ha')).toBeVisible();
     expect(within(hero).getByText('Senha definida')).toBeVisible();
+    expect(within(hero).queryByText('Google vinculado')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Nome da fazenda')).toHaveValue('Boa Vista');
     expect(screen.getByLabelText('Área pastável')).toHaveValue('250,5');
   });
@@ -574,5 +576,137 @@ describe('RF-007 apagar conta', () => {
     await user.click(within(dialogo).getByRole('button', { name: 'Apagar conta' }));
     expect(await within(dialogo).findByRole('alert')).toHaveTextContent(/sem internet/);
     expect(api.deleteAccount).not.toHaveBeenCalled();
+  });
+});
+
+describe('RF-006 selos e conta só com Google', () => {
+  it('mostra "Google vinculado" e esconde "Senha definida" quando não há senha', async () => {
+    await setup({
+      getSession: ok(sessao({ temSenha: false, googleVinculado: true })),
+    });
+    await pronto();
+    const hero = screen.getByRole('region', { name: 'Minha conta' });
+    expect(within(hero).getByText('Google vinculado')).toBeVisible();
+    expect(within(hero).queryByText('Senha definida')).not.toBeInTheDocument();
+  });
+
+  it('sem senha o formulário vira "Definir senha": não pede a atual e envia só a nova', async () => {
+    const changePassword = vi.fn().mockResolvedValue(ok(undefined));
+    const { user } = await setup({
+      api: { changePassword },
+      getSession: ok(sessao({ temSenha: false, googleVinculado: true })),
+    });
+    await pronto();
+    expect(screen.queryByLabelText('Senha atual')).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText('Nova senha'), SENHA_NOVA);
+    await user.type(screen.getByLabelText('Confirmar nova senha'), SENHA_NOVA);
+    await user.click(screen.getByRole('button', { name: 'Definir senha' }));
+    await screen.findByRole('alertdialog', { name: 'Definir senha?' });
+    await confirmar(user, 'Confirmar');
+
+    await waitFor(() => expect(changePassword).toHaveBeenCalledWith({ novaSenha: SENHA_NOVA }));
+    expect(await screen.findByText('Senha definida.')).toBeVisible();
+    // A sessão passa a refletir temSenha: selo aparece e o formulário volta a pedir a atual.
+    const hero = screen.getByRole('region', { name: 'Minha conta' });
+    expect(within(hero).getByText('Senha definida')).toBeVisible();
+    expect(screen.getByLabelText('Senha atual')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Alterar senha' })).toBeVisible();
+  });
+
+  it('definir senha exige a confirmação igual', async () => {
+    const { user, api } = await setup({
+      getSession: ok(sessao({ temSenha: false, googleVinculado: true })),
+    });
+    await pronto();
+    await user.type(screen.getByLabelText('Nova senha'), SENHA_NOVA);
+    await user.type(screen.getByLabelText('Confirmar nova senha'), 'Outra#Senha2027');
+    await user.click(screen.getByRole('button', { name: 'Definir senha' }));
+    expect(await screen.findByText('A confirmação não confere com a nova senha.')).toBeVisible();
+    expect(screen.getByLabelText('Confirmar nova senha')).toHaveFocus();
+    expect(api.changePassword).not.toHaveBeenCalled();
+  });
+});
+
+describe('RF-006 Entrar com Google na Conta', () => {
+  function secao() {
+    return screen.getByRole('region', { name: 'Entrar com Google' });
+  }
+  function hero() {
+    return screen.getByRole('region', { name: 'Minha conta' });
+  }
+
+  it('não vinculado: oferece o link de vínculo (navegação completa)', async () => {
+    await setup();
+    await pronto();
+    expect(within(secao()).getByRole('link', { name: 'Vincular conta Google' })).toHaveAttribute(
+      'href',
+      '/api/auth/google/start?modo=vincular',
+    );
+    expect(within(secao()).getByText('Não vinculada')).toBeVisible();
+  });
+
+  it('vinculado: desvincula só após confirmar e atualiza selos', async () => {
+    const unlinkGoogle = vi.fn().mockResolvedValue(ok(undefined));
+    const { user } = await setup({
+      api: { unlinkGoogle },
+      getSession: ok(sessao({ googleVinculado: true })),
+    });
+    await pronto();
+    expect(within(hero()).getByText('Google vinculado')).toBeVisible();
+    await user.click(within(secao()).getByRole('button', { name: 'Desvincular' }));
+    await screen.findByRole('alertdialog', { name: 'Desvincular conta Google?' });
+    expect(unlinkGoogle).not.toHaveBeenCalled();
+    await confirmar(user, 'Desvincular');
+
+    await waitFor(() => expect(unlinkGoogle).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText('Conta Google desvinculada.')).toBeVisible();
+    expect(within(hero()).queryByText('Google vinculado')).not.toBeInTheDocument();
+    expect(within(secao()).getByRole('link', { name: 'Vincular conta Google' })).toBeVisible();
+  });
+
+  it('cancelar a confirmação não chama a API', async () => {
+    const { user, api } = await setup({ getSession: ok(sessao({ googleVinculado: true })) });
+    await pronto();
+    await user.click(within(secao()).getByRole('button', { name: 'Desvincular' }));
+    await confirmar(user, 'Cancelar');
+    expect(api.unlinkGoogle).not.toHaveBeenCalled();
+  });
+
+  it('409 (sem senha) pede para definir uma senha antes e mantém o vínculo', async () => {
+    const unlinkGoogle = vi.fn().mockResolvedValue({ ok: false, kind: 'conflito' });
+    const { user } = await setup({
+      api: { unlinkGoogle },
+      getSession: ok(sessao({ temSenha: false, googleVinculado: true })),
+    });
+    await pronto();
+    await user.click(within(secao()).getByRole('button', { name: 'Desvincular' }));
+    await confirmar(user, 'Desvincular');
+    expect(await within(secao()).findByRole('alert')).toHaveTextContent(
+      'Defina uma senha antes de desvincular o Google.',
+    );
+    expect(within(secao()).getByText('Vinculada')).toBeVisible();
+  });
+
+  it('?google=vinculado avisa o sucesso e limpa a URL', async () => {
+    window.history.replaceState(null, '', '/conta?google=vinculado');
+    await setup({ getSession: ok(sessao({ googleVinculado: true })) });
+    await pronto();
+    expect(await screen.findByText('Conta Google vinculada.')).toBeVisible();
+    expect(window.location.search).toBe('');
+    window.history.replaceState(null, '', '/');
+  });
+
+  it.each([
+    ['google', 'Não foi possível entrar com o Google. Tente de novo.'],
+    ['google-ja-vinculado', 'Esta conta Google já está vinculada a outro usuário.'],
+  ])('?erro=%s mostra o alerta com foco e limpa a URL', async (codigo, texto) => {
+    window.history.replaceState(null, '', `/conta?erro=${codigo}`);
+    await setup();
+    await pronto();
+    const alerta = await screen.findByRole('alert');
+    expect(alerta).toHaveTextContent(texto);
+    await waitFor(() => expect(alerta).toHaveFocus());
+    expect(window.location.search).toBe('');
+    window.history.replaceState(null, '', '/');
   });
 });

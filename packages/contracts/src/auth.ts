@@ -45,5 +45,9 @@ export const usuarioSchema = z.object({
   email: z.string(),
   /** Nome de exibição (RF-004); nulo até o usuário preencher. */
   nome: z.string().nullable(),
+  /** Selo "Senha definida" (RF-006): falso para conta criada só com Google. */
+  temSenha: z.boolean(),
+  /** Selo "Google vinculado" (RF-006). */
+  googleVinculado: z.boolean(),
 });
 export type UsuarioDto = z.infer<typeof usuarioSchema>;

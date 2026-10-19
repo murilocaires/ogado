@@ -1,3 +1,4 @@
+import type { UsuarioDto } from '@ogado/contracts';
 import type { Limiters } from './plugins/rate-limit';
 import type { RouteCatalogEntry } from './plugins/route-catalog';
 import type { TenantContext } from './tenant';
@@ -12,7 +13,7 @@ declare module 'fastify' {
     /** Contexto de tenant da sessão; nulo em rotas públicas ou sem sessão. */
     tenant: TenantContext | null;
     /** Usuário da sessão (para GET /auth/session); nulo se não autenticado. */
-    sessionUser: { id: string; email: string; nome: string | null } | null;
+    sessionUser: UsuarioDto | null;
   }
   interface FastifyContextConfig {
     /**

@@ -68,7 +68,13 @@ describe('PATCH /conta/perfil (RF-004)', () => {
     });
     expect(res.statusCode).toBe(200);
     const body = sessionResponseSchema.parse(res.json());
-    expect(body.usuario).toEqual({ id: c.usuarioId, email: novo.toLowerCase(), nome: 'Ana Souza' });
+    expect(body.usuario).toEqual({
+      id: c.usuarioId,
+      email: novo.toLowerCase(),
+      nome: 'Ana Souza',
+      temSenha: true,
+      googleVinculado: false,
+    });
     expect(res.body).not.toMatch(/senhaHash|argon2/i);
 
     const sessao = sessionResponseSchema.parse(
@@ -378,7 +384,13 @@ describe('isolamento entre contas (RF-010)', () => {
     const sessaoB = sessionResponseSchema.parse(
       (await getWithCookie(app, '/auth/session', b.cookie)).json(),
     );
-    expect(sessaoB.usuario).toEqual({ id: b.usuarioId, email: b.email, nome: null });
+    expect(sessaoB.usuario).toEqual({
+      id: b.usuarioId,
+      email: b.email,
+      nome: null,
+      temSenha: true,
+      googleVinculado: false,
+    });
     expect(sessaoB.fazenda).toMatchObject({
       id: b.fazendaId,
       nome: null,

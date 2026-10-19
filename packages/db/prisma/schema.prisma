@@ -24,6 +24,19 @@ model Usuario {
   sessoes Sessao[]
   fazenda Fazenda?
   tokensRedefinicao TokenRedefinicao[]
+  identidadeGoogle  IdentidadeGoogle?
+}
+
+// Identidade Google vinculada (RF-001/RF-006): no máximo uma por conta e um `sub` por conta.
+model IdentidadeGoogle {
+  id        String   @id @default(uuid()) @db.Uuid
+  usuarioId String   @unique @db.Uuid
+  // identificador estável do Google (claim `sub`)
+  sub       String   @unique
+  email     String
+  criadoEm  DateTime @default(now()) @db.Timestamptz(3)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 }
 
 model Sessao {

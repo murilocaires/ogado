@@ -268,6 +268,23 @@ describe('T-18 cliente HTTP: Conta', () => {
     expect(result).toEqual({ ok: false, kind: 'conflito' });
   });
 
+  it('RF-006 DELETE /api/conta/google só é sucesso com 204; 409 vira conflito', async () => {
+    const f204 = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    expect(await createApiClient({ fetch: f204 }).unlinkGoogle()).toEqual({
+      ok: true,
+      data: undefined,
+    });
+    const [url, init] = f204.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/conta/google');
+    expect(init.method).toBe('DELETE');
+
+    const f409 = vi.fn().mockResolvedValue(json(409, erro('conflito')));
+    expect(await createApiClient({ fetch: f409 }).unlinkGoogle()).toEqual({
+      ok: false,
+      kind: 'conflito',
+    });
+  });
+
   it('RF-007 DELETE /api/conta envia a confirmação e só é sucesso com 204', async () => {
     const f204 = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
     const result = await createApiClient({ fetch: f204 }).deleteAccount();

@@ -74,7 +74,7 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AuthRoutesDeps): 
         });
         setSessionCookie(reply, deps.config, session.token, session.maxAgeSeconds);
         return reply.code(201).send({
-          usuario: { ...usuario, nome: null },
+          usuario,
           fazenda: toFazendaDto(fazenda),
         });
       } catch (error) {
@@ -117,7 +117,13 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AuthRoutesDeps): 
       const session = await deps.sessions.create(usuario.id);
       setSessionCookie(reply, deps.config, session.token, session.maxAgeSeconds);
       return reply.code(200).send({
-        usuario: { id: usuario.id, email: usuario.email, nome: usuario.nome },
+        usuario: {
+          id: usuario.id,
+          email: usuario.email,
+          nome: usuario.nome,
+          temSenha: true,
+          googleVinculado: usuario.googleVinculado,
+        },
         fazenda: toFazendaDto(fazenda),
       });
     },

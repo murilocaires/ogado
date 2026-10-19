@@ -2,7 +2,15 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useId, useRef, useState, type FormEvent, type ReactNode, type Ref } from 'react';
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+  type Ref,
+} from 'react';
 import {
   areaHaSchema,
   failedPasswordRules,
@@ -18,6 +26,7 @@ import { lerCampo, paraCampo } from '../lib/format';
 import { useOpcaoInstalacao } from '../lib/pwa/instalacao';
 import { Carregando, PageHeader } from './AppShell';
 import { ConfirmDialog, Dialog } from './Dialog';
+import { GoogleLink, GoogleMark } from './GoogleButton';
 import { Icon, type IconName } from './Icon';
 import { InstalarApp } from './InstalarApp';
 import { PasswordRules } from './PasswordRules';
@@ -25,7 +34,7 @@ import { SincronizacaoPainel } from './SincronizacaoPainel';
 import { useSyncInfo, useSyncStatus } from './SyncProvider';
 import { useToast } from './Toast';
 
-/** Tela Conta (RF-004, RF-005, RF-007, RF-011, RF-078), copiada do protótipo, sem Google. */
+/** Tela Conta (RF-004, RF-005, RF-007, RF-011, RF-078), copiada do protótipo; RF-006 (Google) na seção própria. */
 
 const MSG = {
   senhaAtualErrada: 'A senha atual está incorreta.',
@@ -36,6 +45,12 @@ const MSG = {
     'A fazenda foi alterada em outro aparelho. Mostramos os dados atuais: confira e salve de novo.',
   sairFalhou:
     'Não foi possível sair agora. Verifique a conexão e tente de novo. Nada foi apagado deste aparelho.',
+  definirSenhaSemAtual: 'Você ainda não tem uma senha. Defina uma para entrar sem a conta Google.',
+  googleSemSenha: 'Defina uma senha antes de desvincular o Google.',
+  googleErro: 'Não foi possível entrar com o Google. Tente de novo.',
+  googleJaVinculado: 'Esta conta Google já está vinculada a outro usuário.',
+  googleVinculado: 'Conta Google vinculada.',
+  googleDesvinculado: 'Conta Google desvinculada.',
   apagarFalhou: 'Não foi possível apagar a conta agora. Nada foi apagado. Tente de novo.',
 } as const;
 
@@ -293,7 +308,7 @@ function PerfilSecao({ usuario }: { usuario: UsuarioDto }) {
 
 type CamposSenha = 'senhaAtual' | 'novaSenha' | 'confirmacao';
 
-function SenhaSecao() {
+function SenhaSecao({ temSenha }: { temSenha: boolean }) {
   const controller = useSessionController();
   const toast = useToast();
   const regrasId = useId();
@@ -321,7 +336,7 @@ function SenhaSecao() {
     if (salvando) return;
     setFalha(null);
     const novos: Erros<CamposSenha> = {};
-    if (atual === '') novos.senhaAtual = 'Informe a senha atual.';
+    if (temSenha && atual === '') novos.senhaAtual = 'Informe a senha atual.';
     if (nova === '') novos.novaSenha = 'Informe a nova senha.';
     else if (failedPasswordRules(nova).length > 0) novos.novaSenha = MSG.senhaRequisitos;
     if (confirmacao !== nova) novos.confirmacao = MSG.confirmacaoDiferente;
@@ -340,14 +355,16 @@ function SenhaSecao() {
       return;
     }
     setSalvando(true);
-    const res = await controller.changePassword({ senhaAtual: atual, novaSenha: nova });
+    const res = await controller.changePassword(
+      temSenha ? { senhaAtual: atual, novaSenha: nova } : { novaSenha: nova },
+    );
     setSalvando(false);
     if (res.ok) {
       setAtual('');
       setNova('');
       setConfirmacao('');
       setErros({});
-      toast('Senha atualizada.');
+      toast(temSenha ? 'Senha atualizada.' : 'Senha definida.');
       return;
     }
     if (res.kind === 'credenciais') {
@@ -369,15 +386,19 @@ function SenhaSecao() {
   return (
     <form className="panel" onSubmit={pedir} noValidate aria-label="Senha">
       <div className="bd">
-        <Campo
-          label="Senha atual"
-          value={atual}
-          onChange={setAtual}
-          erro={erros.senhaAtual}
-          type="password"
-          autoComplete="current-password"
-          inputRef={refs.senhaAtual}
-        />
+        {temSenha ? (
+          <Campo
+            label="Senha atual"
+            value={atual}
+            onChange={setAtual}
+            erro={erros.senhaAtual}
+            type="password"
+            autoComplete="current-password"
+            inputRef={refs.senhaAtual}
+          />
+        ) : (
+          <div className="note">{MSG.definirSenhaSemAtual}</div>
+        )}
         <div className="r2">
           <Campo
             label="Nova senha"
@@ -403,14 +424,18 @@ function SenhaSecao() {
       </div>
       <Rodape
         dica="Use letras, números e símbolos para uma senha forte."
-        rotulo="Alterar senha"
+        rotulo={temSenha ? 'Alterar senha' : 'Definir senha'}
         ocupado={salvando}
         rotuloOcupado="Salvando…"
       />
       {confirmando && (
         <ConfirmDialog
-          titulo="Alterar senha?"
-          texto="Use a nova senha no próximo acesso."
+          titulo={temSenha ? 'Alterar senha?' : 'Definir senha?'}
+          texto={
+            temSenha
+              ? 'Use a nova senha no próximo acesso.'
+              : 'Você poderá entrar também com e-mail e senha.'
+          }
           confirmar="Confirmar"
           onConfirm={() => void salvar()}
           onCancel={() => setConfirmando(false)}
@@ -418,6 +443,124 @@ function SenhaSecao() {
       )}
     </form>
   );
+}
+
+/* ---------- Google (RF-006) ---------- */
+
+function GoogleSecao({ vinculado }: { vinculado: boolean }) {
+  const controller = useSessionController();
+  const toast = useToast();
+  const [confirmando, setConfirmando] = useState(false);
+  const [desvinculando, setDesvinculando] = useState(false);
+  const [falha, setFalha] = useState<string | null>(null);
+
+  async function desvincular(): Promise<void> {
+    setConfirmando(false);
+    if (!navigator.onLine) {
+      setFalha(MSG_CONTA.offline);
+      return;
+    }
+    setFalha(null);
+    setDesvinculando(true);
+    const res = await controller.unlinkGoogle();
+    setDesvinculando(false);
+    if (res.ok) {
+      toast(MSG.googleDesvinculado);
+      return;
+    }
+    setFalha(res.kind === 'conflito' ? MSG.googleSemSenha : mensagemFalha(res));
+  }
+
+  return (
+    <div className="panel">
+      <div className="bd">
+        <div className="rowi">
+          <span className="gmark">
+            <GoogleMark />
+          </span>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <b style={{ display: 'block' }}>Google</b>
+            <span className="hint">
+              {vinculado
+                ? 'Você pode usar “Entrar com Google” na tela de acesso.'
+                : 'Entre mais rápido, sem digitar senha.'}
+            </span>
+          </div>
+          <span className={`sp${vinculado ? ' ok' : ''}`}>
+            <i />
+            {vinculado ? 'Vinculada' : 'Não vinculada'}
+          </span>
+        </div>
+        <Alerta texto={falha} />
+      </div>
+      <div className="ft">
+        <span className="hint">
+          {vinculado
+            ? 'Para desvincular, a conta precisa ter uma senha.'
+            : 'Você será levado ao Google para autorizar.'}
+        </span>
+        {vinculado ? (
+          <button
+            type="button"
+            className="btn sec sm"
+            aria-disabled={desvinculando}
+            aria-busy={desvinculando}
+            onClick={() => {
+              if (!desvinculando) setConfirmando(true);
+            }}
+          >
+            {desvinculando ? 'Desvinculando…' : 'Desvincular'}
+          </button>
+        ) : (
+          <GoogleLink texto="Vincular conta Google" modo="vincular" className="btn sm" />
+        )}
+      </div>
+      {confirmando && (
+        <ConfirmDialog
+          titulo="Desvincular conta Google?"
+          texto="Você continuará entrando com e-mail e senha."
+          confirmar="Desvincular"
+          onConfirm={() => void desvincular()}
+          onCancel={() => setConfirmando(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/** Retorno do Google (?google=vinculado | ?erro=...): avisa uma vez e limpa a URL. */
+function useRetornoGoogle(): { erro: string | null; alertaRef: Ref<HTMLDivElement> } {
+  const toast = useToast();
+  const [erro, setErro] = useState<string | null>(null);
+  const alertaRef = useRef<HTMLDivElement>(null);
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const resultado = params.get('google');
+    const falha = params.get('erro');
+    let texto: string | null = null;
+    if (falha === 'google') texto = MSG.googleErro;
+    else if (falha === 'google-ja-vinculado') texto = MSG.googleJaVinculado;
+    if (resultado !== 'vinculado' && !texto) return;
+    if (!texto) toastRef.current(MSG.googleVinculado);
+    setErro(texto);
+    params.delete('google');
+    params.delete('erro');
+    const resto = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      '',
+      window.location.pathname + (resto ? `?${resto}` : ''),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (erro) alertaRef.current?.focus();
+  }, [erro]);
+
+  return { erro, alertaRef };
 }
 
 /* ---------- Fazenda (RF-011) ---------- */
@@ -767,6 +910,7 @@ function ContaAutenticada({ usuario, fazenda }: { usuario: UsuarioDto; fazenda: 
   const [saindo, setSaindo] = useState(false);
   const [apagando, setApagando] = useState(false);
   const [sairFalhou, setSairFalhou] = useState(false);
+  const retornoGoogle = useRetornoGoogle();
   const nome = usuario.nome?.trim() || 'Produtor';
   const resumoFazenda = [
     fazenda.nome,
@@ -795,10 +939,18 @@ function ContaAutenticada({ usuario, fazenda }: { usuario: UsuarioDto; fazenda: 
                   {resumoFazenda}
                 </span>
               )}
-              <span className="c2 ok">
-                <i />
-                Senha definida
-              </span>
+              {usuario.temSenha && (
+                <span className="c2 ok">
+                  <i />
+                  Senha definida
+                </span>
+              )}
+              {usuario.googleVinculado && (
+                <span className="c2 ok">
+                  <i />
+                  Google vinculado
+                </span>
+              )}
             </div>
           </div>
           <button
@@ -820,6 +972,18 @@ function ContaAutenticada({ usuario, fazenda }: { usuario: UsuarioDto; fazenda: 
         </div>
       )}
 
+      {retornoGoogle.erro && (
+        <div
+          ref={retornoGoogle.alertaRef}
+          tabIndex={-1}
+          className="note erro"
+          role="alert"
+          style={{ marginTop: 14 }}
+        >
+          {retornoGoogle.erro}
+        </div>
+      )}
+
       <div style={{ marginTop: 6 }}>
         <Secao icone="user" titulo="Perfil" descricao="Seu nome e o e-mail de acesso.">
           <PerfilSecao usuario={usuario} />
@@ -829,7 +993,14 @@ function ContaAutenticada({ usuario, fazenda }: { usuario: UsuarioDto; fazenda: 
           titulo="Senha"
           descricao="Mantenha sua conta protegida com uma senha só sua."
         >
-          <SenhaSecao />
+          <SenhaSecao temSenha={usuario.temSenha} />
+        </Secao>
+        <Secao
+          icone="swap"
+          titulo="Entrar com Google"
+          descricao="Vincule para entrar com um toque."
+        >
+          <GoogleSecao vinculado={usuario.googleVinculado} />
         </Secao>
         <Secao icone="home" titulo="Fazenda" descricao="Dados usados nos seus cálculos.">
           <FazendaSecao fazenda={fazenda} />

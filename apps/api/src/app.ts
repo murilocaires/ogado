@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import type { PrismaClient } from '@ogado/db';
+import type { GoogleOAuthClient } from './google/google-client';
 import { createMemoryEmailSender } from './email/memory-sender';
 import type { EmailSender } from './email/email-sender';
 import { resolveConfig, type PartialAppConfig } from './config';
@@ -23,6 +24,7 @@ import { registerAuthRoutes } from './routes/auth';
 import { registerContaRoutes } from './routes/conta';
 import { registerDadosRoutes } from './routes/dados';
 import { registerFazendaRoutes } from './routes/fazendas';
+import { registerGoogleRoutes } from './routes/google';
 import { registerHealthRoutes } from './routes/health';
 import { createSessionService } from './session/session-service';
 
@@ -39,6 +41,8 @@ export interface AppOptions {
   newFazendaId?: () => string;
   /** Saída de e-mail; padrão em memória (dev/test). O server.ts escolhe Resend conforme o env. */
   emailSender?: EmailSender;
+  /** Cliente OAuth do Google; ausente = rotas /auth/google/* respondem 404 (sem credenciais). */
+  googleClient?: GoogleOAuthClient;
 }
 
 /** Logs sem PII (ADR-0010 e): nenhum cookie, credencial, senha, e-mail nem corpo de requisição. */
@@ -66,10 +70,11 @@ function loggerOptions(stream: NodeJS.WritableStream | undefined) {
       censor: '[redigido]',
     },
     // IP é PII (LGPD): o log de requisição leva só método, rota e id, sem remoteAddress.
+    // A query string também fica de fora: o retorno do Google traz `code` e `state` nela.
     serializers: {
       req: (req: { method?: string; url?: string; id?: string }) => ({
         method: req.method,
-        url: req.url,
+        url: req.url?.split('?')[0],
       }),
     },
     ...(stream ? { stream } : {}),
@@ -131,6 +136,16 @@ export function buildApp(options: AppOptions): FastifyInstance {
     clock,
     newFazendaId: options.newFazendaId ?? randomUUID,
     email: options.emailSender ?? createMemoryEmailSender(),
+    webOrigin: options.corsOrigins[0] ?? 'http://localhost:3000',
+  });
+
+  registerGoogleRoutes(app, {
+    config,
+    google: options.googleClient,
+    accounts,
+    sessions,
+    clock,
+    newFazendaId: options.newFazendaId ?? randomUUID,
     webOrigin: options.corsOrigins[0] ?? 'http://localhost:3000',
   });
 
