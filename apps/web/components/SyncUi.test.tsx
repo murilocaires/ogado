@@ -75,6 +75,8 @@ function montar(srv: ReturnType<typeof criarServidor>, extra?: Partial<DadosClie
       deleteAccount: vi.fn(),
       forgotPassword: vi.fn(),
       resetPassword: vi.fn(),
+      aceitarTermos: vi.fn(),
+      enviarDadosPorEmail: vi.fn(),
     },
     identity: { read: () => identity, write: () => undefined, clear: () => undefined },
     clearLocalData: vi.fn(),

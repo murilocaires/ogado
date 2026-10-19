@@ -81,6 +81,8 @@ async function setup({
     deleteAccount: vi.fn().mockResolvedValue(ok(undefined)),
     forgotPassword: vi.fn(),
     resetPassword: vi.fn(),
+    aceitarTermos: vi.fn(),
+    enviarDadosPorEmail: vi.fn(),
     ...api,
   };
   const controller = createSessionController({
@@ -785,5 +787,82 @@ describe('RNF-009 Meus dados', () => {
       'Muitas tentativas. Tente de novo em 120 segundos.',
     );
     expect(baixados).toHaveLength(0);
+  });
+});
+
+describe('RNF-009 Enviar meus dados por e-mail', () => {
+  const secaoDados = () => screen.getByRole('region', { name: 'Meus dados' });
+  const botaoEnviar = () =>
+    within(secaoDados()).getByRole('button', { name: 'Enviar meus dados por e-mail' });
+
+  it('pede o envio, avisa com toast citando o e-mail da conta', async () => {
+    const enviarDadosPorEmail = vi.fn().mockResolvedValue(ok(undefined));
+    const { user } = await setup({ api: { enviarDadosPorEmail } });
+    await pronto();
+    await user.click(botaoEnviar());
+    expect(await screen.findByText(/Pedido enviado/)).toHaveTextContent(sessionBody.usuario.email);
+    expect(enviarDadosPorEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it('sem internet avisa e não chama a API', async () => {
+    const enviarDadosPorEmail = vi.fn();
+    const { user } = await setup({ api: { enviarDadosPorEmail } });
+    await pronto();
+    setOnline(false);
+    await user.click(botaoEnviar());
+    expect(await within(secaoDados()).findByRole('alert')).toHaveTextContent(/sem internet/);
+    expect(enviarDadosPorEmail).not.toHaveBeenCalled();
+  });
+
+  it('limite de envios vira aviso', async () => {
+    const enviarDadosPorEmail = vi
+      .fn()
+      .mockResolvedValue({ ok: false, kind: 'muitas-tentativas', retryAfterSeconds: 600 });
+    const { user } = await setup({ api: { enviarDadosPorEmail } });
+    await pronto();
+    await user.click(botaoEnviar());
+    expect(await within(secaoDados()).findByRole('alert')).toHaveTextContent(
+      'Muitas tentativas. Tente de novo em 600 segundos.',
+    );
+  });
+});
+
+describe('RNF-009 Termos e privacidade na Conta', () => {
+  const secao = () => screen.getByRole('region', { name: 'Termos e privacidade' });
+
+  it('mostra a versão aceita e a data, com links para os dois documentos', async () => {
+    await setup();
+    await pronto();
+    expect(within(secao()).getByTestId('aceite-atual')).toHaveTextContent(
+      /Você aceitou a versão 2026-10-19 em \d{2}\/\d{2}\/\d{4}\./,
+    );
+    expect(within(secao()).getByRole('link', { name: 'Termos de Uso' })).toHaveAttribute(
+      'href',
+      '/termos',
+    );
+    expect(within(secao()).getByRole('link', { name: 'Política de Privacidade' })).toHaveAttribute(
+      'href',
+      '/privacidade',
+    );
+  });
+
+  it('sem aceite registrado, avisa que ainda não aceitou', async () => {
+    await setup({
+      getSession: ok(
+        sessao({ aceiteVigente: false, aceiteTermosVersao: null, aceiteTermosEm: null }),
+      ),
+    });
+    await pronto();
+    expect(within(secao()).getByTestId('aceite-atual')).toHaveTextContent(
+      'Você ainda não aceitou os termos.',
+    );
+  });
+
+  it('Revogar consentimento explica que equivale a apagar a conta e abre o fluxo de apagar', async () => {
+    const { user } = await setup();
+    await pronto();
+    expect(secao()).toHaveTextContent(/equivale a apagar a conta/);
+    await user.click(within(secao()).getByRole('button', { name: 'Revogar consentimento' }));
+    expect(await screen.findByRole('alertdialog', { name: 'Apagar sua conta?' })).toBeVisible();
   });
 });

@@ -13,7 +13,7 @@ function erro(codigo: string): unknown {
   return { erro: { codigo, mensagem: 'texto da API que a tela não repassa' } };
 }
 
-const credenciais = { email: 'ana@fazenda.com', senha: 'Segredo#1' };
+const credenciais = { email: 'ana@fazenda.com', senha: 'Segredo#1', aceiteTermos: true as const };
 
 describe('RF-001 cliente HTTP: login e cadastro', () => {
   it('RF-001 envia JSON com cookies incluídos para /api e devolve a sessão tipada', async () => {
@@ -297,6 +297,8 @@ describe('T-18 cliente HTTP: Conta', () => {
         criadoEm: '2026-10-01T12:00:00.000Z',
         temSenha: true,
         googleVinculado: false,
+        aceiteTermosVersao: '2026-10-19',
+        aceiteTermosEm: '2026-10-19T12:00:00.000Z',
       },
       fazenda: {
         id: sessionBody.fazenda.id,
@@ -320,7 +322,9 @@ describe('T-18 cliente HTTP: Conta', () => {
       ok: false,
       kind: 'contrato',
     });
-    const limite = vi.fn().mockResolvedValue(json(429, erro('muitas_tentativas'), { 'retry-after': '30' }));
+    const limite = vi
+      .fn()
+      .mockResolvedValue(json(429, erro('muitas_tentativas'), { 'retry-after': '30' }));
     expect(await createApiClient({ fetch: limite }).exportData()).toEqual({
       ok: false,
       kind: 'muitas-tentativas',
@@ -343,6 +347,49 @@ describe('T-18 cliente HTTP: Conta', () => {
     expect(await createApiClient({ fetch: net }).deleteAccount()).toEqual({
       ok: false,
       kind: 'rede',
+    });
+  });
+});
+
+describe('RNF-009 cliente HTTP: termos e envio por e-mail', () => {
+  it('aceitarTermos usa POST /api/conta/aceite com a versão e devolve a sessão', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(json(200, sessionBody));
+    const result = await createApiClient({ fetch: fetchMock }).aceitarTermos('2026-10-19');
+    expect(result).toEqual({ ok: true, data: sessionBody });
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/conta/aceite');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual({ versao: '2026-10-19' });
+  });
+
+  it('aceitarTermos traduz 409 (versão desatualizada) em conflito', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(json(409, erro('conflito')));
+    expect(await createApiClient({ fetch: fetchMock }).aceitarTermos('1999-01-01')).toEqual({
+      ok: false,
+      kind: 'conflito',
+    });
+  });
+
+  it('enviarDadosPorEmail usa POST /api/conta/exportar/enviar, só é sucesso com 202 e traduz 429', async () => {
+    const f202 = vi.fn().mockResolvedValue(json(202, { mensagem: 'ok' }));
+    expect(await createApiClient({ fetch: f202 }).enviarDadosPorEmail()).toEqual({
+      ok: true,
+      data: undefined,
+    });
+    const [url, init] = f202.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/conta/exportar/enviar');
+    expect(init.method).toBe('POST');
+
+    const f429 = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(erro('muitas_tentativas')), {
+        status: 429,
+        headers: { 'content-type': 'application/json', 'retry-after': '120' },
+      }),
+    );
+    expect(await createApiClient({ fetch: f429 }).enviarDadosPorEmail()).toEqual({
+      ok: false,
+      kind: 'muitas-tentativas',
+      retryAfterSeconds: 120,
     });
   });
 });

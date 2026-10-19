@@ -6,6 +6,9 @@ export const sessionBody = {
     nome: null,
     temSenha: true,
     googleVinculado: false,
+    aceiteVigente: true,
+    aceiteTermosVersao: '2026-10-19',
+    aceiteTermosEm: '2026-10-19T12:00:00.000Z',
   },
   fazenda: {
     id: '8c2d3a0b-5b0e-4c55-8f77-2f2d1c9b7e22',

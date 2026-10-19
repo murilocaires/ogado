@@ -52,6 +52,10 @@ export interface ApiClient {
   deleteAccount(): Promise<ApiResult<void>>;
   /** GET /conta/exportar (RNF-009): cópia dos dados do titular, validada pelo contrato. */
   exportData(): Promise<ApiResult<ExportacaoDados>>;
+  /** POST /conta/aceite (RNF-009): registra o aceite da versão vigente e devolve a sessão. */
+  aceitarTermos(versao: string): Promise<ApiResult<SessionResponse>>;
+  /** POST /conta/exportar/enviar (RNF-009): 202 sempre igual; o e-mail é da própria conta. */
+  enviarDadosPorEmail(): Promise<ApiResult<void>>;
   /** POST /auth/senha/esqueci (RF-002): 202 é sempre o mesmo, exista a conta ou não. */
   forgotPassword(body: EsqueciSenhaRequest): Promise<ApiResult<void>>;
   /** POST /auth/senha/redefinir (RF-002): só é sucesso com 204; 400 vira `link-invalido`. */
@@ -178,6 +182,10 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
         return { ok: false, kind: 'contrato' };
       }
     },
+    aceitarTermos: (versao) =>
+      sessionCall('/conta/aceite', { method: 'POST', body: JSON.stringify({ versao }) }),
+    enviarDadosPorEmail: () =>
+      acceptedCall('/conta/exportar/enviar', { method: 'POST', body: '{}' }),
     deleteAccount: () =>
       noContentCall('/conta', {
         method: 'DELETE',
