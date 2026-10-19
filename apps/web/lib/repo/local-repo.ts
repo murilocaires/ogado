@@ -187,7 +187,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
   let persistencia: PersistenciaStatus = 'ok';
   let snapshot: RepoSnapshot | null = null;
 
-  /** Simulador novo: todos os campos vazios e lotação sobre a área pastável (ADR-0014). */
+  /** Simulador novo: todos os campos vazios e lotação inicial sobre 80 ha, como na planilha. */
   function recriaInicial(): RecriaEntity {
     return {
       id: gerarId(),
@@ -195,7 +195,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
       updatedAt: agora().toISOString(),
       deletedAt: null,
       form: recriaFormVazio(),
-      lotacaoInicial: 'areaPastavel',
+      lotacaoInicial: 'fixa80',
     };
   }
 
@@ -372,7 +372,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
       recria = {
         ...recria,
         form: recriaFormVazio(),
-        lotacaoInicial: 'areaPastavel',
+        lotacaoInicial: 'fixa80',
         version: recria.version + 1,
         updatedAt: agora().toISOString(),
       };
