@@ -203,24 +203,56 @@ describe('RF-002 sessão expirada na tela de entrar (CA-21)', () => {
 });
 
 describe('RF-001 tela de cadastro (CA-06, parte de tela)', () => {
-  it('RF-001 lista os requisitos da senha antes de qualquer envio', async () => {
+  it('RF-001 antes de tocar na senha mostra só uma linha discreta com os requisitos', async () => {
     setup('cadastrar');
-    const list = await screen.findByRole('list', { name: 'Requisitos da senha' });
-    expect(list).toHaveTextContent('pelo menos 8 caracteres');
-    expect(list).toHaveTextContent('letra maiúscula');
-    expect(list).toHaveTextContent('um número');
-    expect(list).toHaveTextContent('um símbolo');
-    expect(screen.getByLabelText('Senha')).toHaveAccessibleDescription(/Requisitos da senha/);
+    const senha = await screen.findByLabelText('Senha');
+    expect(screen.getByText('Mín. 8 caracteres, com maiúscula, número e símbolo')).toBeVisible();
+    expect(screen.queryByRole('list', { name: 'Requisitos da senha' })).not.toBeInTheDocument();
+    expect(senha).toHaveAccessibleDescription(/Mín\. 8 caracteres, com maiúscula, número e símbolo/);
+  });
+
+  it('RF-001 ao focar mostra os 4 requisitos como itens compactos, todos pendentes', async () => {
+    const { user } = setup('cadastrar');
+    await user.click(await screen.findByLabelText('Senha'));
+    const list = screen.getByRole('list', { name: 'Requisitos da senha' });
+    expect(within(list).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      '8+ caracteres — pendente',
+      'Maiúscula — pendente',
+      'Número — pendente',
+      'Símbolo — pendente',
+    ]);
+    expect(screen.queryByText(/Mín\. 8 caracteres, com maiúscula/)).not.toBeInTheDocument();
   });
 
   it('RF-001 marca cada requisito como cumprido conforme digita, com texto para leitor de tela', async () => {
     const { user } = setup('cadastrar');
     await user.type(await screen.findByLabelText('Senha'), 'Abc');
     const items = screen.getAllByRole('listitem');
-    const maiuscula = items.find((li) => li.textContent?.includes('maiúscula'));
-    const minimo = items.find((li) => li.textContent?.includes('8 caracteres'));
+    const maiuscula = items.find((li) => li.textContent?.includes('Maiúscula'));
+    const minimo = items.find((li) => li.textContent?.includes('8+ caracteres'));
     expect(maiuscula).toHaveTextContent('cumprido');
+    expect(maiuscula).toHaveAttribute('data-ok', 'true');
     expect(minimo).toHaveTextContent('pendente');
+    expect(minimo).toHaveAttribute('data-ok', 'false');
+  });
+
+  it('RF-001 com todos cumpridos colapsa para "Senha forte" e anuncia só isso (região educada)', async () => {
+    const { user } = setup('cadastrar');
+    const senha = await screen.findByLabelText('Senha');
+    await user.type(senha, 'Abc123');
+    const anuncio = (): string =>
+      screen
+        .getAllByRole('status')
+        .map((s) => s.textContent)
+        .join('');
+    expect(anuncio()).not.toContain('Senha forte'); // a cada tecla não fala nada
+    await user.type(senha, '!x');
+    expect(screen.queryByRole('list', { name: 'Requisitos da senha' })).not.toBeInTheDocument();
+    expect(screen.getByText('Senha forte')).toBeVisible();
+    expect(anuncio()).toContain('Senha forte.');
+    // apagar volta aos itens
+    await user.clear(senha);
+    expect(screen.getByRole('list', { name: 'Requisitos da senha' })).toBeInTheDocument();
   });
 
   it('RF-001 senha fraca não é enviada, marca o campo e foca nele', async () => {
@@ -393,6 +425,21 @@ describe('RNF-009 aceite dos termos na tela de cadastro', () => {
     expect(termos.getAttribute('rel')).toContain('noopener');
     expect(privacidade).toHaveAttribute('href', '/privacidade');
     expect(privacidade).toHaveAttribute('target', '_blank');
+  });
+
+  it('os links de Termos e Privacidade não se repetem no rodapé: só o aviso contextual', async () => {
+    setup('entrar');
+    await screen.findByLabelText('Senha');
+    expect(screen.queryByRole('navigation', { name: 'Documentos legais' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Termos de Uso' })).toHaveLength(1);
+    expect(screen.getAllByRole('link', { name: 'Política de Privacidade' })).toHaveLength(1);
+  });
+
+  it('Cadastrar tem o aviso do Google e o checkbox, e nada no rodapé', async () => {
+    setup('cadastrar');
+    await screen.findByLabelText('Senha');
+    expect(screen.queryByRole('navigation', { name: 'Documentos legais' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Termos de Uso' })).toHaveLength(2);
   });
 
   it('Entrar não pede o checkbox', async () => {

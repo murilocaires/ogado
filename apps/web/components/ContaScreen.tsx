@@ -314,6 +314,7 @@ function SenhaSecao({ temSenha }: { temSenha: boolean }) {
   const controller = useSessionController();
   const toast = useToast();
   const regrasId = useId();
+  const [novaTocada, setNovaTocada] = useState(false);
   const [atual, setAtual] = useState('');
   const [nova, setNova] = useState('');
   const [confirmacao, setConfirmacao] = useState('');
@@ -401,7 +402,7 @@ function SenhaSecao({ temSenha }: { temSenha: boolean }) {
         ) : (
           <div className="note">{MSG.definirSenhaSemAtual}</div>
         )}
-        <div className="r2">
+        <div className="r2" onFocus={() => setNovaTocada(true)}>
           <Campo
             label="Nova senha"
             value={nova}
@@ -421,7 +422,7 @@ function SenhaSecao({ temSenha }: { temSenha: boolean }) {
             inputRef={refs.confirmacao}
           />
         </div>
-        <PasswordRules senha={nova} id={regrasId} />
+        <PasswordRules senha={nova} id={regrasId} tocada={novaTocada} />
         <Alerta texto={falha} />
       </div>
       <Rodape

@@ -78,9 +78,13 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
 
     // Cadastro: requisitos visíveis antes de digitar/enviar (CA-06, parte de tela).
     await page.goto('/cadastrar');
+    await expect(
+      page.getByText('Mín. 8 caracteres, com maiúscula, número e símbolo'),
+    ).toBeVisible();
+    await page.getByLabel('Senha', { exact: true }).focus();
     const regras = page.getByRole('list', { name: 'Requisitos da senha' });
     await expect(regras).toBeVisible();
-    await expect(regras).toContainText('pelo menos 8 caracteres');
+    await expect(regras).toContainText('8+ caracteres');
 
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
