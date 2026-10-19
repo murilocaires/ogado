@@ -1,8 +1,13 @@
 import {
   errorEnvelopeSchema,
+  fazendaSchema,
   sessionResponseSchema,
+  type FazendaDto,
+  type FazendaPatch,
   type FieldError,
   type LoginRequest,
+  type PerfilRequest,
+  type SenhaRequest,
   type SessionResponse,
   type SignupRequest,
 } from '@ogado/contracts';
@@ -11,7 +16,8 @@ import {
 export type ApiFailure =
   | { ok: false; kind: 'credenciais' }
   | { ok: false; kind: 'validacao'; campos: FieldError[] }
-  | { ok: false; kind: 'conflito' }
+  /** `atual` só vem no 409 de versão da fazenda (ADR-0011 §4); e-mail em uso não traz nada. */
+  | { ok: false; kind: 'conflito'; atual?: FazendaDto }
   | { ok: false; kind: 'nao-autenticado' }
   | { ok: false; kind: 'sessao-expirada' }
   | { ok: false; kind: 'muitas-tentativas'; retryAfterSeconds: number | null }
@@ -28,6 +34,14 @@ export interface ApiClient {
   /** Só é sucesso com 204 (o chamador limpa o aparelho depois disso, e só depois). */
   logout(): Promise<ApiResult<void>>;
   getSession(): Promise<ApiResult<SessionResponse>>;
+  /** PATCH /conta/perfil (RF-004): devolve a sessão com o usuário atualizado. */
+  updatePerfil(body: PerfilRequest): Promise<ApiResult<SessionResponse>>;
+  /** PUT /conta/senha (RF-005): só é sucesso com 204. */
+  changePassword(body: SenhaRequest): Promise<ApiResult<void>>;
+  /** PATCH /fazenda (RF-011): 409 devolve a fazenda atual em `atual`. */
+  updateFazenda(body: FazendaPatch): Promise<ApiResult<SessionResponse>>;
+  /** DELETE /conta (RF-007): só é sucesso com 204; o chamador limpa o aparelho depois. */
+  deleteAccount(): Promise<ApiResult<void>>;
 }
 
 export interface ApiClientOptions {
@@ -38,9 +52,11 @@ export interface ApiClientOptions {
 
 async function readFailure(res: Response): Promise<ApiFailure> {
   if (res.status >= 500) return { ok: false, kind: 'servidor' };
+  let raw: unknown;
   let parsed: ReturnType<typeof errorEnvelopeSchema.safeParse> | undefined;
   try {
-    parsed = errorEnvelopeSchema.safeParse(await res.json());
+    raw = await res.json();
+    parsed = errorEnvelopeSchema.safeParse(raw);
   } catch {
     parsed = undefined;
   }
@@ -50,8 +66,12 @@ async function readFailure(res: Response): Promise<ApiFailure> {
       return { ok: false, kind: 'credenciais' };
     case 'validacao_invalida':
       return { ok: false, kind: 'validacao', campos: erro.campos ?? [] };
-    case 'conflito':
-      return { ok: false, kind: 'conflito' };
+    case 'conflito': {
+      const atual = fazendaSchema.safeParse((raw as { atual?: unknown } | null)?.atual);
+      return atual.success
+        ? { ok: false, kind: 'conflito', atual: atual.data }
+        : { ok: false, kind: 'conflito' };
+    }
     case 'nao_autenticado':
       return { ok: false, kind: 'nao-autenticado' };
     case 'sessao_expirada':
@@ -101,15 +121,28 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
     }
   }
 
+  async function noContentCall(path: string, init: RequestInit): Promise<ApiResult<void>> {
+    const res = await call(path, init);
+    if (!res) return { ok: false, kind: 'rede' };
+    if (res.status === 204) return { ok: true, data: undefined };
+    return readFailure(res);
+  }
+
   return {
     signup: (body) => sessionCall('/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
     login: (body) => sessionCall('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
     getSession: () => sessionCall('/auth/session', { method: 'GET' }),
-    async logout() {
-      const res = await call('/auth/logout', { method: 'POST', body: '{}' });
-      if (!res) return { ok: false, kind: 'rede' };
-      if (res.status === 204) return { ok: true, data: undefined };
-      return readFailure(res);
-    },
+    logout: () => noContentCall('/auth/logout', { method: 'POST', body: '{}' }),
+    updatePerfil: (body) =>
+      sessionCall('/conta/perfil', { method: 'PATCH', body: JSON.stringify(body) }),
+    changePassword: (body) =>
+      noContentCall('/conta/senha', { method: 'PUT', body: JSON.stringify(body) }),
+    updateFazenda: (body) =>
+      sessionCall('/fazenda', { method: 'PATCH', body: JSON.stringify(body) }),
+    deleteAccount: () =>
+      noContentCall('/conta', {
+        method: 'DELETE',
+        body: JSON.stringify({ confirmacao: 'deletar' }),
+      }),
   };
 }

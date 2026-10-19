@@ -1,6 +1,9 @@
 import type {
   FazendaDto,
+  FazendaPatch,
   LoginRequest,
+  PerfilRequest,
+  SenhaRequest,
   SessionResponse,
   SignupRequest,
   UsuarioDto,
@@ -46,6 +49,14 @@ export interface SessionController {
   signup(body: SignupRequest): Promise<ApiResult<SessionResponse>>;
   /** Única ação que limpa o aparelho, e só depois do 204 (RF-078). */
   logout(): Promise<ApiResult<void>>;
+  /** RF-004: grava nome/e-mail; em sucesso o estado passa a refletir o usuário devolvido. */
+  updatePerfil(body: PerfilRequest): Promise<ApiResult<SessionResponse>>;
+  /** RF-005: define ou altera a senha (a atual é exigida pela API quando já existe). */
+  changePassword(body: SenhaRequest): Promise<ApiResult<void>>;
+  /** RF-011: grava nome/área da fazenda; em sucesso o estado passa a refletir a fazenda devolvida. */
+  updateFazenda(body: FazendaPatch): Promise<ApiResult<SessionResponse>>;
+  /** RF-007: apaga a conta no servidor e, só depois do 204, o aparelho (como no logout). */
+  deleteAccount(): Promise<ApiResult<void>>;
   /** Qualquer 401 vindo de outra chamada (sync, dados): expira sem apagar nada (RF-080). */
   markUnauthorized(): void;
 }
@@ -112,6 +123,28 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
     return result;
   }
 
+  /** Chamadas da Conta: 401 expira a sessão sem apagar nada (RF-080); sucesso atualiza o estado. */
+  async function accountCall<T>(
+    run: () => Promise<ApiResult<T>>,
+    onOk?: (data: T) => void,
+  ): Promise<ApiResult<T>> {
+    const result = await run();
+    if (result.ok) onOk?.(result.data);
+    else if (result.kind === 'nao-autenticado' || result.kind === 'sessao-expirada') {
+      epoch += 1;
+      expire();
+    }
+    return result;
+  }
+
+  function applySession(data: SessionResponse): void {
+    // Mesma conta: ids não mudam, então só o conteúdo exibido (nome, e-mail, fazenda) é trocado.
+    epoch += 1;
+    if (state.status === 'autenticado') {
+      set({ status: 'autenticado', usuario: data.usuario, fazenda: data.fazenda });
+    }
+  }
+
   return {
     getState: () => state,
     getAccountMismatch: () => mismatch,
@@ -135,6 +168,20 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
       epoch += 1;
       const result = await deps.api.logout();
       if (result.ok) {
+        mismatch = null;
+        await deps.clearLocalData();
+        deps.identity.clear();
+        set({ status: 'anonimo' });
+      }
+      return result;
+    },
+    updatePerfil: (body) => accountCall(() => deps.api.updatePerfil(body), applySession),
+    changePassword: (body) => accountCall(() => deps.api.changePassword(body)),
+    updateFazenda: (body) => accountCall(() => deps.api.updateFazenda(body), applySession),
+    async deleteAccount() {
+      const result = await accountCall(() => deps.api.deleteAccount());
+      if (result.ok) {
+        epoch += 1;
         mismatch = null;
         await deps.clearLocalData();
         deps.identity.clear();

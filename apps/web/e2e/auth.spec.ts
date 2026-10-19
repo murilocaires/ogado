@@ -45,6 +45,17 @@ async function sessionCookie(context: BrowserContext): Promise<{ name: string; v
   return { name: session?.name ?? '', value: session?.value ?? '' };
 }
 
+/** Abre a tela Conta (T-18) e confere que ela mostra o e-mail da sessão. */
+async function abrirConta(page: Page, email: string): Promise<void> {
+  await page
+    .getByRole('navigation', { name: 'Principal' })
+    .first()
+    .getByRole('link', { name: 'Conta' })
+    .click();
+  await expect(page).toHaveURL(/\/conta$/);
+  await expect(page.getByRole('region', { name: 'Minha conta' }).getByText(email)).toBeVisible();
+}
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 /** A identidade local guarda só os dois UUIDs (ADR-0010 f), nunca token nem senha. */
@@ -74,8 +85,8 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Criar conta' }).click();
-    await expect(page).toHaveURL(/\/conta$/);
-    await expect(page.getByText(email)).toBeVisible();
+    await expect(page).toHaveURL(/\/painel$/);
+    await abrirConta(page, email);
 
     const first = await sessionCookie(context);
     const token = first.value;
@@ -86,8 +97,8 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     expect(storage).not.toContain(SENHA);
 
     // Sair (confirmação) apaga a sessão no servidor e leva a /entrar.
-    await page.getByRole('button', { name: 'Sair' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Sair deste aparelho?' });
+    await page.getByRole('button', { name: 'Sair da conta' }).click();
+    const dialog = page.getByRole('alertdialog', { name: 'Sair deste aparelho?' });
     await expect(dialog).toBeVisible();
     await dialog.getByRole('button', { name: 'Sair' }).click();
     await expect(page).toHaveURL(/\/entrar$/);
@@ -103,8 +114,8 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Entrar' }).click();
-    await expect(page).toHaveURL(/\/conta$/);
-    await expect(page.getByText(email)).toBeVisible();
+    await expect(page).toHaveURL(/\/painel$/);
+    await abrirConta(page, email);
 
     await expectOnlyUuidIdentity(page);
     const secondToken = (await sessionCookie(context)).value;
@@ -150,7 +161,8 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Criar conta' }).click();
-    await expect(page).toHaveURL(/\/conta$/);
+    await expect(page).toHaveURL(/\/painel$/);
+    await abrirConta(page, email);
 
     // Dado local do aparelho (simula a fila do T-14) que nenhum 401 pode apagar.
     await page.evaluate(() => window.localStorage.setItem('fila-teste', 'lancamento-pendente'));
@@ -168,12 +180,12 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     expect(await page.evaluate(() => window.localStorage.getItem('ogado.identidade'))).toBe(antes);
 
     // Entrar de novo retoma o uso.
-    await page.getByRole('link', { name: 'Entrar' }).click();
+    await page.getByRole('link', { name: 'Entrar', exact: true }).click();
     await expect(page.getByText(/Entre de novo/)).toBeVisible();
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Entrar' }).click();
-    await expect(page).toHaveURL(/\/conta$/);
+    await expect(page).toHaveURL(/\/painel$/);
     expect(await page.evaluate(() => window.localStorage.getItem('fila-teste'))).toBe(
       'lancamento-pendente',
     );
@@ -187,7 +199,8 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(email);
     await page.getByLabel('Senha', { exact: true }).fill(SENHA);
     await page.getByRole('button', { name: 'Criar conta' }).click();
-    await expect(page).toHaveURL(/\/conta$/);
+    await expect(page).toHaveURL(/\/painel$/);
+    await abrirConta(page, email);
     await page.evaluate(() => window.localStorage.setItem('fila-teste', 'lancamento-pendente'));
     const identidade = await page.evaluate(() => window.localStorage.getItem('ogado.identidade'));
 

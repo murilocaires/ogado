@@ -1,0 +1,17 @@
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+.git
+.env
+.env.*
+!.env.example
+references
+docs
+tests
+.scratch
+.claude
+apps/web/e2e
+apps/web/test-results
+apps/web/playwright-report
+packages/db/src/generated

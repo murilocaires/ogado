@@ -136,3 +136,81 @@ describe('RF-002 cliente HTTP: sessão e logout', () => {
     expect(await createApiClient({ fetch: f }).logout()).toEqual({ ok: false, kind: 'bloqueada' });
   });
 });
+
+describe('T-18 cliente HTTP: Conta', () => {
+  const fazendaAtual = { ...sessionBody.fazenda, nome: 'Outra', areaHa: '10', version: 4 };
+
+  it('RF-004 PATCH /api/conta/perfil devolve a sessão', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(json(200, sessionBody));
+    const result = await createApiClient({ fetch: fetchMock }).updatePerfil({
+      nome: 'Ana',
+      email: 'ana@fazenda.com',
+    });
+    expect(result).toEqual({ ok: true, data: sessionBody });
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/conta/perfil');
+    expect(init.method).toBe('PATCH');
+    expect(JSON.parse(init.body as string)).toEqual({ nome: 'Ana', email: 'ana@fazenda.com' });
+  });
+
+  it('RF-005 PUT /api/conta/senha só é sucesso com 204; 400 credenciais_invalidas e 429 são distintos', async () => {
+    const corpo = { senhaAtual: 'a', novaSenha: 'Nova#Senha2027' };
+    const f204 = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    expect(await createApiClient({ fetch: f204 }).changePassword(corpo)).toEqual({
+      ok: true,
+      data: undefined,
+    });
+    expect((f204.mock.calls[0] as [string, RequestInit])[1].method).toBe('PUT');
+
+    const f400 = vi.fn().mockResolvedValue(json(400, erro('credenciais_invalidas')));
+    expect(await createApiClient({ fetch: f400 }).changePassword(corpo)).toEqual({
+      ok: false,
+      kind: 'credenciais',
+    });
+
+    const f429 = vi
+      .fn()
+      .mockResolvedValue(json(429, erro('muitas_tentativas'), { 'retry-after': '30' }));
+    expect(await createApiClient({ fetch: f429 }).changePassword(corpo)).toEqual({
+      ok: false,
+      kind: 'muitas-tentativas',
+      retryAfterSeconds: 30,
+    });
+  });
+
+  it('RF-011 PATCH /api/fazenda: 409 devolve a fazenda atual', async () => {
+    const f409 = vi
+      .fn()
+      .mockResolvedValue(json(409, { ...(erro('conflito') as object), atual: fazendaAtual }));
+    const result = await createApiClient({ fetch: f409 }).updateFazenda({
+      nome: 'X',
+      version: 1,
+    });
+    expect(result).toEqual({ ok: false, kind: 'conflito', atual: fazendaAtual });
+  });
+
+  it('RF-004 409 sem fazenda (e-mail em uso) é conflito genérico, sem atual', async () => {
+    const f409 = vi.fn().mockResolvedValue(json(409, erro('conflito')));
+    const result = await createApiClient({ fetch: f409 }).updatePerfil({
+      nome: 'Ana',
+      email: 'ana@fazenda.com',
+    });
+    expect(result).toEqual({ ok: false, kind: 'conflito' });
+  });
+
+  it('RF-007 DELETE /api/conta envia a confirmação e só é sucesso com 204', async () => {
+    const f204 = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    const result = await createApiClient({ fetch: f204 }).deleteAccount();
+    expect(result).toEqual({ ok: true, data: undefined });
+    const [url, init] = f204.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/conta');
+    expect(init.method).toBe('DELETE');
+    expect(JSON.parse(init.body as string)).toEqual({ confirmacao: 'deletar' });
+
+    const net = vi.fn().mockRejectedValue(new TypeError('offline'));
+    expect(await createApiClient({ fetch: net }).deleteAccount()).toEqual({
+      ok: false,
+      kind: 'rede',
+    });
+  });
+});

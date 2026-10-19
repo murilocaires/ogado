@@ -50,7 +50,10 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AuthRoutesDeps): 
           now: deps.clock(),
         });
         setSessionCookie(reply, deps.config, session.token, session.maxAgeSeconds);
-        return reply.code(201).send({ usuario, fazenda: toFazendaDto(fazenda) });
+        return reply.code(201).send({
+          usuario: { ...usuario, nome: null },
+          fazenda: toFazendaDto(fazenda),
+        });
       } catch (error) {
         if (error instanceof EmailTakenError) throw emailUnavailable();
         if (error instanceof IdConflictError) throw genericConflict();
@@ -90,12 +93,10 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AuthRoutesDeps): 
       // Sessão sempre nova; um cookie anterior enviado junto nunca é reaproveitado (sem fixação).
       const session = await deps.sessions.create(usuario.id);
       setSessionCookie(reply, deps.config, session.token, session.maxAgeSeconds);
-      return reply
-        .code(200)
-        .send({
-          usuario: { id: usuario.id, email: usuario.email },
-          fazenda: toFazendaDto(fazenda),
-        });
+      return reply.code(200).send({
+        usuario: { id: usuario.id, email: usuario.email, nome: usuario.nome },
+        fazenda: toFazendaDto(fazenda),
+      });
     },
   );
 

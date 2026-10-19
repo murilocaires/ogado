@@ -37,7 +37,7 @@ Princípio: **cada entrega termina com uma URL que o cliente abre e usa**. Backe
 |---|---|---|---|
 | **E1 · Produto navegável de verdade** | App publicado (preview) com Painel, Negócios (compras + vendas), Recria, cálculos corretos, dados salvos no navegador | T-06 + T-17 + T-07 em versão **local** (domínio no cliente, sem API, sem login), RF-051/052/053 | login, servidor, cenários |
 | **E2 · Cenários** — **pronta (2026-10-18, versão local; aguardando revisão humana)** | Salvar, duplicar, renomear, buscar, comparar 2–3 | T-08 + T-19, alertas RN-026, painel (T-09) | login/API (E3): os cenários ficam no navegador (`lib/repo`, chave `ogado.e2.v2`) |
-| **E3 · Conta e dados na nuvem** | Entrar, e os dados seguem o usuário em qualquer aparelho | T-04 (pronto) + T-18 enxuto (perfil, senha, nome/área da fazenda, apagar conta) + API de lotes/cenários | primeiros passos, tela de parâmetros (Q-D), Google |
+| **E3 · Conta e dados na nuvem** — **código pronto (2026-10-19; falta deploy Railway/Vercel e e2e com API real)** | Entrar, e os dados seguem o usuário em qualquer aparelho | T-04 (pronto) + T-18 enxuto (perfil, senha, nome/área da fazenda, apagar conta) + API de lotes/cenários | primeiros passos, tela de parâmetros (Q-D), Google |
 | **E4 · Instalável e offline** | "Instalar app" e uso sem sinal | T-13, parte local do T-14 | conflito entre aparelhos |
 | **E5 · Robustez** | Sincronização entre aparelhos, Google, recuperar senha, exportar | T-14/T-15, T-16, T-11, T-12 | — |
 

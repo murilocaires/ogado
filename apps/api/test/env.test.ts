@@ -76,3 +76,13 @@ describe('PasswordHasher', () => {
     expect(hasher.needsRehash(await hasher.hash('Boi#Gordo2026'))).toBe(false);
   });
 });
+
+describe('porta da plataforma (deploy)', () => {
+  it('RNF-003: usa PORT quando API_PORT não está definido; API_PORT explícito tem prioridade', () => {
+    expect(loadEnv({ ...base, NODE_ENV: 'test', PORT: '8080' }).API_PORT).toBe(8080);
+    expect(loadEnv({ ...base, NODE_ENV: 'test', PORT: '8080', API_PORT: '4000' }).API_PORT).toBe(
+      4000,
+    );
+    expect(loadEnv({ ...base, NODE_ENV: 'test' }).API_PORT).toBe(3001);
+  });
+});

@@ -26,12 +26,14 @@ export interface NewSessionData {
 export interface UsuarioRecord {
   id: string;
   email: string;
+  nome: string | null;
   senhaHash: string | null;
 }
 
 const fazendaSelect = {
   id: true,
   nome: true,
+  areaHa: true,
   version: true,
   updatedAt: true,
   deletedAt: true,
@@ -46,12 +48,50 @@ export function createAccountRepository(prisma: PrismaClient) {
     findUsuarioByEmail(email: string): Promise<UsuarioRecord | null> {
       return prisma.usuario.findUnique({
         where: { email },
-        select: { id: true, email: true, senhaHash: true },
+        select: { id: true, email: true, nome: true, senhaHash: true },
       });
     },
 
     async updateSenhaHash(usuarioId: string, senhaHash: string): Promise<void> {
       await prisma.usuario.update({ where: { id: usuarioId }, data: { senhaHash } });
+    },
+
+    /** Hash atual da senha (nulo = conta sem senha). Usuário inexistente = `undefined`. */
+    async findSenhaHash(usuarioId: string): Promise<string | null | undefined> {
+      const row = await prisma.usuario.findUnique({
+        where: { id: usuarioId },
+        select: { senhaHash: true },
+      });
+      return row ? row.senhaHash : undefined;
+    },
+
+    /** Perfil (RF-004). E-mail já usado por outra conta -> `EmailTakenError`. */
+    async updatePerfil(
+      usuarioId: string,
+      perfil: { nome: string; email: string },
+      now: Date,
+    ): Promise<{ id: string; email: string; nome: string | null }> {
+      try {
+        return await prisma.usuario.update({
+          where: { id: usuarioId },
+          data: { nome: perfil.nome, email: perfil.email, atualizadoEm: now },
+          select: { id: true, email: true, nome: true },
+        });
+      } catch (error) {
+        if (isUniqueViolation(error)) throw new EmailTakenError();
+        throw error;
+      }
+    },
+
+    /**
+     * Apagar conta (RF-007): numa transação remove a fazenda do tenant (lotes, cenários e recria
+     * saem em cascata) e o usuário (sessões em cascata). Tudo ou nada.
+     */
+    async deleteAccount(ctx: { usuarioId: string; fazendaId: string }): Promise<void> {
+      await prisma.$transaction(async (tx) => {
+        await tx.fazenda.deleteMany({ where: { id: ctx.fazendaId, donoId: ctx.usuarioId } });
+        await tx.usuario.deleteMany({ where: { id: ctx.usuarioId } });
+      });
     },
 
     async loadFazendaDoUsuario(usuarioId: string): Promise<FazendaRecord | null> {

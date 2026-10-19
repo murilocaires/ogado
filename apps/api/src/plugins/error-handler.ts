@@ -67,15 +67,14 @@ export function registerErrorHandling(app: FastifyInstance): void {
         for (const [name, value] of Object.entries(error.options.headers ?? {})) {
           void reply.header(name, value);
         }
-        return reply
-          .code(error.statusCode)
-          .send(
-            envelope(
-              error.codigo,
-              error.message,
-              error.options.campos ? { campos: error.options.campos } : {},
-            ),
-          );
+        return reply.code(error.statusCode).send({
+          ...envelope(
+            error.codigo,
+            error.message,
+            error.options.campos ? { campos: error.options.campos } : {},
+          ),
+          ...error.options.extra,
+        });
       }
 
       if (hasZodFastifySchemaValidationErrors(error)) {
