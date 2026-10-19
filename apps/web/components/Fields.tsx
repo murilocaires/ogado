@@ -1,5 +1,5 @@
-import { useId, useLayoutEffect, useRef, type ReactNode } from 'react';
-import { num, valorCampo } from '../lib/format';
+import { useId, useLayoutEffect, useRef, type ReactNode, type InputHTMLAttributes } from 'react';
+import { valorCampo } from '../lib/format';
 import { InfoPopover } from './InfoPopover';
 import { Icon } from './Icon';
 import type { InfoKey } from '../lib/info';
@@ -10,9 +10,7 @@ interface CampoNumeroProps {
   onChange: (valor: string) => void;
   prefixo?: string;
   sufixo?: string;
-  /** Dica/erro mostrado sob o campo (vazio exigido, vírgula etc.). */
   dica?: string | null;
-  /** `true` quando a dica é erro (campo inválido). */
   invalido?: boolean;
   dataK?: string;
   inputId?: string;
@@ -20,7 +18,76 @@ interface CampoNumeroProps {
   mascara?: boolean;
 }
 
-/** Campo BRANCO: o usuário preenche (pt-BR, só vírgula decimal). */
+/** Edicao somente de digitos, preservando a posicao do cursor ao agrupar milhares. */
+function ParteNumero({
+  value,
+  onValue,
+  agrupar = false,
+  limite,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> & {
+  value: string;
+  onValue: (texto: string) => void;
+  agrupar?: boolean;
+  limite?: number;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const cursor = useRef<number | null>(null);
+  const exibido = agrupar ? value.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : value;
+  useLayoutEffect(() => {
+    if (cursor.current !== null) {
+      ref.current?.setSelectionRange(cursor.current, cursor.current);
+      cursor.current = null;
+    }
+  });
+  const atualizar = (texto: string, posicao: number) => {
+    const digitos = texto.replace(/\D/g, '');
+    if (limite !== undefined && digitos.length > limite) return;
+    const limpo = agrupar ? digitos.replace(/^0+(?=\d)/, '') : digitos;
+    const formatado = agrupar ? limpo.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : limpo;
+    let pos = formatado.length;
+    for (let n = texto.slice(posicao).replace(/\D/g, '').length; pos > 0 && n > 0;) {
+      if (/\d/.test(formatado[--pos]!)) n--;
+    }
+    cursor.current = pos;
+    onValue(limpo);
+  };
+  return (
+    <input
+      {...props}
+      ref={ref}
+      value={exibido}
+      inputMode="numeric"
+      autoComplete="off"
+      onKeyDown={(e) => {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.key.length === 1 && !/^\d$/.test(e.key)) e.preventDefault();
+        const el = e.currentTarget;
+        const inicio = el.selectionStart ?? 0;
+        if (inicio !== el.selectionEnd) return;
+        if (e.key === 'Backspace' && exibido[inicio - 1] === '.')
+          el.setSelectionRange(inicio - 1, inicio - 1);
+        if (e.key === 'Delete' && exibido[inicio] === '.')
+          el.setSelectionRange(inicio + 1, inicio + 1);
+      }}
+      onBeforeInput={(e) => {
+        const data = (e.nativeEvent as InputEvent).data;
+        if (data && !/^\d+$/.test(data)) e.preventDefault();
+      }}
+      onPaste={(e) => {
+        e.preventDefault();
+        const texto = e.clipboardData.getData('text');
+        if (!/^\d+$/.test(texto)) return;
+        const inicio = e.currentTarget.selectionStart ?? 0;
+        const fim = e.currentTarget.selectionEnd ?? inicio;
+        atualizar(exibido.slice(0, inicio) + texto + exibido.slice(fim), inicio + texto.length);
+      }}
+      onChange={(e) => atualizar(e.target.value, e.target.selectionStart ?? e.target.value.length)}
+    />
+  );
+}
+
+/** Parte inteira e fracao separadas, sem deslocar a escala durante a digitacao. */
 export function CampoNumero({
   label,
   value,
@@ -37,84 +104,53 @@ export function CampoNumero({
   const gerado = useId();
   const id = inputId ?? gerado;
   const dicaId = `${id}-dica`;
-  const input = useRef<HTMLInputElement>(null);
-  const cursor = useRef<number | null>(null);
   const numero = valorCampo(value);
-  const exibido = mascara && numero ? num(numero, casas) : value;
-  useLayoutEffect(() => {
-    if (cursor.current !== null) {
-      input.current?.setSelectionRange(cursor.current, cursor.current);
-      cursor.current = null;
-    }
-  });
-  const atualizar = (texto: string, posicao: number) => {
-    const digitos = texto.replace(/\D/g, '');
-    const direita = texto.slice(posicao).replace(/\D/g, '').length;
-    const limpo = digitos.replace(/^0+(?=\d)/, '');
-    const preenchido = limpo.padStart(casas + 1, '0');
-    const inteiro = casas ? preenchido.slice(0, -casas) : preenchido;
-    const formatado =
-      digitos === ''
-        ? ''
-        : inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.') +
-          (casas ? `,${preenchido.slice(-casas)}` : '');
-    let novaPosicao = formatado.length;
-    for (let restantes = direita; novaPosicao > 0 && restantes > 0;) {
-      if (/\d/.test(formatado[--novaPosicao]!)) restantes--;
-    }
-    cursor.current = novaPosicao;
-    onChange(casas === 0 ? formatado.replace(/\./g, '') : formatado);
-  };
+  const [inteiro = '', fracao = ''] = numero ? value.replace(/\./g, '').split(',') : ['', ''];
+  const acessibilidade = {
+    'aria-invalid': invalido || undefined,
+    'aria-describedby': dica ? dicaId : undefined,
+  } as const;
   return (
     <div className="lbl">
       <label htmlFor={id}>{label}</label>
       <div className="fld" data-invalid={invalido ? 'true' : undefined}>
         {prefixo && <span aria-hidden="true">{prefixo}</span>}
-        <input
-          ref={input}
-          id={id}
-          inputMode={mascara ? 'numeric' : 'decimal'}
-          autoComplete="off"
-          value={exibido}
-          data-k={dataK}
-          aria-invalid={invalido || undefined}
-          aria-describedby={dica ? dicaId : undefined}
-          onKeyDown={(e) => {
-            if (!mascara) return;
-            if (e.ctrlKey || e.metaKey || e.altKey) return;
-            if (e.key.length === 1 && !/^\d$/.test(e.key)) e.preventDefault();
-            const el = e.currentTarget;
-            const inicio = el.selectionStart ?? 0;
-            const fim = el.selectionEnd ?? inicio;
-            if (inicio !== fim) return;
-            if (e.key === 'Backspace' && /[.,]/.test(exibido[inicio - 1] ?? '')) {
-              el.setSelectionRange(inicio - 1, inicio - 1);
-            }
-            if (e.key === 'Delete' && /[.,]/.test(exibido[inicio] ?? '')) {
-              el.setSelectionRange(inicio + 1, inicio + 1);
-            }
-          }}
-          onBeforeInput={(e) => {
-            if (!mascara) return;
-            const data = (e.nativeEvent as InputEvent).data;
-            if (data && !/^\d+$/.test(data)) e.preventDefault();
-          }}
-          onPaste={(e) => {
-            if (!mascara) return;
-            e.preventDefault();
-            const texto = e.clipboardData.getData('text');
-            if (!/^\d+$/.test(texto)) return;
-            const el = e.currentTarget;
-            const inicio = el.selectionStart ?? 0;
-            const fim = el.selectionEnd ?? inicio;
-            atualizar(exibido.slice(0, inicio) + texto + exibido.slice(fim), inicio + texto.length);
-          }}
-          onChange={(e) =>
-            mascara
-              ? atualizar(e.target.value, e.target.selectionStart ?? e.target.value.length)
-              : onChange(e.target.value)
-          }
-        />
+        {mascara ? (
+          <>
+            <ParteNumero
+              {...acessibilidade}
+              id={id}
+              data-k={dataK}
+              agrupar
+              value={inteiro}
+              onValue={(v) => onChange(v === '' ? '' : v + (fracao ? `,${fracao}` : ''))}
+            />
+            {casas > 0 && (
+              <>
+                <span aria-hidden="true">,</span>
+                <ParteNumero
+                  {...acessibilidade}
+                  className="numero-fracao"
+                  aria-label={`${label} - decimais`}
+                  value={fracao}
+                  limite={casas}
+                  placeholder={'0'.repeat(casas)}
+                  onValue={(v) => onChange(v ? `${inteiro || '0'},${v}` : inteiro)}
+                />
+              </>
+            )}
+          </>
+        ) : (
+          <input
+            {...acessibilidade}
+            id={id}
+            inputMode="decimal"
+            autoComplete="off"
+            value={value}
+            data-k={dataK}
+            onChange={(e) => onChange(e.target.value)}
+          />
+        )}
         {sufixo && <span aria-hidden="true">{sufixo}</span>}
       </div>
       <span id={dicaId} className={invalido ? 'err' : 'hint'} aria-live="polite">
