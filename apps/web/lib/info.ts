@@ -103,8 +103,8 @@ const tabela = {
   ],
   lotIni: [
     'Lotação inicial',
-    'Quantas UA há por hectare na entrada, sobre 80 ha de referência ou sobre a área informada, conforme sua escolha.',
-    'Lotação total ÷ área de base',
+    'Quantas UA há por hectare na entrada, calculadas sobre a área pastável que você informou.',
+    'Lotação total ÷ área pastável',
   ],
   lotFin: [
     'Lotação final',
