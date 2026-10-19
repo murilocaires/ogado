@@ -330,6 +330,28 @@ const isolationCasesConta: Record<string, (a: Farm, b: Farm) => Promise<number>>
     expect(depois).toEqual(antes);
     return 2;
   },
+  // antes de 'DELETE /conta': os casos compartilham A e B, e este apaga a conta de A
+  'DELETE /conta/google': async (a, b) => {
+    const sub = `iso-${randomUUID()}`;
+    await prisma.identidadeGoogle.create({
+      data: { usuarioId: b.usuarioId, sub, email: uniqueEmail('iso') },
+    });
+    // A não tem Google: nem a rota pura nem um id de B na query alcançam a identidade de B.
+    const pura = await app.inject({
+      method: 'DELETE',
+      url: '/conta/google',
+      headers: { origin: TEST_ORIGIN, cookie: a.cookie },
+    });
+    expect(pura.statusCode).toBe(404);
+    const comId = await app.inject({
+      method: 'DELETE',
+      url: `/conta/google?usuarioId=${b.usuarioId}`,
+      headers: { origin: TEST_ORIGIN, cookie: a.cookie },
+    });
+    expect(comId.statusCode).toBe(404);
+    expect(await prisma.identidadeGoogle.count({ where: { sub, usuarioId: b.usuarioId } })).toBe(1);
+    return 2;
+  },
   'DELETE /conta': async (a, b) => {
     const comId = await comoA(a, 'DELETE', '/conta', {
       confirmacao: 'deletar',
@@ -416,6 +438,8 @@ describe('isolamento por fazenda (HTTP)', () => {
       'POST /auth/logout',
       'POST /auth/senha/esqueci',
       'POST /auth/senha/redefinir',
+      'GET /auth/google/start',
+      'GET /auth/google/callback',
     ]);
   });
 

@@ -87,6 +87,30 @@ describe('porta da plataforma (deploy)', () => {
   });
 });
 
+describe('Google OAuth (RF-001)', () => {
+  it('sem GOOGLE_CLIENT_ID/SECRET a API sobe normalmente, inclusive em produção', () => {
+    const env = loadEnv({ ...base, NODE_ENV: 'production', TRUST_PROXY: 'none' });
+    expect(env.GOOGLE_CLIENT_ID).toBeUndefined();
+    expect(env.GOOGLE_CLIENT_SECRET).toBeUndefined();
+  });
+
+  it('uma credencial sem a outra falha na subida', () => {
+    expect(() => loadEnv({ ...base, NODE_ENV: 'development', GOOGLE_CLIENT_ID: 'id' })).toThrow(
+      /GOOGLE_CLIENT_SECRET/,
+    );
+    expect(() => loadEnv({ ...base, NODE_ENV: 'development', GOOGLE_CLIENT_SECRET: 's' })).toThrow(
+      /GOOGLE_CLIENT_ID/,
+    );
+    const env = loadEnv({
+      ...base,
+      NODE_ENV: 'development',
+      GOOGLE_CLIENT_ID: 'id',
+      GOOGLE_CLIENT_SECRET: 's',
+    });
+    expect(env.GOOGLE_CLIENT_ID).toBe('id');
+  });
+});
+
 describe('e-mail transacional (RF-002)', () => {
   it('sem RESEND_API_KEY a API sobe normalmente, inclusive em produção', () => {
     const env = loadEnv({ ...base, NODE_ENV: 'production', TRUST_PROXY: 'none' });

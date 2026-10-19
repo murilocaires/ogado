@@ -1,6 +1,7 @@
 import { createPrisma } from '@ogado/db';
 import { buildApp } from './app.js';
 import { configFromEnv } from './config.js';
+import { createGoogleOAuthClient } from './google/google-client.js';
 import { createMemoryEmailSender, createUnconfiguredEmailSender } from './email/memory-sender.js';
 import { createResendEmailSender } from './email/resend-sender.js';
 import { loadEnv, parseOrigins } from './env.js';
@@ -9,7 +10,15 @@ const env = loadEnv();
 const prisma = createPrisma(env.DATABASE_URL);
 const config = configFromEnv(env);
 const emailConfigured = env.RESEND_API_KEY !== undefined && env.EMAIL_FROM !== undefined;
+const googleClient =
+  env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+    ? createGoogleOAuthClient({
+        clientId: env.GOOGLE_CLIENT_ID,
+        clientSecret: env.GOOGLE_CLIENT_SECRET,
+      })
+    : undefined;
 const app = buildApp({
+  ...(googleClient ? { googleClient } : {}),
   prisma,
   corsOrigins: parseOrigins(env.WEB_ORIGIN),
   logger: true,

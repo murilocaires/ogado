@@ -1,6 +1,8 @@
+import type { UsuarioDto } from '@ogado/contracts';
 import type { PrismaClient } from '@ogado/db';
 import type { AppConfig } from '../config';
 import type { TenantContext } from '../tenant';
+import { toUsuarioDto, usuarioDtoSelect } from '../usuario-dto';
 import { issueToken, parseToken, secretMatches } from './tokens';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -21,7 +23,7 @@ export type SessionValidation =
   | {
       status: 'ok';
       tenant: TenantContext;
-      usuario: { id: string; email: string; nome: string | null };
+      usuario: UsuarioDto;
       /** Presente quando a expiração deslizante avançou: reemitir o cookie. */
       renewedMaxAgeSeconds: number | null;
     }
@@ -85,9 +87,7 @@ export function createSessionService(
           expiraEm: true,
           usuario: {
             select: {
-              id: true,
-              email: true,
-              nome: true,
+              ...usuarioDtoSelect,
               fazenda: { select: { id: true, deletedAt: true } },
             },
           },
@@ -114,7 +114,7 @@ export function createSessionService(
       return {
         status: 'ok',
         tenant: { usuarioId: row.usuario.id, fazendaId: fazenda.id },
-        usuario: { id: row.usuario.id, email: row.usuario.email, nome: row.usuario.nome },
+        usuario: toUsuarioDto(row.usuario),
         renewedMaxAgeSeconds,
       };
     },

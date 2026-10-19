@@ -49,6 +49,11 @@ const envSchema = z.object({
   RATE_LIMIT_FORGOT_IP_PER_HOUR: positiveInt.default(10),
   RATE_LIMIT_FORGOT_EMAIL_PER_HOUR: positiveInt.default(3),
   RATE_LIMIT_RESET_IP_PER_HOUR: positiveInt.default(20),
+  // Entrada com Google (RF-001/RF-006): por IP, início e retorno do fluxo.
+  RATE_LIMIT_GOOGLE_IP_PER_HOUR: positiveInt.default(60),
+  // Google OAuth (opcionais): ausentes, as rotas /auth/google/* respondem 404 e a API sobe normalmente.
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   // E-mail transacional (Resend). Ausentes: a API sobe, mas o e-mail não é enviado (aviso no log).
   RESEND_API_KEY: z.string().min(1).optional(),
   EMAIL_FROM: z.string().min(1).optional(),
@@ -72,6 +77,9 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   }
   if (env.RESEND_API_KEY && !env.EMAIL_FROM) {
     throw new Error('EMAIL_FROM é obrigatório quando RESEND_API_KEY está definido.');
+  }
+  if (Boolean(env.GOOGLE_CLIENT_ID) !== Boolean(env.GOOGLE_CLIENT_SECRET)) {
+    throw new Error('GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET devem ser definidos juntos.');
   }
   return env;
 }

@@ -44,7 +44,13 @@ describe('GET /auth/session', () => {
     const body = sessionResponseSchema.parse(res.json());
     expect(body.usuario.email).toBe(email);
     expect(Object.keys(res.json()).sort()).toEqual(['fazenda', 'usuario']);
-    expect(Object.keys(res.json().usuario).sort()).toEqual(['email', 'id', 'nome']);
+    expect(Object.keys(res.json().usuario).sort()).toEqual([
+      'email',
+      'googleVinculado',
+      'id',
+      'nome',
+      'temSenha',
+    ]);
     const segredo = cookie.split('=')[1]?.split('.')[1] ?? '';
     expect(segredo.length).toBeGreaterThan(20);
     expect(res.body).not.toContain(segredo);

@@ -9,6 +9,8 @@ export const PUBLIC_ROUTE_ALLOWLIST: readonly string[] = [
   'POST /auth/logout',
   'POST /auth/senha/esqueci',
   'POST /auth/senha/redefinir',
+  'GET /auth/google/start',
+  'GET /auth/google/callback',
 ];
 
 export function assertPublicAllowlist(catalog: readonly RouteCatalogEntry[]): void {

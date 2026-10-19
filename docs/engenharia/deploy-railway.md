@@ -19,6 +19,17 @@ A API (`apps/api`) roda no Railway com o Postgres do mesmo projeto (`ogado`, amb
 | `TRUST_PROXY` | `100.64.0.0/10` | obrigatório em produção; faixa interna do proxy do Railway |
 | `RESEND_API_KEY` | chave da conta Resend (segredo) | e-mail de recuperação de senha (RF-002). Ausente: a API sobe, avisa no log e **não envia e-mails** (a resposta de "esqueci a senha" continua a mesma) |
 | `EMAIL_FROM` | `O Gado <nao-responda@seu-dominio>` | remetente; o domínio precisa estar verificado no Resend. Obrigatório se `RESEND_API_KEY` existir |
+| `GOOGLE_CLIENT_ID` | ID do cliente OAuth (Google Cloud) | entrada com Google (RF-001/RF-006). Opcional, mas **as duas `GOOGLE_*` vão juntas** (uma sem a outra impede a subida). Ausentes: a API sobe e `/auth/google/*` responde 404 |
+| `GOOGLE_CLIENT_SECRET` | segredo do cliente OAuth (segredo) | par de `GOOGLE_CLIENT_ID`; nunca no repositório nem em log |
+
+### Entrada com Google (console do Google Cloud)
+
+Crie um cliente OAuth do tipo "Aplicativo da Web" (tela de consentimento com os escopos `openid`, `email` e `profile`). A URI de redirecionamento é `${primeiro item de WEB_ORIGIN}/api/auth/google/callback`: passa pelo rewrite da Vercel, então o cookie de sessão nasce no domínio do site (primeira parte, exigência do ADR-0010 a.5). Cadastre em "URIs de redirecionamento autorizados":
+
+- `https://ogado.vercel.app/api/auth/google/callback`
+- `http://localhost:3000/api/auth/google/callback`
+
+Em desenvolvimento local use `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` no `.env` (não versionado). O limite por IP do fluxo é `RATE_LIMIT_GOOGLE_IP_PER_HOUR` (padrão 60).
 
 `PORT` é injetada pelo Railway (o servidor usa `PORT` quando `API_PORT` não existe). A API não tem segredo próprio: a sessão é um token aleatório cujo hash fica no banco.
 
