@@ -1,6 +1,6 @@
 'use client';
 
-import type { AlertaRecria, Decimal } from '@ogado/domain';
+import type { AlertaRecria, Decimal, ResultadoRecria } from '@ogado/domain';
 import { useMemo, useState, type KeyboardEvent } from 'react';
 import { brl, dicaCampo, ehNegativo, lerCampo, num, TRACO } from '../lib/format';
 import { snapshotDaRecria } from '../lib/cenarios';
@@ -12,6 +12,7 @@ import { Carregando, PageHeader } from './AppShell';
 import { CenariosScreen } from './CenariosScreen';
 import { ConfirmDialog } from './Dialog';
 import { CampoCalculado, CampoNumero } from './Fields';
+import type { InfoKey } from '../lib/info';
 import { InfoPopover } from './InfoPopover';
 import { NomeDialog } from './NomeDialog';
 import { useToast } from './Toast';
@@ -23,42 +24,107 @@ interface CampoDef {
   sufixo?: string;
 }
 
-const GRUPOS: { titulo: string; campos: CampoDef[] }[] = [
-  {
-    titulo: 'Lote e área',
-    campos: [
-      { id: 'area', rotulo: 'Área pastável', sufixo: 'ha' },
-      { id: 'dias', rotulo: 'Dias de recria', sufixo: 'dias' },
-      { id: 'investimento', rotulo: 'Investimento', prefixo: 'R$' },
-      { id: 'rsCabCompra', rotulo: 'R$ por cabeça (compra)', prefixo: 'R$' },
-      { id: 'pesoIni', rotulo: 'Peso inicial', sufixo: 'kg' },
-      { id: 'pesoFin', rotulo: 'Peso final', sufixo: 'kg' },
-      { id: 'precoVenda', rotulo: 'Preço de venda', prefixo: 'R$', sufixo: '/@' },
-    ],
-  },
-  {
-    titulo: 'Suplemento',
-    campos: [
-      { id: 'consumoPct', rotulo: 'Consumo (% do peso vivo)', sufixo: '%' },
-      { id: 'precoSuplKg', rotulo: 'Proteinado', prefixo: 'R$', sufixo: '/kg' },
-    ],
-  },
-  {
-    titulo: 'Imposto e sanidade',
-    campos: [
-      { id: 'rendCarcaca', rotulo: 'Rendimento de carcaça', sufixo: '%' },
-      { id: 'imposto', rotulo: 'Imposto sobre a venda', sufixo: '%' },
-      { id: 'sanidadeCabMes', rotulo: 'Sanidade', prefixo: 'R$', sufixo: '/cab./mês' },
-    ],
-  },
-  {
-    titulo: 'Outros custos',
-    campos: [
-      { id: 'funcionario', rotulo: 'Funcionário', prefixo: 'R$' },
-      { id: 'frete', rotulo: 'Frete', prefixo: 'R$' },
-    ],
-  },
-];
+const CAMPOS: Record<RecriaCampo, CampoDef> = {
+  area: { id: 'area', rotulo: 'Área pastável', sufixo: 'ha' },
+  dias: { id: 'dias', rotulo: 'Dias de recria', sufixo: 'dias' },
+  investimento: { id: 'investimento', rotulo: 'Investimento', prefixo: 'R$' },
+  rsCabCompra: { id: 'rsCabCompra', rotulo: 'R$ por cabeça (compra)', prefixo: 'R$' },
+  pesoIni: { id: 'pesoIni', rotulo: 'Peso inicial', sufixo: 'kg' },
+  pesoFin: { id: 'pesoFin', rotulo: 'Peso final', sufixo: 'kg' },
+  precoVenda: { id: 'precoVenda', rotulo: 'Preço de venda', prefixo: 'R$', sufixo: '/@' },
+  consumoPct: { id: 'consumoPct', rotulo: 'Consumo (% do peso vivo)', sufixo: '%' },
+  precoSuplKg: { id: 'precoSuplKg', rotulo: 'Proteinado', prefixo: 'R$', sufixo: '/kg' },
+  rendCarcaca: { id: 'rendCarcaca', rotulo: 'Rendimento de carcaça', sufixo: '%' },
+  imposto: { id: 'imposto', rotulo: 'Imposto sobre a venda', sufixo: '%' },
+  sanidadeCabMes: { id: 'sanidadeCabMes', rotulo: 'Sanidade', prefixo: 'R$', sufixo: '/cab./mês' },
+  funcionario: { id: 'funcionario', rotulo: 'Funcionário', prefixo: 'R$' },
+  frete: { id: 'frete', rotulo: 'Frete', prefixo: 'R$' },
+};
+
+type ItemSecao =
+  | { campo: RecriaCampo }
+  | { rotulo: string; valor: string; info?: InfoKey; pequeno?: string };
+
+/** Cards na mesma divisão e ordem da planilha de recria (campos brancos = entrada; cadeado = calculado). */
+function secoesRecria(r: ResultadoRecria): { titulo: string; itens: ItemSecao[] }[] {
+  return [
+    {
+      titulo: 'Dados do lote',
+      itens: [
+        { campo: 'area' },
+        { campo: 'dias' },
+        { campo: 'investimento' },
+        { campo: 'rsCabCompra' },
+        {
+          rotulo: 'Total de cabeças',
+          info: 'cabecas',
+          valor: num(r.cabecas, 2),
+          pequeno: r.cabecas ? `≈ ${num(r.cabecas, 0)}` : undefined,
+        },
+        { campo: 'pesoIni' },
+        { rotulo: 'Lotação total', info: 'lotTot', valor: comUnidade(r.lotacaoTotalUA, 2, 'UA') },
+        { rotulo: 'Lotação/ha inicial', info: 'lotIni', valor: comUnidade(r.lotacaoHaInicial, 2, 'UA/ha') },
+        { campo: 'pesoFin' },
+        { rotulo: 'Peso médio', info: 'pesoMed', valor: comUnidade(r.pesoMedio, 2, 'kg') },
+        { rotulo: 'Lotação final', info: 'lotFin', valor: comUnidade(r.lotacaoFinal, 2, 'UA/ha') },
+        { rotulo: 'GMD implícito', info: 'gmd', valor: comUnidade(r.gmdImplicito, 3, 'kg/dia') },
+        { campo: 'precoVenda' },
+        { rotulo: 'Produzidas', info: 'arrVivo', valor: comUnidade(r.arrobasProduzidas, 2, '@') },
+      ],
+    },
+    {
+      titulo: 'Cálculo do suplemento',
+      itens: [
+        { campo: 'consumoPct' },
+        { campo: 'precoSuplKg' },
+        { rotulo: 'Consumo (peso médio × %)', info: 'consumo', valor: comUnidade(r.consumoKgDia, 3, 'kg/dia') },
+        { rotulo: 'R$/cab/dia', valor: brl(r.suplCabDia) },
+        { rotulo: 'R$/dia', valor: brl(r.suplDia) },
+        { rotulo: 'Custo total', info: 'supl', valor: brl(r.suplTotal) },
+      ],
+    },
+    {
+      titulo: 'Cálculo do imposto',
+      itens: [
+        { campo: 'rendCarcaca' },
+        { rotulo: '@ de carcaça por cab.', info: 'arrCarc', valor: comUnidade(r.arrobasCarcacaCab, 2, '@') },
+        { rotulo: 'R$/cab (venda)', info: 'vendaCab', valor: brl(r.vendaCab) },
+        { campo: 'imposto' },
+        { rotulo: 'Imposto R$/cab', valor: brl(r.impostoCab) },
+        { rotulo: 'Total de imposto', info: 'imp', valor: brl(r.impostoTotal) },
+      ],
+    },
+    {
+      titulo: 'Cálculo da sanidade',
+      itens: [
+        { campo: 'sanidadeCabMes' },
+        { rotulo: 'Total de sanidade', info: 'san', valor: brl(r.sanidadeTotal) },
+        { campo: 'funcionario' },
+      ],
+    },
+    {
+      titulo: 'Cálculo do custo operacional',
+      itens: [
+        { rotulo: 'Custo de suplemento', valor: brl(r.suplTotal) },
+        { rotulo: 'Custo de sanidade', valor: brl(r.sanidadeTotal) },
+        { rotulo: 'Custo de imposto', valor: brl(r.impostoTotal) },
+        { campo: 'frete' },
+        { rotulo: 'Custo de funcionário', valor: brl(r.custos.find((c) => c.id === 'func')?.valor ?? null) },
+        { rotulo: 'Total', info: 'custo', valor: brl(r.custoTotal) },
+      ],
+    },
+    {
+      titulo: 'Faturamento',
+      itens: [
+        { rotulo: 'Faturamento bruto', info: 'bruto', valor: brl(r.faturamentoBruto) },
+        { rotulo: 'Faturamento líquido', info: 'recLiq', valor: brl(r.faturamentoLiquido) },
+        { rotulo: 'Total em caixa', info: 'caixa', valor: brl(r.totalEmCaixa) },
+        { rotulo: 'Índice R$/mês', info: 'mes', valor: brl(r.liquidoMes) },
+        { rotulo: 'Índice R$/ha', info: 'ha', valor: brl(r.liquidoHa) },
+      ],
+    },
+  ];
+}
 
 const CUSTO_INFO = { supl: 'supl', san: 'san', imp: 'imp', frete: 'frete', func: 'func' } as const;
 
@@ -197,11 +263,23 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
         ) : (
           <div className="rgrid">
             <div className="stack">
-              {GRUPOS.map((g) => (
-                <section className="card" key={g.titulo} aria-labelledby={`g-${g.titulo}`}>
-                  <h2 id={`g-${g.titulo}`}>{g.titulo}</h2>
+              {secoesRecria(r).map((g, n) => (
+                <section className="card" key={g.titulo} aria-labelledby={`g-recria-${n}`}>
+                  <h2 id={`g-recria-${n}`}>{g.titulo}</h2>
                   <div className="row">
-                    {g.campos.map((c) => {
+                    {g.itens.map((item) => {
+                      if (!('campo' in item)) {
+                        return (
+                          <CampoCalculado
+                            key={item.rotulo}
+                            label={item.rotulo}
+                            info={item.info}
+                            valor={item.valor}
+                            pequeno={item.pequeno}
+                          />
+                        );
+                      }
+                      const c = CAMPOS[item.campo];
                       const leitura = lerCampo(recria.form[c.id]);
                       return (
                         <CampoNumero
@@ -352,66 +430,6 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
                     </tr>
                   </tbody>
                 </table>
-              </section>
-
-              <section className="card" aria-labelledby="r-numeros">
-                <h2 id="r-numeros">Números do lote</h2>
-                <div className="grid g2" style={{ gap: 12 }}>
-                  <CampoCalculado
-                    label="Cabeças"
-                    info="cabecas"
-                    valor={num(r.cabecas, 2)}
-                    pequeno={r.cabecas ? `≈ ${num(r.cabecas, 0)}` : undefined}
-                  />
-                  <CampoCalculado
-                    label="Lotação total"
-                    info="lotTot"
-                    valor={comUnidade(r.lotacaoTotalUA, 2, 'UA')}
-                  />
-                  <CampoCalculado
-                    label="Lotação inicial"
-                    info="lotIni"
-                    valor={comUnidade(r.lotacaoHaInicial, 2, 'UA/ha')}
-                  />
-                  <CampoCalculado
-                    label="Lotação final"
-                    info="lotFin"
-                    valor={comUnidade(r.lotacaoFinal, 2, 'UA/ha')}
-                  />
-                  <CampoCalculado
-                    label="Peso médio"
-                    info="pesoMed"
-                    valor={comUnidade(r.pesoMedio, 0, 'kg')}
-                  />
-                  <CampoCalculado
-                    label="GMD implícito"
-                    info="gmd"
-                    valor={comUnidade(r.gmdImplicito, 3, 'kg/dia')}
-                  />
-                  <CampoCalculado
-                    label="@ na venda (peso vivo)"
-                    info="arrVivo"
-                    valor={comUnidade(r.arrobasProduzidas, 2, '@')}
-                  />
-                  <CampoCalculado
-                    label="@ de carcaça por cabeça"
-                    info="arrCarc"
-                    valor={comUnidade(r.arrobasCarcacaCab, 2, '@')}
-                  />
-                  <CampoCalculado
-                    label="Consumo por cabeça"
-                    info="consumo"
-                    valor={comUnidade(r.consumoKgDia, 3, 'kg/dia')}
-                  />
-                  <CampoCalculado
-                    label="Venda por cabeça"
-                    info="vendaCab"
-                    valor={brl(r.vendaCab)}
-                  />
-                </div>
-                <p className="hint" style={{ margin: '12px 0 0' }}>
-                  Campos com cadeado são calculados e não podem ser editados.
-                </p>
               </section>
 
               <button
