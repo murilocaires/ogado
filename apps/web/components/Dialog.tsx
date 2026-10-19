@@ -10,6 +10,25 @@ export function haDialogoAberto(): boolean {
   return pilha.length > 0;
 }
 
+let rolagemAnterior: { html: string; body: string } | null = null;
+
+/** Com um diálogo aberto só ele rola: a página de trás fica parada (sem 2ª barra fora do modal). */
+function travarRolagemDaPagina(): void {
+  rolagemAnterior = {
+    html: document.documentElement.style.overflow,
+    body: document.body.style.overflow,
+  };
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+}
+
+function soltarRolagemDaPagina(): void {
+  if (!rolagemAnterior) return;
+  document.documentElement.style.overflow = rolagemAnterior.html;
+  document.body.style.overflow = rolagemAnterior.body;
+  rolagemAnterior = null;
+}
+
 const FOCAVEIS =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -45,6 +64,7 @@ export function Dialog({
   useEffect(() => {
     const eu = Symbol('dialog');
     const anterior = document.activeElement as HTMLElement | null;
+    if (pilha.length === 0) travarRolagemDaPagina();
     pilha.push(eu);
     const alvo =
       (focoInicial ? raiz.current?.querySelector<HTMLElement>(focoInicial) : null) ??
@@ -77,6 +97,7 @@ export function Dialog({
       document.removeEventListener('keydown', onKeyDown);
       const i = pilha.indexOf(eu);
       if (i >= 0) pilha.splice(i, 1);
+      if (pilha.length === 0) soltarRolagemDaPagina();
       if (anterior && document.contains(anterior)) anterior.focus();
     };
     // Só na abertura: o foco inicial não deve se repetir a cada renderização.

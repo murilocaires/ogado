@@ -732,7 +732,10 @@
   width: 100%;
   max-width: 640px;
   max-height: 92vh;
+  max-height: 92dvh;
   overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
   padding: 24px;
 }
 .app .modal.estreito {
