@@ -367,6 +367,6 @@ describe('RF-026 aba Vendas', () => {
     renderComApp(<NegociosScreen />);
     expect(screen.queryByText(/em vendas de fêmeas/)).not.toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: 'Vendas' }));
-    expect(screen.getByText(/em vendas de fêmeas, é comum descontar 10%/)).toBeInTheDocument();
+    expect(screen.getByText(/em vendas de fêmeas, é comum descontar 10 kg por cabeça/)).toBeInTheDocument();
   });
 });

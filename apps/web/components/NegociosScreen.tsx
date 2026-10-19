@@ -230,7 +230,7 @@ export function NegociosScreen() {
 
       {aba === 'vendas' && (
         <div className="note" style={{ marginBottom: 12 }}>
-          Dica: em vendas de fêmeas, é comum descontar 10% do peso. Você pode ajustar ou desligar
+          Dica: em vendas de fêmeas, é comum descontar 10 kg por cabeça. Você pode ajustar ou desligar
           isso em cada lote.
         </div>
       )}
