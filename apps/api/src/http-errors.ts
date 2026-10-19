@@ -56,3 +56,11 @@ export const versionConflict = (atual: unknown): AppError =>
     'Este registro foi alterado em outro aparelho. Confira a versão atual e tente de novo.',
     { extra: { atual } },
   );
+
+/** Token de redefinição inexistente, usado, expirado ou adulterado: um só erro, sem dizer qual. */
+export const invalidResetLink = (): AppError =>
+  new AppError(
+    400,
+    'requisicao_invalida',
+    'Este link para redefinir a senha é inválido ou expirou. Peça um novo.',
+  );

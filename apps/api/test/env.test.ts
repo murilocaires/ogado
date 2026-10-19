@@ -86,3 +86,23 @@ describe('porta da plataforma (deploy)', () => {
     expect(loadEnv({ ...base, NODE_ENV: 'test' }).API_PORT).toBe(3001);
   });
 });
+
+describe('e-mail transacional (RF-002)', () => {
+  it('sem RESEND_API_KEY a API sobe normalmente, inclusive em produção', () => {
+    const env = loadEnv({ ...base, NODE_ENV: 'production', TRUST_PROXY: 'none' });
+    expect(env.RESEND_API_KEY).toBeUndefined();
+  });
+
+  it('RESEND_API_KEY sem EMAIL_FROM falha na subida', () => {
+    expect(() => loadEnv({ ...base, NODE_ENV: 'development', RESEND_API_KEY: 're_x' })).toThrow(
+      /EMAIL_FROM/,
+    );
+    const env = loadEnv({
+      ...base,
+      NODE_ENV: 'development',
+      RESEND_API_KEY: 're_x',
+      EMAIL_FROM: 'O Gado <nao-responda@ogado.example>',
+    });
+    expect(env.EMAIL_FROM).toContain('ogado.example');
+  });
+});

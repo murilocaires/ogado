@@ -45,6 +45,13 @@ const envSchema = z.object({
   RATE_LIMIT_LOGIN_IP_EMAIL_PER_MIN: positiveInt.default(5),
   RATE_LIMIT_LOGIN_IP_PER_MIN: positiveInt.default(20),
   RATE_LIMIT_SIGNUP_IP_PER_HOUR: positiveInt.default(5),
+  // Recuperação de senha (RF-002).
+  RATE_LIMIT_FORGOT_IP_PER_HOUR: positiveInt.default(10),
+  RATE_LIMIT_FORGOT_EMAIL_PER_HOUR: positiveInt.default(3),
+  RATE_LIMIT_RESET_IP_PER_HOUR: positiveInt.default(20),
+  // E-mail transacional (Resend). Ausentes: a API sobe, mas o e-mail não é enviado (aviso no log).
+  RESEND_API_KEY: z.string().min(1).optional(),
+  EMAIL_FROM: z.string().min(1).optional(),
   // IPs/CIDRs do proxy reverso confiável, separados por vírgula; `none` = sem proxy.
   // Obrigatório em produção (ver loadEnv).
   TRUST_PROXY: z.string().default('').transform(parseTrustProxy),
@@ -62,6 +69,9 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     throw new Error(
       'TRUST_PROXY é obrigatório em produção: informe o IP/CIDR do proxy reverso ou "none".',
     );
+  }
+  if (env.RESEND_API_KEY && !env.EMAIL_FROM) {
+    throw new Error('EMAIL_FROM é obrigatório quando RESEND_API_KEY está definido.');
   }
   return env;
 }

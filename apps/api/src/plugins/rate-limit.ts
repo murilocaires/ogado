@@ -14,6 +14,12 @@ export interface Limiters {
   passwordChange(request: FastifyRequest, usuarioId: string): Promise<void>;
   /** Cadastro: por IP (~5/h). */
   signupIp(request: FastifyRequest): Promise<void>;
+  /** Esqueci a senha: por IP (~10/h). */
+  forgotIp(request: FastifyRequest): Promise<void>;
+  /** Esqueci a senha: por e-mail normalizado, de qualquer IP (~3/h), contra e-mail em massa. */
+  forgotEmail(request: FastifyRequest, email: string): Promise<void>;
+  /** Redefinir senha: por IP (~20/h). */
+  resetIp(request: FastifyRequest): Promise<void>;
 }
 
 /**
@@ -39,12 +45,13 @@ export const rateLimitPlugin = fp<{ config: Pick<AppConfig, 'rateLimit' | 'proxy
       name: string,
       rule: RateLimitRule,
       keySuffix: (request: FastifyRequest) => string,
+      byIp = true,
     ) =>
       app.createRateLimit({
         max: rule.max,
         timeWindow: rule.windowMs,
         keyGenerator: (request) =>
-          `${name}:${clientIp(request, config.proxySecret)}${keySuffix(request)}`,
+          `${name}:${byIp ? clientIp(request, config.proxySecret) : ''}${keySuffix(request)}`,
       });
 
     const emailByRequest = new WeakMap<FastifyRequest, string>();
@@ -61,6 +68,15 @@ export const rateLimitPlugin = fp<{ config: Pick<AppConfig, 'rateLimit' | 'proxy
       (request) => `:${emailByRequest.get(request) ?? ''}`,
     );
 
+    const forgotIp = make('forgot-ip', rules.forgotIp, () => '');
+    const forgotEmail = make(
+      'forgot-email',
+      rules.forgotEmail,
+      (request) => `:${emailByRequest.get(request) ?? ''}`,
+      false,
+    );
+    const resetIp = make('reset-ip', rules.resetIp, () => '');
+
     const enforce = async (
       check: ReturnType<typeof make>,
       request: FastifyRequest,
@@ -72,6 +88,12 @@ export const rateLimitPlugin = fp<{ config: Pick<AppConfig, 'rateLimit' | 'proxy
     const limiters: Limiters = {
       loginIp: (request) => enforce(loginIp, request),
       signupIp: (request) => enforce(signupIp, request),
+      forgotIp: (request) => enforce(forgotIp, request),
+      resetIp: (request) => enforce(resetIp, request),
+      forgotEmail(request, email) {
+        emailByRequest.set(request, email);
+        return enforce(forgotEmail, request);
+      },
       passwordChange(request, usuarioId) {
         emailByRequest.set(request, usuarioId);
         return enforce(passwordChange, request);
