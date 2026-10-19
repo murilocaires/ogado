@@ -9,6 +9,8 @@
 *::before,
 *::after {
   box-sizing: border-box;
+  /* Sem o retângulo azul do toque no celular; o foco do teclado segue visível (:focus-visible). */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
