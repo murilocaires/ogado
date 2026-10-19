@@ -1,7 +1,9 @@
 import {
   errorEnvelopeSchema,
+  exportacaoDadosSchema,
   fazendaSchema,
   sessionResponseSchema,
+  type ExportacaoDados,
   type FazendaDto,
   type FazendaPatch,
   type FieldError,
@@ -48,6 +50,8 @@ export interface ApiClient {
   updateFazenda(body: FazendaPatch): Promise<ApiResult<SessionResponse>>;
   /** DELETE /conta (RF-007): só é sucesso com 204; o chamador limpa o aparelho depois. */
   deleteAccount(): Promise<ApiResult<void>>;
+  /** GET /conta/exportar (RNF-009): cópia dos dados do titular, validada pelo contrato. */
+  exportData(): Promise<ApiResult<ExportacaoDados>>;
   /** POST /auth/senha/esqueci (RF-002): 202 é sempre o mesmo, exista a conta ou não. */
   forgotPassword(body: EsqueciSenhaRequest): Promise<ApiResult<void>>;
   /** POST /auth/senha/redefinir (RF-002): só é sucesso com 204; 400 vira `link-invalido`. */
@@ -163,6 +167,17 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
       acceptedCall('/auth/senha/esqueci', { method: 'POST', body: JSON.stringify(body) }),
     resetPassword: (body) =>
       noContentCall('/auth/senha/redefinir', { method: 'POST', body: JSON.stringify(body) }),
+    async exportData() {
+      const res = await call('/conta/exportar', { method: 'GET' });
+      if (!res) return { ok: false, kind: 'rede' };
+      if (!res.ok) return readFailure(res);
+      try {
+        const parsed = exportacaoDadosSchema.safeParse(await res.json());
+        return parsed.success ? { ok: true, data: parsed.data } : { ok: false, kind: 'contrato' };
+      } catch {
+        return { ok: false, kind: 'contrato' };
+      }
+    },
     deleteAccount: () =>
       noContentCall('/conta', {
         method: 'DELETE',

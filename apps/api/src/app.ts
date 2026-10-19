@@ -149,13 +149,23 @@ export function buildApp(options: AppOptions): FastifyInstance {
     webOrigin: options.corsOrigins[0] ?? 'http://localhost:3000',
   });
 
-  registerContaRoutes(app, { config, accounts, fazendas, sessions, hasher, clock });
-  registerFazendaRoutes(app, { fazendas });
-  registerDadosRoutes(app, {
-    lotes: createLoteRepository(prisma),
-    cenarios: createCenarioRepository(prisma),
-    recria: createRecriaRepository(prisma),
+  const lotes = createLoteRepository(prisma);
+  const cenarios = createCenarioRepository(prisma);
+  const recria = createRecriaRepository(prisma);
+
+  registerContaRoutes(app, {
+    config,
+    accounts,
+    fazendas,
+    lotes,
+    cenarios,
+    recria,
+    sessions,
+    hasher,
+    clock,
   });
+  registerFazendaRoutes(app, { fazendas });
+  registerDadosRoutes(app, { lotes, cenarios, recria });
 
   return app;
 }

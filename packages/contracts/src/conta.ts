@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { emailSchema, loginPasswordSchema, newPasswordSchema } from './auth';
-import { baseVersionSchema } from './dados';
+import { baseVersionSchema, cenarioSchema, loteSchema, recriaEntradaSchema } from './dados';
 import { decimalStringSchema } from './decimal';
 
 // E3 / T-18 (RF-004, RF-005, RF-007, RF-011): API da Conta. Um schema para API e telas.
@@ -52,3 +52,33 @@ export const contaDeleteSchema = z.strictObject({
   confirmacao: z.literal('deletar', { error: 'Digite "deletar" para confirmar.' }),
 });
 export type ContaDelete = z.infer<typeof contaDeleteSchema>;
+
+// RNF-009: exportação dos dados do titular (GET /conta/exportar). O arquivo nunca leva hash de
+// senha, token de sessão nem segredo: só o que o próprio titular cadastrou.
+
+export const EXPORTACAO_VERSAO_DO_FORMATO = 1;
+
+export const exportacaoDadosSchema = z.object({
+  versaoDoFormato: z.literal(EXPORTACAO_VERSAO_DO_FORMATO),
+  geradoEm: z.iso.datetime(),
+  /** Explica o recorte do arquivo (só registros não excluídos). */
+  observacao: z.string(),
+  perfil: z.object({
+    id: z.uuid(),
+    email: z.string(),
+    nome: z.string().nullable(),
+    criadoEm: z.iso.datetime(),
+    temSenha: z.boolean(),
+    googleVinculado: z.boolean(),
+  }),
+  fazenda: z.object({
+    id: z.uuid(),
+    nome: z.string().nullable(),
+    areaHa: z.string().nullable(),
+    criadoEm: z.iso.datetime(),
+  }),
+  lotes: z.array(loteSchema),
+  cenarios: z.array(cenarioSchema),
+  recriaEntrada: recriaEntradaSchema.nullable(),
+});
+export type ExportacaoDados = z.infer<typeof exportacaoDadosSchema>;

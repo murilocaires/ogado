@@ -32,6 +32,8 @@ export interface AppConfig {
     resetIp: RateLimitRule;
     /** Entrada com Google (início e retorno): por IP. */
     googleIp: RateLimitRule;
+    /** Exportação dos dados do titular (RNF-009): por usuário. */
+    exportUser: RateLimitRule;
   };
   /** IPs/CIDRs do proxy reverso confiável (para ler o IP real); vazio = não confia em ninguém. */
   trustProxy: string[];
@@ -66,6 +68,7 @@ export const defaultConfig: AppConfig = {
     forgotEmail: { max: 3, windowMs: 60 * 60_000 },
     resetIp: { max: 20, windowMs: 60 * 60_000 },
     googleIp: { max: 60, windowMs: 60 * 60_000 },
+    exportUser: { max: 10, windowMs: 60 * 60_000 },
   },
   trustProxy: [],
 };
@@ -113,6 +116,7 @@ export function configFromEnv(env: Env): AppConfig {
       forgotEmail: { max: env.RATE_LIMIT_FORGOT_EMAIL_PER_HOUR, windowMs: 60 * 60_000 },
       resetIp: { max: env.RATE_LIMIT_RESET_IP_PER_HOUR, windowMs: 60 * 60_000 },
       googleIp: { max: env.RATE_LIMIT_GOOGLE_IP_PER_HOUR, windowMs: 60 * 60_000 },
+      exportUser: { max: env.RATE_LIMIT_EXPORT_USER_PER_HOUR, windowMs: 60 * 60_000 },
     },
     trustProxy: env.TRUST_PROXY,
     ...(env.PROXY_SECRET ? { proxySecret: env.PROXY_SECRET } : {}),

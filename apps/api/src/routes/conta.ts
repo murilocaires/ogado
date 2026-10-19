@@ -2,6 +2,8 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import {
   contaDeleteSchema,
+  EXPORTACAO_VERSAO_DO_FORMATO,
+  exportacaoDadosSchema,
   fazendaPatchSchema,
   perfilRequestSchema,
   senhaRequestSchema,
@@ -11,16 +13,22 @@ import type { AppConfig } from '../config';
 import { AppError, genericConflict, notFound, versionConflict } from '../http-errors';
 import type { PasswordHasher } from '../password';
 import { EmailTakenError, type AccountRepository } from '../repositories/account-repository';
+import type { CenarioRepository } from '../repositories/cenario-repository';
 import type { FazendaRepository } from '../repositories/fazenda-repository';
+import type { LoteRepository } from '../repositories/lote-repository';
+import type { RecriaRepository } from '../repositories/recria-repository';
 import { clearSessionCookie, sessionCookieName } from '../session/cookie';
 import type { SessionService } from '../session/session-service';
 import { requireTenant } from '../tenant';
-import { toFazendaDto } from './dto';
+import { toCenarioDto, toFazendaDto, toLoteDto, toRecriaEntradaDto } from './dto';
 
 export interface ContaRoutesDeps {
   config: AppConfig;
   accounts: AccountRepository;
   fazendas: FazendaRepository;
+  lotes: LoteRepository;
+  cenarios: CenarioRepository;
+  recria: RecriaRepository;
   sessions: SessionService;
   hasher: PasswordHasher;
   clock: () => Date;
@@ -102,6 +110,57 @@ export function registerContaRoutes(app: FastifyInstance, deps: ContaRoutesDeps)
       if (result.status === 'conflito') throw versionConflict(toFazendaDto(result.atual));
       if (result.status === 'nao_encontrado') throw notFound();
       return { usuario: sessionUser, fazenda: toFazendaDto(result.record) };
+    },
+  );
+
+  // RNF-009: cópia dos dados do titular. Só leitura, só do tenant da sessão, sem segredos.
+  typed.get(
+    '/conta/exportar',
+    { schema: { response: { 200: exportacaoDadosSchema } } },
+    async (request, reply) => {
+      const tenant = requireTenant(request);
+      await app.limiters.exportUser(request, tenant.usuarioId);
+
+      const titular = await deps.accounts.loadTitularParaExportar(tenant);
+      if (!titular) throw notFound();
+      const [lotes, cenarios, recria] = await Promise.all([
+        deps.lotes.list(tenant, { incluirExcluidos: false }),
+        deps.cenarios.list(tenant, false),
+        deps.recria.get(tenant),
+      ]);
+      const agora = deps.clock();
+      const { usuario, fazenda } = titular;
+
+      return reply
+        .header(
+          'content-disposition',
+          `attachment; filename="ogado-meus-dados-${agora.toISOString().slice(0, 10)}.json"`,
+        )
+        .header('cache-control', 'no-store')
+        .send({
+          versaoDoFormato: EXPORTACAO_VERSAO_DO_FORMATO,
+          geradoEm: agora.toISOString(),
+          observacao:
+            'Este arquivo traz apenas os registros não excluídos. Registros excluídos, senhas, ' +
+            'sessões e outros dados de segurança não fazem parte da exportação.',
+          perfil: {
+            id: usuario.id,
+            email: usuario.email,
+            nome: usuario.nome,
+            criadoEm: usuario.criadoEm.toISOString(),
+            temSenha: usuario.senhaHash !== null,
+            googleVinculado: usuario.identidadeGoogle !== null,
+          },
+          fazenda: {
+            id: fazenda.id,
+            nome: fazenda.nome,
+            areaHa: fazenda.areaHa ? fazenda.areaHa.toFixed() : null,
+            criadoEm: fazenda.createdAt.toISOString(),
+          },
+          lotes: lotes.map(toLoteDto),
+          cenarios: cenarios.map(toCenarioDto),
+          recriaEntrada: recria && !recria.deletedAt ? toRecriaEntradaDto(recria) : null,
+        });
     },
   );
 

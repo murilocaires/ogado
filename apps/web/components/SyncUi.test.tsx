@@ -70,6 +70,7 @@ function montar(srv: ReturnType<typeof criarServidor>, extra?: Partial<DadosClie
       updatePerfil: vi.fn(),
       changePassword: vi.fn(),
       unlinkGoogle: vi.fn(),
+      exportData: vi.fn(),
       updateFazenda: vi.fn(),
       deleteAccount: vi.fn(),
       forgotPassword: vi.fn(),
