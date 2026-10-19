@@ -23,9 +23,9 @@ describe('RF-030/RF-031 simulador de recria', () => {
     const ouro = formatarBRL(calcularRecria(ENTRADA_PADRAO).faturamentoLiquido);
     expect(ouro).toBe('R$ 102.408,05');
     expect(within(hero()).getByText('R$ 102.408,05')).toHaveClass('big');
-    expect(screen.getByLabelText('Consumo (% do peso vivo)')).toHaveValue('0,3');
-    expect(screen.getByLabelText('Rendimento de carcaça')).toHaveValue('52');
-    expect(screen.getByLabelText('Imposto sobre a venda')).toHaveValue('1,5');
+    expect(screen.getByLabelText('Proteinado')).toHaveValue('0,3');
+    expect(screen.getByLabelText('Se')).toHaveValue('52');
+    expect(screen.getAllByLabelText('Imposto').find((e) => e.tagName === 'INPUT')).toHaveValue('1,5');
   });
 
   it('RF-031 mostra por mês, por hectare, total em caixa, custos, números do lote e alerta de cabeças', () => {
@@ -46,7 +46,7 @@ describe('RF-030/RF-031 simulador de recria', () => {
   it('RF-030 recalcula ao digitar', async () => {
     const user = userEvent.setup();
     renderComPlanilha();
-    const preco = screen.getByLabelText('Preço de venda');
+    const preco = screen.getByLabelText('R$/cab (venda)');
     await user.clear(preco);
     await user.type(preco, '330');
     const esperado = calcularRecria({ ...ENTRADA_PADRAO, precoVenda: '330' }).faturamentoLiquido;
@@ -56,11 +56,11 @@ describe('RF-030/RF-031 simulador de recria', () => {
   it('RN-022 campo vazio mostra "—" e a dica de preenchimento, sem quebrar', async () => {
     const user = userEvent.setup();
     renderComPlanilha();
-    await user.clear(screen.getByLabelText('Investimento'));
+    await user.clear(screen.getByLabelText('Investimento (compra)'));
     expect(within(hero()).getAllByText('—').length).toBeGreaterThanOrEqual(1);
     expect(within(hero()).queryByText('R$ 102.408,05')).not.toBeInTheDocument();
     expect(screen.getAllByText('Preencha este campo para calcular.')).toHaveLength(1);
-    expect(screen.getByLabelText('Investimento')).toHaveAccessibleDescription(
+    expect(screen.getByLabelText('Investimento (compra)')).toHaveAccessibleDescription(
       'Preencha este campo para calcular.',
     );
   });
@@ -68,7 +68,7 @@ describe('RF-030/RF-031 simulador de recria', () => {
   it('RNF-007 "1.5" em dias é inválido, com dica de vírgula, e o resultado vira "—"', async () => {
     const user = userEvent.setup();
     renderComPlanilha();
-    const dias = screen.getByLabelText('Dias de recria');
+    const dias = screen.getByLabelText('Dias de Recria');
     await user.clear(dias);
     await user.type(dias, '1.5');
     expect(screen.getByText(/Use vírgula para os decimais/)).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe('RF-030/RF-031 simulador de recria', () => {
     await user.click(screen.getByRole('button', { name: 'Limpar campos' }));
     const alerta = screen.getByRole('alertdialog', { name: 'Limpar todos os campos?' });
     await user.click(within(alerta).getByRole('button', { name: 'Limpar' }));
-    expect(screen.getByLabelText('Investimento')).toHaveValue('');
+    expect(screen.getByLabelText('Investimento (compra)')).toHaveValue('');
     expect(within(hero()).queryByText('R$ 102.408,05')).not.toBeInTheDocument();
     expect(within(hero()).getAllByText('—').length).toBeGreaterThanOrEqual(1);
   });
@@ -99,22 +99,25 @@ describe('ADR-0014 simulador sem padrões', () => {
   it('RF-030 o simulador novo abre com todos os campos vazios e os resultados em "—"', () => {
     renderComApp(<RecriaScreen />);
     const campos = [
-      'Área pastável',
-      'Dias de recria',
-      'Investimento',
-      'R$ por cabeça (compra)',
+      'Área Pastável',
+      'Dias de Recria',
+      'Investimento (compra)',
+      'R$/cab (compra)',
       'Peso inicial',
-      'Peso final',
-      'Preço de venda',
-      'Consumo (% do peso vivo)',
+      'Peso Final',
+      'R$/cab (venda)',
       'Proteinado',
-      'Rendimento de carcaça',
-      'Imposto sobre a venda',
+      'R$/Kg',
+      'Se',
+      'Imposto',
       'Sanidade',
       'Funcionário',
-      'Frete',
+      'Transporte (frete)',
     ];
-    for (const rotulo of campos) expect(screen.getByLabelText(rotulo)).toHaveValue('');
+    for (const rotulo of campos) {
+      const entrada = screen.getAllByLabelText(rotulo).find((e) => e.tagName === 'INPUT');
+      expect(entrada).toHaveValue('');
+    }
     expect(hero().querySelector('.big')).toHaveTextContent('—');
     expect(within(hero()).getByText(/faltam 14/)).toBeInTheDocument();
     const lote = screen.getByRole('region', { name: 'Dados do lote' });
@@ -133,7 +136,7 @@ describe('ADR-0014 simulador sem padrões', () => {
   it('RN-009 a lotação inicial usa a área pastável informada (50 ha, não 80)', async () => {
     const user = userEvent.setup();
     renderComPlanilha();
-    const area = screen.getByLabelText('Área pastável');
+    const area = screen.getByLabelText('Área Pastável');
     await user.clear(area);
     await user.type(area, '50');
     const r = calcularRecria({ ...ENTRADA_PADRAO, area: '50' }, { lotacaoInicial: 'areaPastavel', faturamentoBruto: 'pesoVivo' });
