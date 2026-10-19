@@ -25,6 +25,7 @@ Escolha o modelo pela tarefa: `.claude/config/model-routing.json` (`node scripts
 - Campo branco = entrada; menta + cadeado = calculado.
 - Git é feito pelo agente, por autorização do humano (2026-10-18): branch por entrega, commit, push, PR e merge. Nunca `reset --hard` nem `clean -f` (hook bloqueia).
 - Pergunte ao humano quando for regra de negócio; não invente fórmula.
+- Mudou tratamento de dados pessoais (novo dado, provedor, cookie/armazenamento, retenção, finalidade)? Atualize `docs/legal/*`, suba `TERMOS_VERSAO` (e o manifesto de hash) em `packages/contracts/src/termos.ts` e cite no PR. O teste de hash falha se esquecer.
 
 ## Agent skills
 ### Issue tracker

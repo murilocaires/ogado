@@ -123,3 +123,27 @@ test.describe('aceite no cadastro e gate', () => {
     await expect(titulo).toHaveCount(0);
   });
 });
+
+test('RNF-009 Conta: "Enviar meus dados por e-mail" pede o envio e avisa', async ({ page }) => {
+  const email = uniqueEmail('enviar');
+  await page.goto('/cadastrar');
+  await page.getByLabel('E-mail', { exact: true }).fill(email);
+  await page.getByLabel('Senha', { exact: true }).fill(SENHA);
+  await page.getByLabel('Confirmar senha', { exact: true }).fill(SENHA);
+  await page.getByLabel(/Li e aceito/).check();
+  await page.getByRole('button', { name: 'Criar conta' }).click();
+  await expect(page).toHaveURL(/\/painel$/);
+  await page
+    .getByRole('navigation', { name: 'Principal' })
+    .first()
+    .getByRole('link', { name: 'Conta' })
+    .click();
+
+  const resposta = page.waitForResponse((r) => r.url().endsWith('/api/conta/exportar/enviar'));
+  await page
+    .getByRole('region', { name: 'Meus dados' })
+    .getByRole('button', { name: 'Enviar meus dados por e-mail' })
+    .click();
+  expect((await resposta).status()).toBe(202);
+  await expect(page.getByText(/Pedido enviado/)).toContainText(email);
+});
