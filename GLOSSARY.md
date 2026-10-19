@@ -11,7 +11,7 @@ Use estes termos no código, testes, tickets e UI. Código em inglês técnico; 
 | **Arroba (@)** | Compra: 30 kg de peso vivo. Venda: o lote escolhe a base, peso vivo (30 kg, padrão) ou carcaça (15 kg) (ADR-0012). | arroba "genérica" sem dizer qual |
 | **Peso vivo (PV)** | Peso do animal na balança. | — |
 | **Rendimento de carcaça** | % do PV que vira carcaça (padrão 52%). | — |
-| **Desconto de venda** | Percentual do peso (padrão 10%) deduzido por lote antes de converter em @; automático para categorias femininas (ADR-0012). Na planilha original: 10 kg por cabeça. | quebra (ambíguo) |
+| **Desconto de venda** | Quilos por cabeça (padrão 10 kg/cab.) deduzidos do peso do lote antes de converter em @; automático para categorias femininas, editável por lote (ADR-0013; não é percentual). | quebra (ambíguo) |
 | **Base da @ (venda)** | `vivo` ou `carcaca`: define quantos kg valem 1 @ no lote de venda (RN-024). | tipo de arroba |
 | **Negócios** | Tela única de compras e vendas (abas Todas/Compras/Vendas). | Compra e Venda (nome da planilha) |
 | **Conta** | Tela de perfil, senha, Google, fazenda e apagar conta. Não confundir com Fazenda (tenant). | Configurações |

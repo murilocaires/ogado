@@ -84,7 +84,7 @@ export function createLoteRepository(prisma: PrismaClient) {
               preco: input.preco,
               base: input.base,
               aplicarDesconto: input.aplicarDesconto,
-              desconto: input.desconto,
+              descontoKg: input.descontoKg,
               createdAt: now,
               updatedAt: now,
             },

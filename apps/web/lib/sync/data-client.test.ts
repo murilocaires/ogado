@@ -21,7 +21,7 @@ const CORPO_LOTE = {
   preco: '0',
   base: 'vivo',
   aplicarDesconto: false,
-  desconto: null,
+  descontoKg: null,
 };
 
 describe('data-client: falhas', () => {

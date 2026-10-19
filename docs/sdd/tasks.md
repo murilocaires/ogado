@@ -24,7 +24,7 @@ Formato: `T-nn · título · bloqueado por · requisitos`
 | T-18 | Conta: perfil, senha, Google (vincular/desvincular), fazenda, sair e apagar conta (ADR-0012) | T-04, T-05 | RF-004, RF-005, RF-006, RF-007, RF-011 |
 | T-19 | Cenários: busca, ordenação, lista/grade, abrir no simulador, ★ e comparação de 2–3 cenários (ADR-0012) | T-08 | RF-033, RF-034, RF-035, RF-036 |
 
-**Revisão pós-protótipo (ADR-0012, 2026-10-18; proposta, aguardando aprovação):** T-02 e T-17 passam a RN-024/025 (base da @ e desconto %); T-05 depende de Q-A, Q-C e Q-D (parâmetro `descontoVendaPct`, primeiros passos, tela de parâmetros); T-06/T-17 entregam a tela única **Negócios** (RF-024…RF-026); T-07 ganha seletor de lotação na simulação, alertas RN-026 e RF-031 completo; T-08 salva nome livre + data (RF-032); T-09 segue RF-040 revisado; T-10 inclui ajuda contextual RF-052 e navegação RF-053.
+**Revisão pós-protótipo (ADR-0012, 2026-10-18; proposta, aguardando aprovação):** T-02 e T-17 passam a RN-024/025 (base da @ e desconto, que o ADR-0013 fixou em 10 kg/cab., não %); T-05 depende de Q-A, Q-C e Q-D (parâmetro `descontoVendaKgCab` conforme ADR-0013, primeiros passos, tela de parâmetros); T-06/T-17 entregam a tela única **Negócios** (RF-024…RF-026); T-07 ganha seletor de lotação na simulação, alertas RN-026 e RF-031 completo; T-08 salva nome livre + data (RF-032); T-09 segue RF-040 revisado; T-10 inclui ajuda contextual RF-052 e navegação RF-053.
 
 Arquivos de tickets: `.scratch/web-v1/issues/NN-*.md`, onde NN = número do T-NN.
 

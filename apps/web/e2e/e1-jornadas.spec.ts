@@ -117,7 +117,7 @@ test('RF-025/RF-026 modal de venda: desconto automático para fêmeas e pré-vis
   await modal.getByLabel('Peso total do lote', { exact: true }).fill('3000');
   await modal.getByLabel('Preço da arroba', { exact: true }).fill('300');
   await expect(modal.getByRole('group', { name: 'Pré-visualização do lote' })).toContainText(
-    'R$ 27.000,00',
+    'R$ 29.000,00',
   );
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: `${OUT}/e1-modal-venda-1440.png` });

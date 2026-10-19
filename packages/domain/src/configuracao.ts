@@ -21,8 +21,8 @@ export interface ParametrosFazenda<T = string> {
   arrobaVivoKg: T;
   /** kg de carcaça por @: @ na venda e @ de carcaça da recria. */
   arrobaCarcacaKg: T;
-  /** Desconto padrão da venda (fração: 0,1 = 10%) (RN-025). */
-  descontoVendaPct: T;
+  /** Desconto padrão da venda, em kg por cabeça (RN-025, ADR-0013). */
+  descontoVendaKgCab: T;
   /** kg por unidade animal (UA). */
   uaKg: T;
   /** Valor inicial do simulador: rendimento de carcaça (fração). */
@@ -45,7 +45,7 @@ export interface ConfiguracaoFazenda {
 export const PARAMETROS_FAZENDA_PADRAO: Readonly<ParametrosFazenda> = {
   arrobaVivoKg: PARAMETROS_PADRAO.arrobaVivoKg,
   arrobaCarcacaKg: PARAMETROS_PADRAO.arrobaCarcacaKg,
-  descontoVendaPct: PARAMETROS_COMPRA_VENDA.descontoVendaPct.toString(),
+  descontoVendaKgCab: PARAMETROS_COMPRA_VENDA.descontoVendaKgCab.toString(),
   uaKg: PARAMETROS_PADRAO.uaKg,
   rendCarcaca: ENTRADA_PADRAO.rendCarcaca,
   imposto: ENTRADA_PADRAO.imposto,
@@ -88,7 +88,7 @@ export function traduzirConfiguracao(config: ConfiguracaoFazenda): ArgumentosDeC
     parametrosCompraVenda: {
       arrobaVivoKg: p.arrobaVivoKg,
       arrobaCarcacaKg: p.arrobaCarcacaKg,
-      descontoVendaPct: p.descontoVendaPct,
+      descontoVendaKgCab: p.descontoVendaKgCab,
     },
     entradaInicialRecria: {
       rendCarcaca: p.rendCarcaca,

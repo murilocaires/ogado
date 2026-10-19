@@ -19,14 +19,14 @@ const tabela = {
   ],
   vendido: [
     'Vendido',
-    'Soma do valor de todos os lotes de venda, já considerando o desconto de peso quando houver.',
-    'Cada lote = (kg × (1 − desconto%) ÷ kg por @) × preço da arroba',
+    'Soma do valor de todos os lotes de venda, já considerando o desconto de peso (kg por cabeça) quando houver.',
+    'Cada lote = ((kg − cabeças × desconto kg/cab.) ÷ kg por @) × preço da arroba',
   ],
   arrC: ['Arrobas (compra)', 'Peso total do lote convertido em arrobas de peso vivo.', '@ = kg ÷ 30'],
   arrV: [
     'Arrobas (venda)',
-    'Peso do lote já sem o desconto (se houver), dividido pelos kg de uma arroba: 30 kg no peso vivo ou 15 kg na carcaça.',
-    '@ = kg × (1 − desconto%) ÷ (30 ou 15)',
+    'Peso do lote já sem o desconto por cabeça (se houver), dividido pelos kg de uma arroba: 30 kg no peso vivo ou 15 kg na carcaça.',
+    '@ = (kg − cabeças × desconto) ÷ (30 ou 15)',
   ],
   totalLote: [
     'Total do lote',

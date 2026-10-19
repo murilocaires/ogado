@@ -35,8 +35,8 @@ export interface LoteEntity extends EntityMeta {
   base?: BaseArroba;
   /** Só venda (RN-025). */
   aplicarDesconto?: boolean;
-  /** Só venda: percentual na tela (`10` = 10%), texto pt-BR. */
-  descontoPct?: string;
+  /** Só venda: kg descontados por cabeça (`10` = 10 kg/cab.), texto pt-BR (ADR-0013). */
+  descontoKg?: string;
 }
 
 export type LoteSalvar = Omit<LoteEntity, 'id' | 'version' | 'updatedAt' | 'deletedAt'> & {

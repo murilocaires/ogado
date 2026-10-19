@@ -2,7 +2,7 @@
 
 **Status:** aprovado pelo humano em 2026-10-18 (colunas tipadas, só PATCH com versão otimista, 409 com a fazenda atual, DELETE sem corpo com `?version=N` no T-06; decisões Q1–Q4 abaixo) · **Data:** 2026-10-18
 
-> **Atualização (ADR-0012, proposta):** `descontoVendaKgCab` passa a `descontoVendaPct` (RN-025) e primeiros passos / tela de parâmetros dependem das decisões Q-C e Q-D. Ver ADR-0012.
+> **Atualização (ADR-0013):** o parâmetro continua `descontoVendaKgCab` (10 kg/cab.); a troca por `descontoVendaPct` do ADR-0012 foi revertida. Histórico (ADR-0012): `descontoVendaKgCab` passa a `descontoVendaPct` (RN-025) e primeiros passos / tela de parâmetros dependem das decisões Q-C e Q-D. Ver ADR-0012.
 **Requisitos:** RF-003, RF-011, RN-021, RN-023, RN-009, RN-017, RNF-001, RNF-003, RNF-004, RNF-007 · **Relacionados:** ADR-0003, ADR-0004, ADR-0007, ADR-0008, ADR-0010
 
 ## Contexto

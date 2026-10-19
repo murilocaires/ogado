@@ -68,16 +68,18 @@ function plain(v) {
 }
 
 // Funções de packages/domain validadas contra o mesmo golden (além do oráculo calc.js).
-// ADR-0012: a VENDA do domínio segue a regra revisada do protótipo (base vivo/carcaça + desconto %),
-// que difere da planilha ((kg - qtd*10) / 15). Por isso só as COMPRAS (e seus totais) do domínio são
-// comparadas ao golden; a venda tem ouro próprio (origem 'nao-planilha') em compra-venda.test.ts.
-// O oráculo calc.js continua comparado por inteiro (é a planilha, referência histórica).
-const CAMPOS_COMPRA = ['compras', 'totalCompras', 'cabCompra', 'arrCompra'];
-const soCompras = (esperado) =>
-  Object.fromEntries(CAMPOS_COMPRA.filter((k) => k in esperado).map((k) => [k, esperado[k]]));
+// ADR-0013: a venda da planilha = base carcaça (15 kg/@) + desconto 10 kg/cab. (F11). O golden não
+// traz o campo base; o runner o injeta como 'carcaca' nas vendas para comparar o domínio por inteiro.
+const comBaseCarcaca = (entrada) => ({
+  ...entrada,
+  vendas: entrada.vendas.map((v) => ({ ...v, base: 'carcaca' })),
+});
+const CAMPOS = ['compras', 'vendas', 'totalCompras', 'totalVendas', 'saldo', 'cabCompra', 'cabVenda', 'arrCompra', 'arrVenda'];
+const soResultado = (esperado) =>
+  Object.fromEntries(CAMPOS.filter((k) => k in esperado).map((k) => [k, esperado[k]]));
 const domainRunners = {
-  compraVenda: (entrada) => plain(domainCV.calcularCompraVenda(entrada)),
-  compraVendaIndividual: (entrada) => plain(domainCV.calcularCompraVenda(entrada)),
+  compraVenda: (entrada) => plain(domainCV.calcularCompraVenda(comBaseCarcaca(entrada))),
+  compraVendaIndividual: (entrada) => plain(domainCV.calcularCompraVenda(comBaseCarcaca(entrada))),
 };
 
 for (const [name, run] of Object.entries(runners)) {
@@ -88,7 +90,7 @@ for (const [name, run] of Object.entries(runners)) {
   }
   compare(name, run(caso.entrada), caso.esperado);
   if (domainRunners[name])
-    compare(`domain.${name}`, domainRunners[name](caso.entrada), soCompras(caso.esperado));
+    compare(`domain.${name}`, domainRunners[name](caso.entrada), soResultado(caso.esperado));
 }
 // --- T-03: recria de packages/domain contra o golden (variantes padrão, ADR-0008) ---
 // Carrega recria.ts direto via Node strip-types (só depende de decimal.js).

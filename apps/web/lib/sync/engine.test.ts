@@ -26,20 +26,20 @@ describe('mapeadores de lote', () => {
     expect(volta).toMatchObject({ qtd: '10', peso: '2500,5', preco: '300,5' });
   });
 
-  it('desconto da venda: % digitado vira fração e volta', () => {
+  it('desconto da venda: kg por cabeça digitado vai ao contrato e volta', () => {
     const venda = {
       ...COMPRA,
       tipo: 'venda' as const,
       base: 'carcaca' as const,
       aplicarDesconto: true,
-      descontoPct: '12,5',
+      descontoKg: '12,5',
       id: '00000000-0000-4000-8000-000000000002',
       version: 1,
       updatedAt: AGORA,
       deletedAt: null,
     };
     const criar = loteParaCriar(venda);
-    expect(criar.desconto).toBe('0.125');
+    expect(criar.descontoKg).toBe('12.5');
     const volta = loteDeDto({
       ...criar,
       numero: 1,
@@ -48,7 +48,7 @@ describe('mapeadores de lote', () => {
       updatedAt: AGORA,
       deletedAt: null,
     });
-    expect(volta.descontoPct).toBe('12,5');
+    expect(volta.descontoKg).toBe('12,5');
     expect(volta.base).toBe('carcaca');
   });
 });

@@ -41,7 +41,7 @@ function lote(numero: number, data: string, tipo: 'compra' | 'venda' = 'compra')
     peso: '3000',
     pesos: [],
     preco: '300',
-    ...(tipo === 'venda' ? { base: 'vivo' as const, aplicarDesconto: false, descontoPct: '' } : {}),
+    ...(tipo === 'venda' ? { base: 'vivo' as const, aplicarDesconto: false, descontoKg: '' } : {}),
   };
 }
 

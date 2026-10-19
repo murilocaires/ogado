@@ -1,7 +1,7 @@
 // Rascunho do modal de lote: retém o que foi digitado em cada modo de peso (RN-027) e valida.
 import { categoriaFeminina, type LinhaCalculada, type LoteInput, type ModoPeso } from '@ogado/domain';
 import { hojeISO, lerCampo, valorCampo } from './format';
-import { fracaoDePercentual, pesosValidos, separarPesos } from './negocios';
+import { pesosValidos, separarPesos } from './negocios';
 import type { BaseArroba, LoteEntity, LoteSalvar, LoteTipo } from './repo/types';
 
 export interface LoteDraft {
@@ -19,14 +19,17 @@ export interface LoteDraft {
   preco: string;
   base: BaseArroba;
   aplicarDesconto: boolean;
-  descontoPct: string;
+  /** kg descontados por cabeça (texto pt-BR). */
+  descontoKg: string;
   /** Depois que o usuário mexe no desconto, a categoria deixa de ligá-lo sozinha. */
   descontoTocado: boolean;
 }
 
 const CATEGORIA_PADRAO: Record<LoteTipo, string> = { compra: 'BEZERROS', venda: 'BOIS' };
 export const CATEGORIAS_SUGERIDAS = ['BEZERROS', 'BEZERRAS', 'GARROTES', 'NOVILHAS', 'BOIS', 'VACAS'];
-export const DESCONTO_PADRAO_PCT = '10';
+export const DESCONTO_PADRAO_KG = '10';
+/** Capacidade da coluna do servidor (Decimal 8,3): 5 inteiros. */
+const DESCONTO_MAX_KG = 99999.999;
 
 export function novoRascunho(tipo: LoteTipo, numero: number, hoje = hojeISO()): LoteDraft {
   const categoria = CATEGORIA_PADRAO[tipo];
@@ -43,7 +46,7 @@ export function novoRascunho(tipo: LoteTipo, numero: number, hoje = hojeISO()): 
     preco: '',
     base: 'vivo',
     aplicarDesconto: tipo === 'venda' && categoriaFeminina(categoria),
-    descontoPct: DESCONTO_PADRAO_PCT,
+    descontoKg: DESCONTO_PADRAO_KG,
     descontoTocado: false,
   };
 }
@@ -63,7 +66,7 @@ export function rascunhoDeLote(lote: LoteEntity): LoteDraft {
     preco: lote.preco,
     base: lote.base ?? 'vivo',
     aplicarDesconto: lote.aplicarDesconto ?? false,
-    descontoPct: lote.descontoPct || DESCONTO_PADRAO_PCT,
+    descontoKg: lote.descontoKg || DESCONTO_PADRAO_KG,
     descontoTocado: true,
   };
 }
@@ -127,11 +130,11 @@ export function errosDoRascunho(d: LoteDraft): CampoErro[] {
   }
   checar('preco', d.preco);
   if (d.tipo === 'venda' && d.aplicarDesconto) {
-    const l = lerCampo(d.descontoPct);
+    const l = lerCampo(d.descontoKg);
     if (l.tipo !== 'ok') {
-      erros.push({ campo: 'desconto', mensagem: 'Informe o desconto em % (ex.: 10).' });
-    } else if (l.valor.isNegative() || l.valor.gt(100)) {
-      erros.push({ campo: 'desconto', mensagem: 'O desconto deve ficar entre 0 e 100%.' });
+      erros.push({ campo: 'desconto', mensagem: 'Informe o desconto em kg por cabeça (ex.: 10).' });
+    } else if (l.valor.isNegative() || l.valor.gt(DESCONTO_MAX_KG)) {
+      erros.push({ campo: 'desconto', mensagem: 'O desconto deve ficar entre 0 e 99.999 kg por cabeça.' });
     }
   }
   return erros;
@@ -151,7 +154,7 @@ export function rascunhoParaDominio(d: LoteDraft): LoteInput {
     ...base,
     base: d.base,
     aplicarDesconto: d.aplicarDesconto,
-    desconto: d.aplicarDesconto ? fracaoDePercentual(d.descontoPct) : null,
+    desconto: d.aplicarDesconto ? valorCampo(d.descontoKg) : null,
   };
 }
 
@@ -159,7 +162,7 @@ export function rascunhoParaDominio(d: LoteDraft): LoteInput {
 export function previaPronta(d: LoteDraft, linha: LinhaCalculada): { peso: boolean; total: boolean } {
   const peso = linha.kg.gt(0) && linha.qtd.gt(0);
   const precoOk = valorCampo(d.preco)?.gt(0) ?? false;
-  const descontoOk = d.tipo === 'compra' || !d.aplicarDesconto || fracaoDePercentual(d.descontoPct) !== null;
+  const descontoOk = d.tipo === 'compra' || !d.aplicarDesconto || valorCampo(d.descontoKg) !== null;
   return { peso: peso && descontoOk, total: peso && precoOk && descontoOk };
 }
 
@@ -194,7 +197,7 @@ export function validarRascunho(d: LoteDraft): ResultadoValidacao {
       ? {
           base: d.base,
           aplicarDesconto: d.aplicarDesconto,
-          descontoPct: d.aplicarDesconto ? d.descontoPct.trim() : '',
+          descontoKg: d.aplicarDesconto ? d.descontoKg.trim() : '',
         }
       : {}),
   };

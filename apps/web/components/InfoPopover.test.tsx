@@ -63,10 +63,10 @@ describe('RF-052 ajuda contextual', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('RN-025 o texto de venda explica a base e o desconto em %', () => {
+  it('RN-025 o texto de venda explica a base e o desconto em kg por cabeça', () => {
     expect(INFO.vendido.formula).toBe(
-      'Cada lote = (kg × (1 − desconto%) ÷ kg por @) × preço da arroba',
+      'Cada lote = ((kg − cabeças × desconto kg/cab.) ÷ kg por @) × preço da arroba',
     );
-    expect(INFO.arrV.formula).toContain('desconto%');
+    expect(INFO.arrV.formula).toContain('cabeças × desconto');
   });
 });

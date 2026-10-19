@@ -39,7 +39,7 @@ export function toLoteDto(l: LoteRecord): LoteDto {
     preco: l.preco.toFixed(),
     base: l.base,
     aplicarDesconto: l.aplicarDesconto,
-    desconto: l.desconto ? l.desconto.toFixed() : null,
+    descontoKg: l.descontoKg ? l.descontoKg.toFixed() : null,
     version: l.version,
     createdAt: iso(l.createdAt),
     updatedAt: iso(l.updatedAt),

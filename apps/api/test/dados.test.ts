@@ -101,7 +101,7 @@ describe('lotes na nuvem (RF-020 compra, RF-021 venda)', () => {
       qtd: '100',
       base: 'vivo',
       aplicarDesconto: false,
-      desconto: null,
+      descontoKg: null,
       pesos: [],
       version: 1,
       deletedAt: null,
@@ -157,7 +157,7 @@ describe('lotes na nuvem (RF-020 compra, RF-021 venda)', () => {
     expect(c.numero).toBe(3);
   });
 
-  it('RF-021: lote de venda guarda base da @, desconto (fração) e pesos individuais', async () => {
+  it('RF-021: lote de venda guarda base da @, desconto (kg por cabeça) e pesos individuais', async () => {
     const cookie = await conta();
     const res = await send(
       app,
@@ -170,7 +170,7 @@ describe('lotes na nuvem (RF-020 compra, RF-021 venda)', () => {
         pesos: ['480.000', '510.5'],
         base: 'carcaca',
         aplicarDesconto: true,
-        desconto: '0.100000',
+        descontoKg: '10.000',
       }),
     );
     expect(res.statusCode).toBe(201);
@@ -178,8 +178,18 @@ describe('lotes na nuvem (RF-020 compra, RF-021 venda)', () => {
       pesos: ['480', '510.5'],
       base: 'carcaca',
       aplicarDesconto: true,
-      desconto: '0.1',
+      descontoKg: '10',
     });
+    const criado = loteSchema.parse(res.json());
+    const editado = await send(app, 'PATCH', `/lotes/${criado.id}`, cookie, {
+      version: 1,
+      descontoKg: '12.5',
+    });
+    expect(editado.statusCode).toBe(200);
+    expect(loteSchema.parse(editado.json()).descontoKg).toBe('12.5');
+    // campo legado (fração) não é mais aceito (ADR-0013)
+    const legado = await send(app, 'POST', '/lotes', cookie, novoLote({ desconto: '0.1' }));
+    expect(legado.statusCode).toBe(400);
   });
 
   it('RF-020: POST é idempotente pelo id do cliente (repetir = mesmo lote, sem duplicar)', async () => {
@@ -260,7 +270,7 @@ describe('lotes na nuvem (RF-020 compra, RF-021 venda)', () => {
     await rejeita(novoLote({ qtd: 100 }));
     await rejeita(novoLote({ preco: '300.001' }), 'casas_decimais');
     await rejeita(novoLote({ qtd: '1e3' }), 'formato');
-    await rejeita(novoLote({ desconto: '1.5', aplicarDesconto: true }), 'faixa');
+    await rejeita(novoLote({ descontoKg: '100000', aplicarDesconto: true }), 'faixa');
     await rejeita(novoLote({ data: '2026-02-31' }));
     await rejeita(novoLote({ categoria: '   ' }));
     await rejeita(novoLote({ tipo: 'recria' }));

@@ -274,15 +274,15 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
                     <input
                       id="d-pct"
                       inputMode="decimal"
-                      value={d.descontoPct}
+                      value={d.descontoKg}
                       disabled={!d.aplicarDesconto}
-                      aria-label="Percentual de desconto"
+                      aria-label="Desconto (kg por cabeça)"
                       aria-invalid={erroDe('desconto') ? true : undefined}
-                      onChange={(e) => atualizar({ descontoPct: e.target.value })}
+                      onChange={(e) => atualizar({ descontoKg: e.target.value })}
                     />
-                    %
+                    kg por cabeça
                   </span>
-                  <span className="hint">sobre o peso (fêmeas; desmarque para machos)</span>
+                  <span className="hint">descontados do peso (fêmeas; desmarque para machos)</span>
                 </div>
                 {erroDe('desconto') && (
                   <span className="err" role="alert">
@@ -316,7 +316,7 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
               valor={pronta.peso ? `${num(linha.arrobas, 2)} @` : '—'}
               pequeno={
                 pronta.peso
-                  ? linha.descontoPct.gt(0) && venda
+                  ? linha.kgDescontado.gt(0) && venda
                     ? `${num(linha.kgLiquido, 0)} kg líq.`
                     : `${num(linha.kg, 0)} kg`
                   : undefined

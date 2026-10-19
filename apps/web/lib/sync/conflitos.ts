@@ -74,8 +74,8 @@ function linhasDoLote(local: LoteEntity, servidor: LoteEntity): LinhaComparacao[
     pares.push(
       ['Base da arroba', (l) => (l.base === 'carcaca' ? 'Carcaça' : 'Peso vivo')],
       [
-        'Desconto (%)',
-        (l) => (l.aplicarDesconto ? valorOuTraco(l.descontoPct ?? '') : 'Sem desconto'),
+        'Desconto (kg/cab.)',
+        (l) => (l.aplicarDesconto ? valorOuTraco(l.descontoKg ?? '') : 'Sem desconto'),
       ],
     );
   }

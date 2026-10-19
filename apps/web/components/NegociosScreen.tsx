@@ -32,8 +32,10 @@ function descricaoItem(x: ItemNegocio): string {
   if (x.lote.modo === 'individual') partes.push('peso a peso');
   if (x.tipo === 'venda') {
     partes.push(x.lote.base === 'carcaca' ? 'carcaça' : 'peso vivo');
-    const pct = x.linha.descontoPct.times(100);
-    partes.push(pct.gt(0) ? `desc. ${num(pct, pct.isInteger() ? 0 : 1)}%` : 'sem desconto');
+    const kg = x.linha.descontoKgCab;
+    partes.push(
+      x.linha.kgDescontado.gt(0) ? `desc. ${num(kg, kg.isInteger() ? 0 : 1)} kg/cab.` : 'sem desconto',
+    );
   }
   return partes.join(' · ');
 }

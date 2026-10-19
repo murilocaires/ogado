@@ -38,11 +38,17 @@ describe('contratos de dados da nuvem', () => {
     expect(regras({ ...lote, peso: '1234567890.5' })).toContain('faixa');
   });
 
-  it('RF-021: desconto é fração entre 0 e 1', () => {
-    expect(loteCreateSchema.safeParse({ ...lote, desconto: '1' }).success).toBe(true);
-    expect(loteCreateSchema.safeParse({ ...lote, desconto: '0.000001' }).success).toBe(true);
-    expect(regras({ ...lote, desconto: '1.000001' })).toContain('faixa');
-    expect(regras({ ...lote, desconto: '0.0000001' })).toContain('casas_decimais');
+  it('RF-021: descontoKg é kg por cabeça (0, 10, 12.5), com 3 casas e 5 inteiros', () => {
+    for (const d of ['0', '10', '12.5', '99999.999', null]) {
+      expect(loteCreateSchema.safeParse({ ...lote, descontoKg: d }).success).toBe(true);
+    }
+    expect(regras({ ...lote, descontoKg: '100000' })).toContain('faixa');
+    expect(regras({ ...lote, descontoKg: '1.0001' })).toContain('casas_decimais');
+    expect(regras({ ...lote, descontoKg: '-1' })).toContain('formato');
+  });
+
+  it('RF-021: o campo antigo "desconto" (fração) é recusado (strictObject, ADR-0013)', () => {
+    expect(loteCreateSchema.safeParse({ ...lote, desconto: '0.1' }).success).toBe(false);
   });
 
   it('RF-020: PATCH exige version e ao menos um campo; chaves desconhecidas são recusadas', () => {

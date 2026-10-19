@@ -1,5 +1,6 @@
 // Compra e Venda (RN-001…RN-006). Domínio puro: Decimal (precisão 28), sem arredondar no cálculo.
-// Compra espelha calc.js/planilha; venda segue a regra revisada do protótipo (ADR-0012, RN-024/025).
+// Compra espelha calc.js/planilha; venda: base da @ por lote (ADR-0012, RN-024) e desconto em kg por
+// cabeça como na planilha (ADR-0013, RN-025).
 // Sem imports locais: o parity.mjs carrega este arquivo direto (Node strip-types).
 import Decimal from 'decimal.js';
 
@@ -21,7 +22,7 @@ export interface LoteInput {
   base?: 'vivo' | 'carcaca';
   /** Só venda (RN-025): `false` desliga o desconto; qualquer outro valor mantém ligado (padrão). */
   aplicarDesconto?: boolean;
-  /** Só venda (RN-025): fração (0.1 = 10%). Vazio/null usa `params.descontoVendaPct`. */
+  /** Só venda (RN-025): kg descontados POR CABEÇA. Vazio/null/inválido usa `params.descontoVendaKgCab`. */
   desconto?: Decimal.Value | null;
 }
 
@@ -35,23 +36,25 @@ export interface ParametrosCompraVenda {
   arrobaVivoKg: Decimal;
   /** kg de carcaça por @: venda com base `carcaca` (RN-024). */
   arrobaCarcacaKg: Decimal;
-  /** Desconto padrão da venda, em fração (0.1 = 10%) (RN-025). */
-  descontoVendaPct: Decimal;
+  /** Desconto padrão da venda, em kg por cabeça (RN-025, ADR-0013). */
+  descontoVendaKgCab: Decimal;
 }
 
 export const PARAMETROS_COMPRA_VENDA: ParametrosCompraVenda = {
   arrobaVivoKg: new Decimal(30),
   arrobaCarcacaKg: new Decimal(15),
-  descontoVendaPct: new Decimal('0.1'),
+  descontoVendaKgCab: new Decimal(10),
 };
 
 export interface LinhaCalculada {
   qtd: Decimal;
   kg: Decimal;
-  /** kg após o desconto (= kg na compra). */
+  /** kg após o desconto (= kg na compra); nunca negativo (RN-025). */
   kgLiquido: Decimal;
-  /** Fração de desconto efetivamente aplicada (0 na compra ou com desconto desligado). */
-  descontoPct: Decimal;
+  /** kg por cabeça efetivamente descontados (0 na compra ou com desconto desligado). */
+  descontoKgCab: Decimal;
+  /** kg descontados no lote efetivamente (kg − kgLiquido; ≤ qtd × descontoKgCab se o líquido foi limitado a 0). */
+  kgDescontado: Decimal;
   arrobas: Decimal;
   preco: Decimal;
   total: Decimal;
@@ -110,7 +113,7 @@ function fechar(
   qtd: Decimal,
   kg: Decimal,
   kgLiquido: Decimal,
-  descontoPct: Decimal,
+  descontoKgCab: Decimal,
   arrobas: Decimal,
   lote: LoteInput,
 ): LinhaCalculada {
@@ -120,7 +123,8 @@ function fechar(
     qtd,
     kg,
     kgLiquido,
-    descontoPct,
+    descontoKgCab,
+    kgDescontado: kg.minus(kgLiquido),
     arrobas,
     preco,
     total,
@@ -138,19 +142,21 @@ export function calcularCompra(
 }
 
 /**
- * RN-002, RN-024, RN-025: kg líquido = kg × (1 − desconto); @ = kg líquido ÷ (30 vivo | 15 carcaça);
- * total = @ × R$/@.
+ * RN-002, RN-024, RN-025: kg líquido = kg − qtd × desconto (kg/cab.); @ = kg líquido ÷ (30 vivo | 15
+ * carcaça); total = @ × R$/@. Se qtd × desconto > kg, o kg líquido é limitado a 0 (sem @ negativa).
  */
 export function calcularVenda(
   lote: LoteInput,
   params: ParametrosCompraVenda = PARAMETROS_COMPRA_VENDA,
 ): LinhaCalculada {
   const { qtd, kg } = pesoLote(lote);
-  const descontoPct =
-    lote.aplicarDesconto === false ? ZERO : parametro(lote.desconto, params.descontoVendaPct);
-  const kgLiquido = kg.times(new Decimal(1).minus(descontoPct));
+  const descontoKgCab =
+    lote.aplicarDesconto === false
+      ? ZERO
+      : Decimal.max(ZERO, parametro(lote.desconto, params.descontoVendaKgCab));
+  const kgLiquido = Decimal.max(ZERO, kg.minus(qtd.times(descontoKgCab)));
   const kgPorArroba = lote.base === 'carcaca' ? params.arrobaCarcacaKg : params.arrobaVivoKg;
-  return fechar(qtd, kg, kgLiquido, descontoPct, kgLiquido.div(kgPorArroba), lote);
+  return fechar(qtd, kg, kgLiquido, descontoKgCab, kgLiquido.div(kgPorArroba), lote);
 }
 
 function soma(
@@ -169,7 +175,7 @@ export function calcularCompraVenda(
   const params: ParametrosCompraVenda = {
     arrobaVivoKg: parametro(sobrescritas.arrobaVivoKg, padrao.arrobaVivoKg),
     arrobaCarcacaKg: parametro(sobrescritas.arrobaCarcacaKg, padrao.arrobaCarcacaKg),
-    descontoVendaPct: parametro(sobrescritas.descontoVendaPct, padrao.descontoVendaPct),
+    descontoVendaKgCab: parametro(sobrescritas.descontoVendaKgCab, padrao.descontoVendaKgCab),
   };
   const compras = entrada.compras.map((l) => calcularCompra(l, params));
   const vendas = entrada.vendas.map((l) => calcularVenda(l, params));

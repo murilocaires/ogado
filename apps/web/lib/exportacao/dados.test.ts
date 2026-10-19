@@ -31,7 +31,7 @@ const venda = (extra: Partial<LoteSalvar> = {}): LoteSalvar => ({
   preco: '320',
   base: 'vivo',
   aplicarDesconto: true,
-  descontoPct: '10',
+  descontoKg: '10',
   ...extra,
 });
 
@@ -63,16 +63,18 @@ describe('RF-041 tabelas de Negócios saem do domínio', () => {
     expect(lc[5]).toBe(10);
     expect(lc[7]).toBeNull(); // base só na venda
     expect(lc[8]).toBeNull(); // desconto só na venda
-    expect(lc[9]).toBe(Number(esperado.compras[0]!.arrobas.toFixed(2)));
-    expect(lc[11]).toBe(Number(esperado.compras[0]!.total.toFixed(2)));
+    expect(lc[9]).toBeNull(); // kg líquido só na venda
+    expect(lc[10]).toBe(Number(esperado.compras[0]!.arrobas.toFixed(2)));
+    expect(lc[12]).toBe(Number(esperado.compras[0]!.total.toFixed(2)));
 
     const v = tabelaDeNegocios(snap.lotes, 'venda');
     const lv = v.linhas[0]!;
     expect(lv[0]).toBe('Venda');
     expect(lv[7]).toBe('Peso vivo');
-    expect(lv[8]).toBe(10);
-    expect(lv[11]).toBe(Number(esperado.vendas[0]!.total.toFixed(2)));
-    expect(lv[12]).toBe(Number(esperado.vendas[0]!.porCab!.toFixed(2)));
+    expect(lv[8]).toBe(10); // 10 kg/cab.
+    expect(lv[9]).toBe(4400); // 4.500 − 10×10
+    expect(lv[12]).toBe(Number(esperado.vendas[0]!.total.toFixed(2)));
+    expect(lv[13]).toBe(Number(esperado.vendas[0]!.porCab!.toFixed(2)));
   });
 
   it('ordena por data decrescente e deixa lote sem data por último', () => {

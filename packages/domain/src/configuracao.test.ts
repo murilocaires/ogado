@@ -56,7 +56,7 @@ describe('configuração padrão da fazenda (RN-021, RN-023)', () => {
     expect(PARAMETROS_FAZENDA_PADRAO).toEqual({
       arrobaVivoKg: PARAMETROS_PADRAO.arrobaVivoKg,
       arrobaCarcacaKg: PARAMETROS_PADRAO.arrobaCarcacaKg,
-      descontoVendaPct: PARAMETROS_COMPRA_VENDA.descontoVendaPct.toString(),
+      descontoVendaKgCab: PARAMETROS_COMPRA_VENDA.descontoVendaKgCab.toString(),
       uaKg: PARAMETROS_PADRAO.uaKg,
       rendCarcaca: ENTRADA_PADRAO.rendCarcaca,
       imposto: ENTRADA_PADRAO.imposto,
@@ -90,10 +90,14 @@ describe('tradução da configuração em argumentos de cálculo (RN-023, RN-009
     expect(recria.faturamentoLiquido?.toNumber()).toBeCloseTo(102408.0529717073, 6);
     perto(recria.lotacaoHaInicial, golden.recria.esperado.lotacaoHaInicial);
 
-    const cv = calcularCompraVenda(golden.compraVenda.entrada, t.parametrosCompraVenda);
-    // Venda mudou (ADR-0012): só as compras seguem o ouro da planilha; saldo novo = −117.431,8333…
+    // Venda da planilha = base carcaça + 10 kg/cab (ADR-0013): saldo −89.475,8333… do ouro.
+    const entrada = {
+      ...golden.compraVenda.entrada,
+      vendas: golden.compraVenda.entrada.vendas.map((v) => ({ ...v, base: 'carcaca' as const })),
+    };
+    const cv = calcularCompraVenda(entrada, t.parametrosCompraVenda);
     expect(cv.totalCompras.toNumber()).toBeCloseTo(142835.8333333, 4);
-    expect(cv.saldo.toNumber()).toBeCloseTo(-117431.8333333, 4);
+    expect(cv.saldo.toNumber()).toBeCloseTo(-89475.8333333, 4);
   });
 
   it('RN-021: as entradas iniciais do simulador vêm dos 5 parâmetros de valor inicial', () => {
@@ -120,7 +124,7 @@ describe('tradução da configuração em argumentos de cálculo (RN-023, RN-009
     expect(t.parametrosRecria).not.toHaveProperty('lotacaoFixaHa');
   });
 
-  it('CA-19: arrobaCarcacaKg = 16 faz a venda do ouro (base carcaça, 10%) dar 2.628 ÷ 16 = 164,25 @ e alimenta a @ de carcaça (origem: nao-planilha)', () => {
+  it('CA-19: arrobaCarcacaKg = 16 faz a venda do ouro (base carcaça, 10 kg/cab) dar 2.760 ÷ 16 = 172,5 @ e alimenta a @ de carcaça (origem: nao-planilha)', () => {
     const t = traduzirConfiguracao(comParametros({ arrobaCarcacaKg: '16' }));
 
     const venda = { ...golden.compraVenda.entrada.vendas[0]!, base: 'carcaca' as const };
@@ -128,7 +132,7 @@ describe('tradução da configuração em argumentos de cálculo (RN-023, RN-009
       { ...golden.compraVenda.entrada, vendas: [venda] },
       t.parametrosCompraVenda,
     );
-    expect(cv.vendas[0]?.arrobas.toString()).toBe('164.25');
+    expect(cv.vendas[0]?.arrobas.toString()).toBe('172.5');
 
     const recria = calcularRecria(entradaOuro, t.variantes, t.parametrosRecria);
     // 420 kg x 0,52 ÷ 16 = 13,65 @ por cabeça

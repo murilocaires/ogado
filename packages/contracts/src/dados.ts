@@ -57,13 +57,8 @@ const loteCampos = {
   preco: decimalStringSchema({ rotulo: 'O preço por @', precisao: 14, escala: 2 }),
   base: baseArrobaSchema,
   aplicarDesconto: z.boolean({ error: 'Informe se aplica desconto.' }),
-  /** Fração (0.1 = 10%). */
-  desconto: decimalStringSchema({
-    rotulo: 'O desconto',
-    precisao: 7,
-    escala: 6,
-    maximo: 1,
-  }).nullable(),
+  /** kg descontados por cabeça (ADR-0013); vazio usa o padrão de 10 kg/cab. */
+  descontoKg: decimalStringSchema({ rotulo: 'O desconto', precisao: 8, escala: 3 }).nullable(),
 };
 
 /** POST /lotes. O `id` é gerado pelo cliente (idempotência); o `numero` é do servidor. */
@@ -79,7 +74,7 @@ export const loteCreateSchema = z.strictObject({
   preco: loteCampos.preco,
   base: loteCampos.base.default('vivo'),
   aplicarDesconto: loteCampos.aplicarDesconto.default(false),
-  desconto: loteCampos.desconto.default(null),
+  descontoKg: loteCampos.descontoKg.default(null),
 });
 export type LoteCreate = z.infer<typeof loteCreateSchema>;
 
@@ -96,7 +91,7 @@ export const lotePatchSchema = z
     preco: loteCampos.preco.optional(),
     base: loteCampos.base.optional(),
     aplicarDesconto: loteCampos.aplicarDesconto.optional(),
-    desconto: loteCampos.desconto.optional(),
+    descontoKg: loteCampos.descontoKg.optional(),
   })
   .refine((v) => Object.keys(v).some((k) => k !== 'version'), {
     error: 'Informe ao menos um campo para alterar.',
@@ -116,7 +111,7 @@ export const loteSchema = z.object({
   preco: z.string(),
   base: baseArrobaSchema,
   aplicarDesconto: z.boolean(),
-  desconto: z.string().nullable(),
+  descontoKg: z.string().nullable(),
   ...syncMeta,
 });
 export type LoteDto = z.infer<typeof loteSchema>;
