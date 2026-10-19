@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import type { AppConfig, RateLimitRule } from '../config';
 import { tooManyAttempts } from '../http-errors';
+import { clientIp } from './client-ip';
 
 export interface Limiters {
   /** Login: chave IP + e-mail normalizado (~5/min). Chamar depois da validação do corpo. */
@@ -20,7 +21,7 @@ export interface Limiters {
  * cadastro. Armazenamento em memória enquanto houver uma instância (ADR-0010: Postgres/Redis ao
  * escalar). Estouro = 429 `muitas_tentativas` com `Retry-After`.
  */
-export const rateLimitPlugin = fp<{ config: Pick<AppConfig, 'rateLimit'> }>(
+export const rateLimitPlugin = fp<{ config: Pick<AppConfig, 'rateLimit' | 'proxySecret'> }>(
   async (app: FastifyInstance, { config }) => {
     const rules = config.rateLimit;
 
@@ -28,6 +29,7 @@ export const rateLimitPlugin = fp<{ config: Pick<AppConfig, 'rateLimit'> }>(
       global: true,
       max: rules.global.max,
       timeWindow: rules.global.windowMs,
+      keyGenerator: (request) => clientIp(request, config.proxySecret),
       errorResponseBuilder: (_request, context) => tooManyAttempts(context.ttl / 1000),
     });
 
@@ -41,7 +43,8 @@ export const rateLimitPlugin = fp<{ config: Pick<AppConfig, 'rateLimit'> }>(
       app.createRateLimit({
         max: rule.max,
         timeWindow: rule.windowMs,
-        keyGenerator: (request) => `${name}:${request.ip}${keySuffix(request)}`,
+        keyGenerator: (request) =>
+          `${name}:${clientIp(request, config.proxySecret)}${keySuffix(request)}`,
       });
 
     const emailByRequest = new WeakMap<FastifyRequest, string>();

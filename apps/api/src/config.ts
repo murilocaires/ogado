@@ -28,6 +28,8 @@ export interface AppConfig {
   };
   /** IPs/CIDRs do proxy reverso confiável (para ler o IP real); vazio = não confia em ninguém. */
   trustProxy: string[];
+  /** Segredo do site para confiar no IP do cliente repassado por ele; ausente = ignora o cabeçalho. */
+  proxySecret?: string;
 }
 
 export interface PartialAppConfig {
@@ -37,6 +39,7 @@ export interface PartialAppConfig {
   argon2?: Partial<Argon2Params>;
   rateLimit?: Partial<AppConfig['rateLimit']>;
   trustProxy?: string[];
+  proxySecret?: string;
 }
 
 /** Mínimos que o ADR-0010 (b) fixa: os parâmetros só podem subir. */
@@ -64,6 +67,7 @@ export function resolveConfig(partial: PartialAppConfig = {}): AppConfig {
     argon2: { ...defaultConfig.argon2, ...partial.argon2 },
     rateLimit: { ...defaultConfig.rateLimit, ...partial.rateLimit },
     trustProxy: partial.trustProxy ?? defaultConfig.trustProxy,
+    ...(partial.proxySecret ? { proxySecret: partial.proxySecret } : {}),
   };
   const { argon2 } = config;
   if (
@@ -96,5 +100,6 @@ export function configFromEnv(env: Env): AppConfig {
       signupIp: { max: env.RATE_LIMIT_SIGNUP_IP_PER_HOUR, windowMs: 60 * 60_000 },
     },
     trustProxy: env.TRUST_PROXY,
+    ...(env.PROXY_SECRET ? { proxySecret: env.PROXY_SECRET } : {}),
   });
 }

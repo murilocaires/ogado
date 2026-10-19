@@ -57,37 +57,33 @@ export function registerContaRoutes(app: FastifyInstance, deps: ContaRoutesDeps)
     },
   );
 
-  typed.put(
-    '/conta/senha',
-    { schema: { body: senhaRequestSchema } },
-    async (request, reply) => {
-      const tenant = requireTenant(request);
-      const { senhaAtual, novaSenha } = request.body;
-      await app.limiters.passwordChange(request, tenant.usuarioId);
+  typed.put('/conta/senha', { schema: { body: senhaRequestSchema } }, async (request, reply) => {
+    const tenant = requireTenant(request);
+    const { senhaAtual, novaSenha } = request.body;
+    await app.limiters.passwordChange(request, tenant.usuarioId);
 
-      const hashAtual = await deps.accounts.findSenhaHash(tenant.usuarioId);
-      if (hashAtual === undefined) throw notFound();
-      if (hashAtual !== null) {
-        if (senhaAtual === undefined) {
-          throw new AppError(400, 'validacao_invalida', 'Informe a senha atual.', {
-            campos: [
-              { caminho: 'senhaAtual', regra: 'obrigatoria', mensagem: 'Informe a senha atual.' },
-            ],
-          });
-        }
-        if (!(await deps.hasher.verify(hashAtual, senhaAtual))) {
-          // 400 (não 401): a sessão está válida; só a senha atual informada está errada.
-          throw new AppError(400, 'credenciais_invalidas', 'A senha atual está incorreta.');
-        }
+    const hashAtual = await deps.accounts.findSenhaHash(tenant.usuarioId);
+    if (hashAtual === undefined) throw notFound();
+    if (hashAtual !== null) {
+      if (senhaAtual === undefined) {
+        throw new AppError(400, 'validacao_invalida', 'Informe a senha atual.', {
+          campos: [
+            { caminho: 'senhaAtual', regra: 'obrigatoria', mensagem: 'Informe a senha atual.' },
+          ],
+        });
       }
+      if (!(await deps.hasher.verify(hashAtual, senhaAtual))) {
+        // 400 (não 401): a sessão está válida; só a senha atual informada está errada.
+        throw new AppError(400, 'credenciais_invalidas', 'A senha atual está incorreta.');
+      }
+    }
 
-      await deps.accounts.updateSenhaHash(tenant.usuarioId, await deps.hasher.hash(novaSenha));
-      const token = request.cookies[sessionCookieName(deps.config)];
-      if (token) await deps.sessions.invalidateOthersForUser(tenant.usuarioId, token);
-      else await deps.sessions.invalidateAllForUser(tenant.usuarioId);
-      return reply.code(204).send();
-    },
-  );
+    await deps.accounts.updateSenhaHash(tenant.usuarioId, await deps.hasher.hash(novaSenha));
+    const token = request.cookies[sessionCookieName(deps.config)];
+    if (token) await deps.sessions.invalidateOthersForUser(tenant.usuarioId, token);
+    else await deps.sessions.invalidateAllForUser(tenant.usuarioId);
+    return reply.code(204).send();
+  });
 
   typed.patch(
     '/fazenda',
