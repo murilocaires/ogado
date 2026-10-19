@@ -90,7 +90,7 @@ test('RF-053 a navegação lateral some e a barra inferior aparece em 390 px', a
   await expect(lateral).toBeHidden();
   await expect(inferior).toBeVisible();
   await expect(inferior.getByRole('link', { name: 'Painel' })).toHaveAttribute('aria-current', 'page');
-  await expect(inferior.getByRole('link')).toHaveCount(3);
+  await expect(inferior.getByRole('link')).toHaveCount(4); // Painel, Negócios, Recria, Conta
 });
 
 test('RF-052 o botão "i" abre o balão e Esc fecha', async ({ page }) => {
