@@ -352,8 +352,12 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
         )}
 
         {isLogin && (
-          <p style={{ margin: 0, textAlign: 'right', fontSize: 14.5 }}>
-            <Link href="/esqueci-senha" className="link">
+          <p style={{ margin: '-14px 0 0', textAlign: 'right', fontSize: 14.5 }}>
+            <Link
+              href="/esqueci-senha"
+              className="link"
+              style={{ display: 'inline-block', padding: '10px 0 10px 8px' }}
+            >
               Esqueci minha senha
             </Link>
           </p>
