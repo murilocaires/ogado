@@ -71,7 +71,7 @@ for (const vp of viewports) {
       await expect(page.getByLabel('Investimento', { exact: true })).toHaveValue('');
       await expect(resultado.locator('.hero .big')).toHaveText('—');
       await expect(page.getByRole('button', { name: 'Restaurar padrões' })).toHaveCount(0);
-      await expect(page.getByLabel(/Lotação inicial/)).toHaveCount(0);
+      await expect(page.getByRole('combobox')).toHaveCount(0);
       await page.evaluate(() => document.fonts.ready);
       await page.screenshot({ path: `${OUT}/e1-recria-vazio-${vp.nome}.png`, fullPage: true });
 
