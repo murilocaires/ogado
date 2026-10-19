@@ -17,6 +17,24 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // Service worker (E4): scripts clássicos do navegador, fora do bundle do Next.
+    files: ['apps/web/public/sw.js', 'apps/web/public/sw-policy.js'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: {
+        self: 'readonly',
+        caches: 'readonly',
+        fetch: 'readonly',
+        Response: 'readonly',
+        URL: 'readonly',
+        Promise: 'readonly',
+        setTimeout: 'readonly',
+        importScripts: 'readonly',
+        module: 'writable',
+      },
+    },
+  },
+  {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',

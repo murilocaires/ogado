@@ -1,10 +1,19 @@
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
+import { PwaBootstrap } from '../components/PwaBootstrap';
 import '../styles/tokens.css';
 import '../styles/globals.css';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'O Gado',
   description: 'Gestão de pecuária: Compra e Venda e Recria',
+  applicationName: 'O Gado',
+  icons: { apple: '/icons/apple-touch-icon.png' },
+  appleWebApp: { capable: true, title: 'O Gado', statusBarStyle: 'black-translucent' },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#08241a',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -19,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body>
+        <PwaBootstrap />
         {children}
       </body>
     </html>
