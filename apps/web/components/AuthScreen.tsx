@@ -219,6 +219,15 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
           </p>
         </div>
 
+        {!isLogin && (
+          <>
+            <GoogleLink texto="Cadastrar com Google" />
+            <p className="auth-sep" aria-hidden="true">
+              ou cadastre com e-mail
+            </p>
+          </>
+        )}
+
         {session.status === 'expirada' && isLogin && (
           <div className="notice notice-warn" role="status">
             <strong>Entre de novo</strong>
@@ -379,10 +388,14 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
               : 'Criar conta'}
         </button>
 
-        <p className="auth-sep" aria-hidden="true">
-          ou
-        </p>
-        <GoogleLink texto={isLogin ? 'Entrar com Google' : 'Cadastrar com Google'} />
+        {isLogin && (
+          <>
+            <p className="auth-sep" aria-hidden="true">
+              ou
+            </p>
+            <GoogleLink texto="Entrar com Google" />
+          </>
+        )}
 
         <p style={{ margin: 0, textAlign: 'center', fontSize: 14.5, color: 'var(--tinta-2)' }}>
           {isLogin ? 'Ainda não tem conta? ' : 'Já tem conta? '}
