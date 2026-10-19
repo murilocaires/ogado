@@ -27,16 +27,18 @@ export const csrfPlugin = fp<{ allowedOrigins: string[] }>(
 
       // DELETE sem corpo (ADR-0011 §7): não é método "simples" do CORS (sempre faz preflight) e
       // formulário HTML não envia DELETE; então o Content-Type não acrescenta barreira. Com corpo, bloqueia.
+      const mediaType = (request.headers['content-type'] ?? '').split(';')[0]?.trim().toLowerCase();
+      const json = mediaType === 'application/json';
       if (request.method === 'DELETE') {
         const comCorpo =
           Number(request.headers['content-length'] ?? 0) > 0 ||
           request.headers['transfer-encoding'] !== undefined;
-        if (comCorpo) throw forbidden();
+        // Exceção explícita por rota (DELETE /conta, RF-007): corpo só se for JSON.
+        if (comCorpo && !(request.routeOptions.config.allowJsonBody && json)) throw forbidden();
         return;
       }
 
-      const mediaType = (request.headers['content-type'] ?? '').split(';')[0]?.trim().toLowerCase();
-      if (mediaType !== 'application/json') throw forbidden();
+      if (!json) throw forbidden();
     });
   },
 );

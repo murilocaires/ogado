@@ -8,6 +8,8 @@ import { z } from 'zod';
 export const fazendaSchema = z.object({
   id: z.uuid(),
   nome: z.string().nullable(),
+  /** Área em hectares (RF-011), string decimal canônica. */
+  areaHa: z.string().nullable(),
   version: z.number().int().min(1),
   updatedAt: z.iso.datetime(),
   deletedAt: z.iso.datetime().nullable(),

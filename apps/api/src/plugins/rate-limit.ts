@@ -9,6 +9,8 @@ export interface Limiters {
   loginIpEmail(request: FastifyRequest, email: string): Promise<void>;
   /** Login: só IP (~20/min). */
   loginIp(request: FastifyRequest): Promise<void>;
+  /** Troca de senha: chave IP + usuário, mesma regra do login por IP + e-mail (~5/min). */
+  passwordChange(request: FastifyRequest, usuarioId: string): Promise<void>;
   /** Cadastro: por IP (~5/h). */
   signupIp(request: FastifyRequest): Promise<void>;
 }
@@ -45,6 +47,11 @@ export const rateLimitPlugin = fp<{ config: Pick<AppConfig, 'rateLimit'> }>(
     const emailByRequest = new WeakMap<FastifyRequest, string>();
     const loginIp = make('login-ip', rules.loginIp, () => '');
     const signupIp = make('signup-ip', rules.signupIp, () => '');
+    const passwordChange = make(
+      'password-change',
+      rules.loginIpEmail,
+      (request) => `:${emailByRequest.get(request) ?? ''}`,
+    );
     const loginIpEmail = make(
       'login-ip-email',
       rules.loginIpEmail,
@@ -62,6 +69,10 @@ export const rateLimitPlugin = fp<{ config: Pick<AppConfig, 'rateLimit'> }>(
     const limiters: Limiters = {
       loginIp: (request) => enforce(loginIp, request),
       signupIp: (request) => enforce(signupIp, request),
+      passwordChange(request, usuarioId) {
+        emailByRequest.set(request, usuarioId);
+        return enforce(passwordChange, request);
+      },
       loginIpEmail(request, email) {
         emailByRequest.set(request, email);
         return enforce(loginIpEmail, request);

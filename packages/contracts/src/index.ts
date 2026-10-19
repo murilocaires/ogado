@@ -6,3 +6,4 @@ export * from './fazenda';
 export * from './session';
 export * from './decimal';
 export * from './dados';
+export * from './conta';

@@ -12,7 +12,7 @@ declare module 'fastify' {
     /** Contexto de tenant da sessão; nulo em rotas públicas ou sem sessão. */
     tenant: TenantContext | null;
     /** Usuário da sessão (para GET /auth/session); nulo se não autenticado. */
-    sessionUser: { id: string; email: string } | null;
+    sessionUser: { id: string; email: string; nome: string | null } | null;
   }
   interface FastifyContextConfig {
     /**
@@ -20,5 +20,7 @@ declare module 'fastify' {
      * assim uma rota nova nunca nasce aberta por esquecimento.
      */
     auth?: 'public' | 'required';
+    /** DELETE com corpo JSON (DELETE /conta, confirmação); nas demais rotas DELETE com corpo segue bloqueado. */
+    allowJsonBody?: boolean;
   }
 }

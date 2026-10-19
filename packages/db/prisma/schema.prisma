@@ -16,6 +16,8 @@ model Usuario {
   email        String   @unique
   // string PHC argon2id; nulo quando o usuário só entra com Google (T-16)
   senhaHash    String?
+  // nome de exibição (RF-004); opcional até o usuário preencher na Conta
+  nome         String?
   criadoEm     DateTime @default(now()) @db.Timestamptz(3)
   atualizadoEm DateTime @default(now()) @updatedAt @db.Timestamptz(3)
 
@@ -44,6 +46,8 @@ model Fazenda {
   donoId    String    @unique @db.Uuid
   // opcional até o onboarding (T-05)
   nome      String?
+  // área em hectares (RF-011); string decimal na API
+  areaHa    Decimal?  @db.Decimal(12, 2)
   version   Int       @default(1)
   createdAt DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt DateTime  @default(now()) @db.Timestamptz(3)

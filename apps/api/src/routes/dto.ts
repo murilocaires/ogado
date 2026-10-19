@@ -15,6 +15,7 @@ export function toFazendaDto(f: FazendaRecord): FazendaDto {
   return {
     id: f.id,
     nome: f.nome,
+    areaHa: f.areaHa ? f.areaHa.toFixed() : null,
     version: f.version,
     updatedAt: f.updatedAt.toISOString(),
     deletedAt: f.deletedAt ? f.deletedAt.toISOString() : null,

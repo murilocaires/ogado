@@ -21,7 +21,7 @@ export type SessionValidation =
   | {
       status: 'ok';
       tenant: TenantContext;
-      usuario: { id: string; email: string };
+      usuario: { id: string; email: string; nome: string | null };
       /** Presente quando a expiração deslizante avançou: reemitir o cookie. */
       renewedMaxAgeSeconds: number | null;
     }
@@ -87,6 +87,7 @@ export function createSessionService(
             select: {
               id: true,
               email: true,
+              nome: true,
               fazenda: { select: { id: true, deletedAt: true } },
             },
           },
@@ -113,7 +114,7 @@ export function createSessionService(
       return {
         status: 'ok',
         tenant: { usuarioId: row.usuario.id, fazendaId: fazenda.id },
-        usuario: { id: row.usuario.id, email: row.usuario.email },
+        usuario: { id: row.usuario.id, email: row.usuario.email, nome: row.usuario.nome },
         renewedMaxAgeSeconds,
       };
     },
@@ -130,7 +131,15 @@ export function createSessionService(
       await prisma.sessao.deleteMany({ where: { id: parsed.id } });
     },
 
-    /** Para o T-16 (troca de senha): derruba todas as sessões do usuário. */
+    /** Troca de senha (RF-005): derruba as sessões do usuário, exceto a do token informado. */
+    async invalidateOthersForUser(usuarioId: string, currentToken: string): Promise<void> {
+      const current = parseToken(currentToken);
+      await prisma.sessao.deleteMany({
+        where: { usuarioId, ...(current ? { id: { not: current.id } } : {}) },
+      });
+    },
+
+    /** Derruba todas as sessões do usuário. */
     async invalidateAllForUser(usuarioId: string): Promise<void> {
       await prisma.sessao.deleteMany({ where: { usuarioId } });
     },

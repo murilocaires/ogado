@@ -40,5 +40,10 @@ export type SignupRequest = z.infer<typeof signupRequestSchema>;
 export const loginRequestSchema = z.object({ email: emailSchema, senha: loginPasswordSchema });
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
-export const usuarioSchema = z.object({ id: z.uuid(), email: z.string() });
+export const usuarioSchema = z.object({
+  id: z.uuid(),
+  email: z.string(),
+  /** Nome de exibição (RF-004); nulo até o usuário preencher. */
+  nome: z.string().nullable(),
+});
 export type UsuarioDto = z.infer<typeof usuarioSchema>;

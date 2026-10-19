@@ -1,15 +1,25 @@
 import type { PrismaClient } from '@ogado/db';
 import type { TenantContext } from '../tenant';
+import type { WriteResult } from './sync';
 
 export interface FazendaRecord {
   id: string;
   nome: string | null;
+  /** Decimal exato (Decimal(12,2)); a API o trafega como string canônica. */
+  areaHa: { toFixed(): string } | null;
   version: number;
   updatedAt: Date;
   deletedAt: Date | null;
 }
 
-const select = { id: true, nome: true, version: true, updatedAt: true, deletedAt: true } as const;
+const select = {
+  id: true,
+  nome: true,
+  areaHa: true,
+  version: true,
+  updatedAt: true,
+  deletedAt: true,
+} as const;
 
 /**
  * Repositório da Fazenda (ADR-0010 d). Todo método exige o contexto de tenant e escopa a consulta
@@ -51,6 +61,30 @@ export function createFazendaRepository(prisma: PrismaClient) {
       });
       if (count === 0) return null;
       return prisma.fazenda.findFirst({ where, select });
+    },
+
+    /**
+     * Edição da Conta · Fazenda (RF-011) com versão-base (ADR-0011 §4): só grava se `version`
+     * confere; senão devolve o estado atual (`conflito`). `areaHa` indefinido = não altera.
+     */
+    async updateDados(
+      ctx: TenantContext,
+      changes: { nome: string; areaHa?: string | null | undefined; version: number },
+      now: Date = new Date(),
+    ): Promise<WriteResult<FazendaRecord>> {
+      const where = { id: ctx.fazendaId, donoId: ctx.usuarioId, deletedAt: null };
+      const { count } = await prisma.fazenda.updateMany({
+        where: { ...where, version: changes.version },
+        data: {
+          nome: changes.nome,
+          ...(changes.areaHa !== undefined ? { areaHa: changes.areaHa } : {}),
+          version: { increment: 1 },
+          updatedAt: now,
+        },
+      });
+      const atual = await prisma.fazenda.findFirst({ where, select });
+      if (!atual) return { status: 'nao_encontrado' };
+      return count === 1 ? { status: 'ok', record: atual } : { status: 'conflito', atual };
     },
 
     /** Exclusão lógica (lápide): preenche `deletedAt`, avança `version` e `updatedAt`. */

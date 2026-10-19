@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   errorEnvelopeSchema,
@@ -7,7 +8,14 @@ import {
   sessionResponseSchema,
 } from '@ogado/contracts';
 import { TEST_ORIGIN } from './support/env';
-import { buildTestApp, getWithCookie, prisma, signup } from './support/harness';
+import {
+  buildTestApp,
+  getWithCookie,
+  prisma,
+  signup,
+  uniqueEmail,
+  VALID_PASSWORD,
+} from './support/harness';
 import {
   assertPublicAllowlist,
   PUBLIC_ROUTE_ALLOWLIST,
@@ -263,6 +271,80 @@ const isolationCasesDados: Record<string, (a: Farm, b: Farm) => Promise<number>>
   },
 };
 Object.assign(isolationCases, isolationCasesDados);
+
+const comoA = (
+  a: Farm,
+  method: 'PATCH' | 'PUT' | 'DELETE',
+  url: string,
+  body: unknown,
+): Promise<LightMyRequestResponse> =>
+  app.inject({
+    method,
+    url,
+    headers: { origin: TEST_ORIGIN, 'content-type': 'application/json', cookie: a.cookie },
+    payload: JSON.stringify(body),
+  });
+
+// Rotas da Conta (RF-004/005/007/011): nenhum id do cliente escolhe o alvo; só o tenant da sessão.
+const isolationCasesConta: Record<string, (a: Farm, b: Farm) => Promise<number>> = {
+  'PATCH /conta/perfil': async (a, b) => {
+    const antes = await prisma.usuario.findUniqueOrThrow({ where: { id: b.usuarioId } });
+    const roubo = await comoA(a, 'PATCH', '/conta/perfil', { nome: 'A', email: antes.email });
+    expect(roubo.statusCode).toBe(409);
+    expect(roubo.body).not.toContain(b.usuarioId);
+    const comId = await comoA(a, 'PATCH', '/conta/perfil', {
+      id: b.usuarioId,
+      nome: 'A',
+      email: uniqueEmail('iso'),
+    });
+    expect(comId.statusCode).toBe(400);
+    const depois = await prisma.usuario.findUniqueOrThrow({ where: { id: b.usuarioId } });
+    expect(depois).toEqual(antes);
+    return 2;
+  },
+  'PUT /conta/senha': async (a, b) => {
+    const antes = await prisma.usuario.findUniqueOrThrow({ where: { id: b.usuarioId } });
+    const res = await comoA(a, 'PUT', '/conta/senha', {
+      usuarioId: b.usuarioId,
+      senhaAtual: VALID_PASSWORD,
+      novaSenha: 'Gado#Novo2027',
+    });
+    expect(res.statusCode).toBe(400);
+    const depois = await prisma.usuario.findUniqueOrThrow({ where: { id: b.usuarioId } });
+    expect(depois.senhaHash).toBe(antes.senhaHash);
+    expect(await prisma.sessao.count({ where: { usuarioId: b.usuarioId } })).toBeGreaterThan(0);
+    return 1;
+  },
+  'PATCH /fazenda': async (a, b) => {
+    const antes = await prisma.fazenda.findUniqueOrThrow({ where: { id: b.fazendaId } });
+    const comId = await comoA(a, 'PATCH', '/fazenda', {
+      id: b.fazendaId,
+      nome: 'Invasão',
+      version: 1,
+    });
+    expect(comId.statusCode).toBe(400);
+    const propria = await comoA(a, 'PATCH', '/fazenda', { nome: 'Da A', areaHa: '5', version: 1 });
+    expect(propria.statusCode).toBe(200);
+    expect(propria.body).not.toContain(b.fazendaId);
+    const depois = await prisma.fazenda.findUniqueOrThrow({ where: { id: b.fazendaId } });
+    expect(depois).toEqual(antes);
+    return 2;
+  },
+  'DELETE /conta': async (a, b) => {
+    const comId = await comoA(a, 'DELETE', '/conta', {
+      confirmacao: 'deletar',
+      usuarioId: b.usuarioId,
+    });
+    expect(comId.statusCode).toBe(400);
+    const propria = await comoA(a, 'DELETE', '/conta', { confirmacao: 'deletar' });
+    expect(propria.statusCode).toBe(204);
+    expect(await prisma.usuario.count({ where: { id: a.usuarioId } })).toBe(0);
+    expect(await prisma.usuario.count({ where: { id: b.usuarioId } })).toBe(1);
+    expect(await prisma.fazenda.count({ where: { id: b.fazendaId } })).toBe(1);
+    return 2;
+  },
+};
+Object.assign(isolationCases, isolationCasesConta);
 
 describe('isolamento por fazenda (HTTP)', () => {
   it('RF-010 CA-11: o usuário A não lê, nem lista a fazenda de B, e os dados de B ficam intactos', async () => {
