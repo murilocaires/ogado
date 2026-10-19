@@ -13,6 +13,7 @@ import {
   previaPronta,
   rascunhoDeLote,
   rascunhoParaDominio,
+  trocarModo,
   validarRascunho,
   type LoteDraft,
 } from '../lib/lote-draft';
@@ -54,7 +55,8 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
 
   const venda = d.tipo === 'venda';
   const erros = useMemo(() => errosDoRascunho(d), [d]);
-  const erroDe = (campo: string): string | null => erros.find((e) => e.campo === campo)?.mensagem ?? null;
+  const erroDe = (campo: string): string | null =>
+    erros.find((e) => e.campo === campo)?.mensagem ?? null;
   const guardados = modosGuardados(d);
 
   const linha = useMemo(() => {
@@ -150,7 +152,10 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
                   type="button"
                   role="tab"
                   aria-selected={d.modo === m.modo}
-                  onClick={() => atualizar({ modo: m.modo })}
+                  onClick={() => {
+                    setErroSalvar('');
+                    setD((atual) => trocarModo(atual, m.modo));
+                  }}
                 >
                   {m.rotulo}
                   {guardados.includes(m.modo) && (
@@ -184,7 +189,11 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
                   'Aceita linhas, ponto e vírgula ou vírgula seguida de espaço. A quantidade vira o nº de pesos.'}
               </span>
               {chips.length > 0 && (
-                <ul className="chips" aria-label="Pesos informados" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <ul
+                  className="chips"
+                  aria-label="Pesos informados"
+                  style={{ listStyle: 'none', padding: 0, margin: 0 }}
+                >
                   {chips.slice(0, 40).map((p, i) => (
                     <li key={i} className="chip">
                       {numCompacto(p)} kg
@@ -210,7 +219,9 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
                 inputId="d-peso"
                 value={pesoDoModo(d)}
                 sufixo="kg"
-                onChange={(v) => atualizar(d.modo === 'medio' ? { pesoMedio: v } : { pesoTotal: v })}
+                onChange={(v) =>
+                  atualizar(d.modo === 'medio' ? { pesoMedio: v } : { pesoTotal: v })
+                }
                 dica={erroDe('peso')}
                 invalido={!!erroDe('peso')}
               />
@@ -287,7 +298,13 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
             invalido={!!erroDe('preco')}
           />
 
-          <div className="grid g3" style={{ gap: 10 }} role="group" aria-live="polite" aria-label="Pré-visualização do lote">
+          <div
+            className="grid g3"
+            style={{ gap: 10 }}
+            role="group"
+            aria-live="polite"
+            aria-label="Pré-visualização do lote"
+          >
             <CampoCalculado
               label="Cabeças"
               info="cabLote"
@@ -305,7 +322,11 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
                   : undefined
               }
             />
-            <CampoCalculado label="Total" info="totalLote" valor={pronta.total ? brl(linha.total) : '—'} />
+            <CampoCalculado
+              label="Total"
+              info="totalLote"
+              valor={pronta.total ? brl(linha.total) : '—'}
+            />
           </div>
 
           {!pronta.total && !erroSalvar && (
@@ -346,4 +367,3 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
     </>
   );
 }
-

@@ -1,5 +1,10 @@
 // Rascunho do modal de lote: retém o que foi digitado em cada modo de peso (RN-027) e valida.
-import { categoriaFeminina, type LinhaCalculada, type LoteInput, type ModoPeso } from '@ogado/domain';
+import {
+  categoriaFeminina,
+  type LinhaCalculada,
+  type LoteInput,
+  type ModoPeso,
+} from '@ogado/domain';
 import { hojeISO, lerCampo, valorCampo } from './format';
 import { pesosValidos, separarPesos } from './negocios';
 import type { BaseArroba, LoteEntity, LoteSalvar, LoteTipo } from './repo/types';
@@ -23,10 +28,19 @@ export interface LoteDraft {
   descontoKg: string;
   /** Depois que o usuário mexe no desconto, a categoria deixa de ligá-lo sozinha. */
   descontoTocado: boolean;
+  /** Quantidade e preço da @ dos modos que NÃO estão ativos: cada modo tem os seus campos. */
+  guardado: Partial<Record<ModoPeso, { qtd: string; preco: string }>>;
 }
 
 const CATEGORIA_PADRAO: Record<LoteTipo, string> = { compra: 'BEZERROS', venda: 'BOIS' };
-export const CATEGORIAS_SUGERIDAS = ['BEZERROS', 'BEZERRAS', 'GARROTES', 'NOVILHAS', 'BOIS', 'VACAS'];
+export const CATEGORIAS_SUGERIDAS = [
+  'BEZERROS',
+  'BEZERRAS',
+  'GARROTES',
+  'NOVILHAS',
+  'BOIS',
+  'VACAS',
+];
 export const DESCONTO_PADRAO_KG = '10';
 /** Capacidade da coluna do servidor (Decimal 8,3): 5 inteiros. */
 const DESCONTO_MAX_KG = 99999.999;
@@ -48,6 +62,7 @@ export function novoRascunho(tipo: LoteTipo, numero: number, hoje = hojeISO()): 
     aplicarDesconto: tipo === 'venda' && categoriaFeminina(categoria),
     descontoKg: DESCONTO_PADRAO_KG,
     descontoTocado: false,
+    guardado: {},
   };
 }
 
@@ -68,6 +83,7 @@ export function rascunhoDeLote(lote: LoteEntity): LoteDraft {
     aplicarDesconto: lote.aplicarDesconto ?? false,
     descontoKg: lote.descontoKg || DESCONTO_PADRAO_KG,
     descontoTocado: true,
+    guardado: {},
   };
 }
 
@@ -87,16 +103,32 @@ export function mudarCategoria(d: LoteDraft, categoria: string): LoteDraft {
   return { ...d, categoria };
 }
 
+/**
+ * Troca o modo de peso (RN-027): cada modo tem os seus campos (quantidade, peso e preço da @). O que
+ * foi digitado no modo que sai fica guardado; o modo que entra volta com o que já tinha, ou vazio.
+ */
+export function trocarModo(d: LoteDraft, modo: ModoPeso): LoteDraft {
+  if (modo === d.modo) return d;
+  const guardado = { ...d.guardado, [d.modo]: { qtd: d.qtd, preco: d.preco } };
+  const entrada = guardado[modo] ?? { qtd: '', preco: '' };
+  delete guardado[modo];
+  return { ...d, modo, qtd: entrada.qtd, preco: entrada.preco, guardado };
+}
+
 export function pesoDoModo(d: LoteDraft): string {
   return d.modo === 'medio' ? d.pesoMedio : d.pesoTotal;
 }
 
 /** Modos (exceto o ativo) que têm algo digitado e guardado: marcados com ● na tela. */
 export function modosGuardados(d: LoteDraft): ModoPeso[] {
+  const outros = (m: ModoPeso): boolean => {
+    const g = d.guardado[m];
+    return !!g && (g.qtd.trim() !== '' || g.preco.trim() !== '');
+  };
   const tem: Record<ModoPeso, boolean> = {
-    total: valorCampo(d.pesoTotal)?.gt(0) ?? false,
-    medio: valorCampo(d.pesoMedio)?.gt(0) ?? false,
-    individual: separarPesos(d.pesosTxt).length > 0,
+    total: (valorCampo(d.pesoTotal)?.gt(0) ?? false) || outros('total'),
+    medio: (valorCampo(d.pesoMedio)?.gt(0) ?? false) || outros('medio'),
+    individual: separarPesos(d.pesosTxt).length > 0 || outros('individual'),
   };
   return (['total', 'medio', 'individual'] as const).filter((m) => m !== d.modo && tem[m]);
 }
@@ -134,7 +166,10 @@ export function errosDoRascunho(d: LoteDraft): CampoErro[] {
     if (l.tipo !== 'ok') {
       erros.push({ campo: 'desconto', mensagem: 'Informe o desconto em kg por cabeça (ex.: 10).' });
     } else if (l.valor.isNegative() || l.valor.gt(DESCONTO_MAX_KG)) {
-      erros.push({ campo: 'desconto', mensagem: 'O desconto deve ficar entre 0 e 99.999 kg por cabeça.' });
+      erros.push({
+        campo: 'desconto',
+        mensagem: 'O desconto deve ficar entre 0 e 99.999 kg por cabeça.',
+      });
     }
   }
   return erros;
@@ -159,16 +194,17 @@ export function rascunhoParaDominio(d: LoteDraft): LoteInput {
 }
 
 /** A pré-visualização só mostra números com peso e (para o total) preço válidos; senão, "—". */
-export function previaPronta(d: LoteDraft, linha: LinhaCalculada): { peso: boolean; total: boolean } {
+export function previaPronta(
+  d: LoteDraft,
+  linha: LinhaCalculada,
+): { peso: boolean; total: boolean } {
   const peso = linha.kg.gt(0) && linha.qtd.gt(0);
   const precoOk = valorCampo(d.preco)?.gt(0) ?? false;
   const descontoOk = d.tipo === 'compra' || !d.aplicarDesconto || valorCampo(d.descontoKg) !== null;
   return { peso: peso && descontoOk, total: peso && precoOk && descontoOk };
 }
 
-export type ResultadoValidacao =
-  | { ok: true; lote: LoteSalvar }
-  | { ok: false; mensagem: string };
+export type ResultadoValidacao = { ok: true; lote: LoteSalvar } | { ok: false; mensagem: string };
 
 /** Valida para salvar (RF-025): exige quantidade/peso e preço da @. */
 export function validarRascunho(d: LoteDraft): ResultadoValidacao {

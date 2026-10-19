@@ -3,8 +3,10 @@ import { calcularVenda } from '@ogado/domain';
 import {
   DESCONTO_PADRAO_KG,
   errosDoRascunho,
+  modosGuardados,
   novoRascunho,
   rascunhoParaDominio,
+  trocarModo,
   validarRascunho,
 } from './lote-draft';
 
@@ -43,7 +45,9 @@ describe('RN-025/ADR-0013 rascunho do lote: desconto em kg por cabeça', () => {
 
   it('valida: vazio, texto, negativo e acima da capacidade da coluna são erros', () => {
     for (const ruim of ['', 'abc', '-5', '100000']) {
-      expect(errosDoRascunho(venda({ descontoKg: ruim })).map((e) => e.campo)).toContain('desconto');
+      expect(errosDoRascunho(venda({ descontoKg: ruim })).map((e) => e.campo)).toContain(
+        'desconto',
+      );
     }
     expect(errosDoRascunho(venda({ descontoKg: '0' }))).toEqual([]);
     expect(errosDoRascunho(venda({ aplicarDesconto: false, descontoKg: '' }))).toEqual([]);
@@ -54,5 +58,34 @@ describe('RN-025/ADR-0013 rascunho do lote: desconto em kg por cabeça', () => {
     expect(ligado.ok && ligado.lote.descontoKg).toBe('10');
     const desligado = validarRascunho(venda({ aplicarDesconto: false }));
     expect(desligado.ok && desligado.lote.descontoKg).toBe('');
+  });
+});
+
+describe('RN-027 cada modo de peso tem os seus campos', () => {
+  it('quantidade, peso e preço da @ não vazam entre os modos e voltam ao retornar', () => {
+    let d = novoRascunho('venda', 1);
+    d = { ...d, qtd: '10', pesoTotal: '3000', preco: '300' };
+
+    d = trocarModo(d, 'medio');
+    expect(d.qtd).toBe('');
+    expect(d.preco).toBe('');
+    expect(d.pesoMedio).toBe('');
+    d = { ...d, qtd: '5', pesoMedio: '450', preco: '310' };
+
+    d = trocarModo(d, 'individual');
+    expect(d.qtd).toBe('');
+    expect(d.preco).toBe('');
+
+    d = trocarModo(d, 'total');
+    expect(d).toMatchObject({ qtd: '10', pesoTotal: '3000', preco: '300' });
+    d = trocarModo(d, 'medio');
+    expect(d).toMatchObject({ qtd: '5', pesoMedio: '450', preco: '310' });
+  });
+
+  it('marca como guardado o modo que tem só quantidade ou preço', () => {
+    let d = novoRascunho('compra', 1);
+    d = { ...d, preco: '300' };
+    d = trocarModo(d, 'medio');
+    expect(modosGuardados(d)).toEqual(['total']);
   });
 });
