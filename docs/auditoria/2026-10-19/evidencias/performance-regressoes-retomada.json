@@ -1,0 +1,30 @@
+{
+  "decimalGlobalMutation": {
+    "normal": "122535.8333333333333333333333",
+    "afterPrecision5": "122530",
+    "changed": true
+  },
+  "snapshotReplay": {
+    "recordedCabecas": "60",
+    "replayCabecas": "59.77307317073170731707317073",
+    "recordedLiquido": "103307.6",
+    "replayLiquido": "102408.0529717073170731707317",
+    "savedVariantes": {
+      "lotacaoInicial": "fixa80",
+      "faturamentoBruto": "pesoVivo"
+    }
+  },
+  "contractPoisonScenario": {
+    "createAccepted": true,
+    "mapperReturnsNull": true,
+    "syncResult": "erro"
+  },
+  "twoTabsBeforeSync": {
+    "tabAInMemory": 1,
+    "tabBInMemory": 1,
+    "persistedAfterBothWrites": 1,
+    "persistedCategories": [
+      "f46b5ef0-8a4f-49a7-b36c-60f12375d814"
+    ]
+  }
+}

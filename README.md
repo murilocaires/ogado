@@ -33,12 +33,18 @@ Abra http://localhost:3000: a página mostra o resultado de `GET http://localhos
 ```bash
 pnpm typecheck
 pnpm lint
-pnpm test          # o teste de /health usa Postgres real (docker compose up -d antes; DATABASE_URL)
+pnpm test          # API exige PostgreSQL exclusivo + TEST_DATABASE_URL (instruções abaixo)
 pnpm test:parity   # script Node: oráculo references/calculo/calc.js vs tests/fixtures/golden.json (tol. 1e-6)
 pnpm build
-node scripts/trace-check.mjs
+node scripts/trace-check.mjs --strict
+pnpm performance:check
+pnpm audit --audit-level moderate
 node scripts/validate-routing.mjs
 ```
+Os testes de API e os E2E integrados recusam banco não identificado como teste. Suba o serviço descartável com `docker compose --profile test up -d postgres-test` e configure **ambas** as variáveis `TEST_DATABASE_URL` e `DATABASE_URL` com `postgresql://ogado_test:ogado_test_local@127.0.0.1:55441/ogado_test?schema=public`. Não use a URL do desenvolvimento. A suíte aplica as migrações e limpa os dados desse banco. Ao terminar, remova apenas esse serviço com `docker compose --profile test rm -s -f postgres-test`; o volume de desenvolvimento permanece separado.
+
+E2E: `pnpm --filter @ogado/web test:e2e:local` (sem banco), `test:e2e` (API real) e `test:e2e:offline` (build PWA). Use `E2E_LOCAL_BUILD=1` para a jornada local em produção e `E2E_CHANNEL` vazio para o Chromium instalado via Playwright. `performance:check` mede cálculo puro e seleção de cenários; não certifica latência HTTP. A política de rastreabilidade distingue testes, gates e itens adiados em `docs/sdd/test-coverage-policy.json`.
+
 `pnpm parity:xlsx` roda o `verify.py` (compara com as planilhas .xlsx; exige Python + `pip install openpyxl`). É opcional e pensado para Linux/CI: no Windows o `verify.py` quebra por causa das barras invertidas no caminho passado ao node.
 
 Estrutura: `apps/web` (Next), `apps/api` (Fastify), `packages/domain`, `packages/contracts`, `packages/db`. Versões e ferramentas: `docs/adr/0009-versoes-e-ferramentas.md`.

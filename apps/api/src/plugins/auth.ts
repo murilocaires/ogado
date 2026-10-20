@@ -19,24 +19,31 @@ export const authPlugin = fp<AuthDeps>(async (app: FastifyInstance, deps) => {
   app.decorateRequest('sessionUser', null);
 
   app.addHook('onRequest', async (request, reply) => {
-    if (request.is404 || request.routeOptions.config.auth === 'public') return;
+    const expectedUsuarioId = request.headers['x-ogado-usuario'];
+    const bound = expectedUsuarioId !== undefined;
+    const boundLogout = request.routeOptions.url === '/auth/logout' && bound;
+    if (request.is404 || (request.routeOptions.config.auth === 'public' && !boundLogout)) return;
+
+    if (expectedUsuarioId !== undefined && typeof expectedUsuarioId !== 'string') {
+      throw unauthenticated();
+    }
 
     const token = request.cookies[sessionCookieName(deps.config)];
     if (!token) throw unauthenticated();
 
-    const result = await deps.sessions.validate(token);
+    const result = await deps.sessions.validate(token, expectedUsuarioId);
     if (result.status === 'invalida') {
-      clearSessionCookie(reply, deps.config);
+      if (!bound) clearSessionCookie(reply, deps.config);
       throw unauthenticated();
     }
     if (result.status === 'expirada') {
-      clearSessionCookie(reply, deps.config);
+      if (!bound) clearSessionCookie(reply, deps.config);
       throw sessionExpired();
     }
 
     request.tenant = result.tenant;
     request.sessionUser = result.usuario;
-    if (result.renewedMaxAgeSeconds !== null) {
+    if (result.renewedMaxAgeSeconds !== null && !boundLogout) {
       setSessionCookie(reply, deps.config, token, result.renewedMaxAgeSeconds);
     }
   });

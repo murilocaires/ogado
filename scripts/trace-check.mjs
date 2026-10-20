@@ -8,7 +8,7 @@ const ID = /\b(RF|RN|RNF)-\d{3}\b/g;
 const req = readFileSync(join(root, 'docs/negocio/02-requisitos.md'), 'utf8');
 const defined = new Set([...req.matchAll(/^\|\s*((?:RF|RN|RNF)-\d{3})\s*\|/gm)].map((m) => m[1]));
 const used = new Map();
-const skip = new Set(['node_modules', '.git', '.next', 'dist', 'references', 'docs', '.claude']);
+const skip = new Set(['node_modules', '.git', '.next', 'dist', 'coverage', 'references', 'docs', '.claude', '.scratch', '.pnpm-store']);
 (function walk(d) {
   if (!existsSync(d)) return;
   for (const n of readdirSync(d)) {
@@ -21,7 +21,26 @@ const skip = new Set(['node_modules', '.git', '.next', 'dist', 'references', 'do
 })(root);
 const untested = [...defined].filter((id) => !used.has(id));
 const unknown = [...used.keys()].filter((id) => !defined.has(id));
+// Exceções explícitas não contam como testes e nunca significam funcionalidade concluída.
+const policy = JSON.parse(readFileSync(join(root, 'docs/sdd/test-coverage-policy.json'), 'utf8'));
+const policyErrors = [];
+for (const [id, rule] of Object.entries(policy)) {
+  if (!defined.has(id) || !rule.motivo || !['gate', 'adiado', 'fora-do-escopo'].includes(rule.tipo)
+      || !existsSync(join(root, rule.fonte))) {
+    policyErrors.push(`${id}: política inválida`);
+    continue;
+  }
+  if (rule.tipo === 'gate') {
+    const source = readFileSync(join(root, rule.fonte), 'utf8');
+    if (!rule.comandos?.length || rule.comandos.some((command) => !source.includes(command)))
+      policyErrors.push(`${id}: comando de gate ausente da fonte`);
+  }
+}
+const missing = untested.filter((id) => !policy[id]);
 console.log(`Requisitos: ${defined.size} | com teste: ${defined.size - untested.length} | sem teste: ${untested.length}`);
 if (untested.length) console.log('Sem teste:', untested.join(', '));
+console.log('Sem teste com tratamento documentado:', untested.filter((id) => policy[id]).join(', ') || 'nenhum');
+if (missing.length) console.log('Sem cobertura nem tratamento:', missing.join(', '));
+if (policyErrors.length) { console.error(policyErrors.join('\n')); process.exit(1); }
 if (unknown.length) { console.error('IDs em testes que não existem na spec:', unknown.join(', ')); process.exit(1); }
-if (process.argv.includes('--strict') && untested.length) process.exit(1);
+if (process.argv.includes('--strict') && missing.length) process.exit(1);

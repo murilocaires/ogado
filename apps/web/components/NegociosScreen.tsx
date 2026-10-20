@@ -1,5 +1,7 @@
 'use client';
 
+import { aguardarGravacao } from '../lib/persistencia';
+
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { baixarArquivo, gerarArquivo } from '../lib/exportacao/baixar';
@@ -35,7 +37,9 @@ function descricaoItem(x: ItemNegocio): string {
     partes.push(x.lote.base === 'carcaca' ? 'carcaça' : 'peso vivo');
     const kg = x.linha.descontoKgCab;
     partes.push(
-      x.linha.kgDescontado.gt(0) ? `desc. ${num(kg, kg.isInteger() ? 0 : 1)} kg/cab.` : 'sem desconto',
+      x.linha.kgDescontado.gt(0)
+        ? `desc. ${num(kg, kg.isInteger() ? 0 : 1)} kg/cab.`
+        : 'sem desconto',
     );
   }
   return partes.join(' · ');
@@ -151,7 +155,8 @@ export function NegociosScreen() {
   const arrInfo = aba === 'vendas' ? 'arrV' : 'arrC';
 
   // Botões de criar contextuais: a aba define o tipo (Todas oferece os dois).
-  const tiposNovos: LoteTipo[] = aba === 'compras' ? ['compra'] : aba === 'vendas' ? ['venda'] : ['compra', 'venda'];
+  const tiposNovos: LoteTipo[] =
+    aba === 'compras' ? ['compra'] : aba === 'vendas' ? ['venda'] : ['compra', 'venda'];
   const botoesNovo = tiposNovos.map((t) => (
     <button key={t} type="button" className="btn sm" onClick={() => setModal({ tipo: t })}>
       <Icon name="plus" size={18} />
@@ -230,8 +235,8 @@ export function NegociosScreen() {
 
       {aba === 'vendas' && (
         <div className="note" style={{ marginBottom: 12 }}>
-          Dica: em vendas de fêmeas, é comum descontar 10 kg por cabeça. Você pode ajustar ou desligar
-          isso em cada lote.
+          Dica: em vendas de fêmeas, é comum descontar 10 kg por cabeça. Você pode ajustar ou
+          desligar isso em cada lote.
         </div>
       )}
 
@@ -342,10 +347,17 @@ export function NegociosScreen() {
           confirmar="Excluir"
           perigo
           onCancel={() => setExcluindo(null)}
-          onConfirm={() => {
+          onConfirm={async () => {
             repo.excluirLote(excluindo.lote.id);
-            setExcluindo(null);
-            toast('Lote excluído.');
+            try {
+              await aguardarGravacao(repo);
+              setExcluindo(null);
+              toast('Lote excluído.');
+            } catch {
+              toast(
+                'Não foi possível confirmar a exclusão. Mantenha o app aberto e tente novamente.',
+              );
+            }
           }}
         />
       )}

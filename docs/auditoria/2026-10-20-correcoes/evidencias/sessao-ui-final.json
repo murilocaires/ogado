@@ -1,0 +1,20 @@
+{
+  "label": "sessao-ui-final",
+  "command": "node",
+  "args": [
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--root",
+    "apps/web",
+    "components/SyncUi.test.tsx",
+    "lib/auth/session-controller.test.ts",
+    "--maxWorkers=1",
+    "--no-file-parallelism"
+  ],
+  "cwd": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit",
+  "started": "2026-10-20T15:44:27.671Z",
+  "ended": "2026-10-20T15:44:36.231Z",
+  "durationSeconds": 8.56,
+  "exitCode": 0,
+  "signal": null
+}

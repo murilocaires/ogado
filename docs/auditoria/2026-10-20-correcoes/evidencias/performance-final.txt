@@ -1,0 +1,20 @@
+{
+  "escopo": "Microbenchmark local; não certifica latência HTTP, rede ou renderização.",
+  "node": "v22.23.2",
+  "resultados": [
+    {
+      "nome": "recria: ouro, cabeças fracionárias",
+      "amostras": 1000,
+      "p95Ms": 0.308100000000195,
+      "limiteMs": 50,
+      "aprovado": true
+    },
+    {
+      "nome": "destaques: 5.000 cenários em uma passagem",
+      "amostras": 100,
+      "p95Ms": 15.881500000000415,
+      "limiteMs": 1000,
+      "aprovado": true
+    }
+  ]
+}

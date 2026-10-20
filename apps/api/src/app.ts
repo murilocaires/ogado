@@ -9,7 +9,7 @@ import type { GoogleOAuthClient } from './google/google-client';
 import { createMemoryEmailSender } from './email/memory-sender';
 import type { EmailSender } from './email/email-sender';
 import { resolveConfig, type PartialAppConfig } from './config';
-import { createPasswordHasher } from './password';
+import { createPasswordHasher, type PasswordHasher } from './password';
 import { authPlugin } from './plugins/auth';
 import { csrfPlugin } from './plugins/csrf';
 import { registerErrorHandling } from './plugins/error-handler';
@@ -43,6 +43,8 @@ export interface AppOptions {
   newFazendaId?: () => string;
   /** Saída de e-mail; padrão em memória (dev/test). O server.ts escolhe Resend conforme o env. */
   emailSender?: EmailSender;
+  /** Adaptador criptográfico; testes podem controlar latência sem substituir banco ou HTTP. */
+  passwordHasher?: PasswordHasher;
   /** Cliente OAuth do Google; ausente = rotas /auth/google/* respondem 404 (sem credenciais). */
   googleClient?: GoogleOAuthClient;
 }
@@ -97,11 +99,21 @@ export function buildApp(options: AppOptions): FastifyInstance {
   app.setSerializerCompiler(serializerCompiler);
   registerErrorHandling(app);
   registerRouteCatalog(app);
+  // Sessão, credenciais e dados privados não podem ser conservados por navegador/proxy/CDN.
+  app.addHook('onSend', async (request, reply, payload) => {
+    if (
+      request.routeOptions.config.auth !== 'public' ||
+      request.routeOptions.url?.startsWith('/auth/')
+    ) {
+      void reply.header('cache-control', 'no-store');
+    }
+    return payload;
+  });
 
   const sessions = createSessionService(prisma, config, clock);
   const accounts = createAccountRepository(prisma);
   const fazendas = createFazendaRepository(prisma);
-  const hasher = createPasswordHasher(config.argon2);
+  const hasher = options.passwordHasher ?? createPasswordHasher(config.argon2);
 
   // A API só serve JSON: CSP fechada, nosniff, sem referrer; HSTS só em produção (ADR-0010 e).
   void app.register(helmet, {
@@ -124,53 +136,56 @@ export function buildApp(options: AppOptions): FastifyInstance {
   void app.register(csrfPlugin, { allowedOrigins: options.corsOrigins });
   void app.register(authPlugin, { config, sessions });
 
-  registerHealthRoutes(app, {
-    pingDatabase: async () => {
-      await prisma.$queryRaw`SELECT 1`;
-    },
-  });
-  const emailSender = options.emailSender ?? createMemoryEmailSender();
-  registerAuthRoutes(app, {
-    config,
-    accounts,
-    fazendas,
-    sessions,
-    hasher,
-    clock,
-    newFazendaId: options.newFazendaId ?? randomUUID,
-    email: emailSender,
-    webOrigin: options.corsOrigins[0] ?? 'http://localhost:3000',
-  });
+  // onRoute (rate limit) precisa existir antes de qualquer rota ser declarada.
+  void app.register(async (routes) => {
+    registerHealthRoutes(routes, {
+      pingDatabase: async () => {
+        await prisma.$queryRaw`SELECT 1`;
+      },
+    });
+    const emailSender = options.emailSender ?? createMemoryEmailSender();
+    registerAuthRoutes(routes, {
+      config,
+      accounts,
+      fazendas,
+      sessions,
+      hasher,
+      clock,
+      newFazendaId: options.newFazendaId ?? randomUUID,
+      email: emailSender,
+      webOrigin: options.corsOrigins[0] ?? 'http://localhost:3000',
+    });
 
-  registerGoogleRoutes(app, {
-    config,
-    google: options.googleClient,
-    accounts,
-    sessions,
-    clock,
-    newFazendaId: options.newFazendaId ?? randomUUID,
-    webOrigin: options.corsOrigins[0] ?? 'http://localhost:3000',
-  });
+    registerGoogleRoutes(routes, {
+      config,
+      google: options.googleClient,
+      accounts,
+      sessions,
+      clock,
+      newFazendaId: options.newFazendaId ?? randomUUID,
+      webOrigin: options.corsOrigins[0] ?? 'http://localhost:3000',
+    });
 
-  const lotes = createLoteRepository(prisma);
-  const cenarios = createCenarioRepository(prisma);
-  const recria = createRecriaRepository(prisma);
+    const lotes = createLoteRepository(prisma);
+    const cenarios = createCenarioRepository(prisma);
+    const recria = createRecriaRepository(prisma);
 
-  registerContaRoutes(app, {
-    config,
-    email: emailSender,
-    accounts,
-    fazendas,
-    lotes,
-    cenarios,
-    recria,
-    sessions,
-    hasher,
-    clock,
+    registerContaRoutes(routes, {
+      config,
+      email: emailSender,
+      accounts,
+      fazendas,
+      lotes,
+      cenarios,
+      recria,
+      sessions,
+      hasher,
+      clock,
+    });
+    registerFazendaRoutes(routes, { fazendas });
+    registerDadosRoutes(routes, { lotes, cenarios, recria });
+    registerHistoricoSyncRoutes(routes, createHistoricoSyncRepository(prisma));
   });
-  registerFazendaRoutes(app, { fazendas });
-  registerDadosRoutes(app, { lotes, cenarios, recria });
-  registerHistoricoSyncRoutes(app, createHistoricoSyncRepository(prisma));
 
   return app;
 }

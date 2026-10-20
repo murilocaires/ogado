@@ -1,0 +1,21 @@
+{
+  "label": "cursor-relogio-red",
+  "command": "node",
+  "args": [
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--root",
+    "apps/api",
+    "test/dados-incremental.test.ts",
+    "--maxWorkers=1",
+    "--no-file-parallelism",
+    "-t",
+    "relógio atrasado"
+  ],
+  "cwd": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit",
+  "started": "2026-10-20T15:41:31.526Z",
+  "ended": "2026-10-20T15:42:38.384Z",
+  "durationSeconds": 66.858,
+  "exitCode": 0,
+  "signal": null
+}

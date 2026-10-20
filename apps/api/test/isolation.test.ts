@@ -10,6 +10,7 @@ import {
   TERMOS_VERSAO,
 } from '@ogado/contracts';
 import { TEST_ORIGIN } from './support/env';
+import { cenarioFixture } from './support/cenario';
 import {
   buildTestApp,
   getWithCookie,
@@ -104,15 +105,7 @@ async function dadosDeB(b: Farm) {
     peso: '1',
     preco: '1',
   });
-  const cenario = await post('/cenarios', {
-    id: randomUUID(),
-    nome: 'B',
-    criadoEm: '2026-10-18T00:00:00.000Z',
-    entradas: {},
-    variantes: {},
-    parametros: {},
-    resultado: {},
-  });
+  const cenario = await post('/cenarios', cenarioFixture({ nome: 'B' }));
   return { lote, cenario };
 }
 
@@ -270,15 +263,7 @@ const isolationCasesDados: Record<string, (a: Farm, b: Farm) => Promise<number>>
   'POST /cenarios': async (a, b) => {
     const id = randomUUID();
     const headers = { origin: TEST_ORIGIN, 'content-type': 'application/json' };
-    const corpo = {
-      id,
-      nome: 'B',
-      criadoEm: '2026-10-18T00:00:00.000Z',
-      entradas: {},
-      variantes: {},
-      parametros: {},
-      resultado: {},
-    };
+    const corpo = cenarioFixture({ id, nome: 'B' });
     const deB = await app.inject({
       method: 'POST',
       url: '/cenarios',

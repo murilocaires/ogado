@@ -13,7 +13,13 @@ import { RepoProvider } from '../lib/repo/repo-provider';
 import type { SyncableRepo } from '../lib/repo/types';
 import type { DadosClient } from '../lib/sync/data-client';
 import { sincronizar, type EstadoSyncStore } from '../lib/sync/engine';
-import { aparelho, COMPRA, criarEstado, criarServidor } from '../lib/sync/engine.test-support';
+import {
+  aparelho,
+  cenario,
+  COMPRA,
+  criarEstado,
+  criarServidor,
+} from '../lib/sync/engine.test-support';
 import { AppShell } from './AppShell';
 import { NegociosScreen } from './NegociosScreen';
 import { SyncContext, SyncInfoContext, SyncProvider } from './SyncProvider';
@@ -122,7 +128,21 @@ afterEach(() => {
   else Reflect.deleteProperty(navigator, 'storage');
 });
 
-describe('RF-075 indicador global e selo por registro', () => {
+describe('RF-050/RF-075 indicador global e selo por registro', () => {
+  it('RF-078/RNF-014 saída confirmada relê o banco durável sem apagar uma segunda vez', async () => {
+    const m = montar(criarServidor());
+    await aguardarSincronizado();
+    const reler = vi.fn().mockResolvedValue(undefined);
+    m.repo.ready = reler;
+    const limpar = vi.spyOn(m.repo, 'limpar');
+    await act(async () => {
+      await m.controller.logout();
+    });
+    await waitFor(() => expect(shell()).toHaveAttribute('data-sync-status', 'desligado'));
+    expect(limpar).not.toHaveBeenCalled();
+    expect(reler).toHaveBeenCalled();
+  });
+
   it('online e sincronizado não mostra nenhum indicador nem "Sincronizar agora"', async () => {
     montar(criarServidor());
     await aguardarSincronizado();
@@ -251,6 +271,171 @@ describe('conflitos resolvidos automaticamente', () => {
 });
 
 describe('RF-079 item recusado pelo servidor', () => {
+  it('RF-079 quarentena remota só permite excluir e só anuncia sucesso após remover o estado duravelmente', async () => {
+    const user = userEvent.setup();
+    const srv = criarServidor();
+    const origem = aparelho();
+    const salvo = origem.repo.salvarCenario(cenario());
+    await sincronizar({ ...origem, api: srv.api, usuarioId: identity.usuarioId });
+    const original = { ...srv.cenarios.get(salvo.id)!, entradas: {} };
+    srv.cenarios.set(salvo.id, original);
+    const excluir = vi.fn(srv.api.excluirCenario);
+    const m = montar(srv, { excluirCenario: excluir });
+    await aguardarSincronizado();
+    expect(m.repo.exportar().cenarios).toHaveLength(0);
+    await user.click(
+      (await screen.findAllByRole('button', { name: '1 item precisa de atenção' }))[0]!,
+    );
+    const lista = await screen.findByRole('dialog', { name: 'Precisa de atenção' });
+    expect(within(lista).queryByRole('button', { name: 'Corrigir' })).not.toBeInTheDocument();
+    expect(within(lista).getByText(/Os dados originais estão preservados/)).toBeInTheDocument();
+    let confirmar!: () => void;
+    m.estado.flush = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          confirmar = resolve;
+        }),
+    );
+    await user.click(within(lista).getByRole('button', { name: 'Excluir' }));
+    const dialog = await screen.findByRole('alertdialog', { name: 'Excluir este item?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Excluir' }));
+    await waitFor(() => expect(excluir).toHaveBeenCalledWith(salvo.id, original.version));
+    expect(screen.queryByText('Item excluído.')).not.toBeInTheDocument();
+    expect(screen.getByRole('alertdialog', { name: 'Excluir este item?' })).toBeInTheDocument();
+    await act(async () => {
+      confirmar();
+    });
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('button', { name: /item precisa de atenção/ }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(m.estado.ler()?.rejeitados).toEqual([]);
+    expect(srv.cenarios.get(salvo.id)?.deletedAt).not.toBeNull();
+    m.estado.flush = vi.fn().mockResolvedValue(undefined);
+    await sincronizarAgora();
+    await aguardarSincronizado();
+    expect(m.estado.ler()?.rejeitados).toEqual([]);
+  });
+
+  it('RF-079 falha ao excluir cenário remoto conserva o original e não mostra sucesso falso', async () => {
+    const user = userEvent.setup();
+    const srv = criarServidor();
+    const origem = aparelho();
+    const salvo = origem.repo.salvarCenario(cenario());
+    await sincronizar({ ...origem, api: srv.api, usuarioId: identity.usuarioId });
+    const original = { ...srv.cenarios.get(salvo.id)!, entradas: {} };
+    srv.cenarios.set(salvo.id, original);
+    const excluir = vi.fn().mockResolvedValue({ ok: false, kind: 'rede' });
+    const m = montar(srv, { excluirCenario: excluir });
+    await aguardarSincronizado();
+    await user.click(
+      (await screen.findAllByRole('button', { name: '1 item precisa de atenção' }))[0]!,
+    );
+    const lista = await screen.findByRole('dialog', { name: 'Precisa de atenção' });
+    await user.click(within(lista).getByRole('button', { name: 'Excluir' }));
+    const dialog = await screen.findByRole('alertdialog', { name: 'Excluir este item?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Excluir' }));
+    await waitFor(() => expect(excluir).toHaveBeenCalledWith(salvo.id, original.version));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Não foi possível confirmar a alteração.',
+    );
+    expect(screen.queryByText('Item excluído.')).not.toBeInTheDocument();
+    expect(m.estado.ler()?.rejeitados?.[0]?.original).toEqual(original);
+    expect(srv.cenarios.get(salvo.id)?.deletedAt).toBeNull();
+  });
+
+  it('RF-078/RF-079 resposta de exclusão após expirar sessão não altera o estado nem anuncia sucesso', async () => {
+    const user = userEvent.setup();
+    const srv = criarServidor();
+    const origem = aparelho();
+    const salvo = origem.repo.salvarCenario(cenario());
+    await sincronizar({ ...origem, api: srv.api, usuarioId: identity.usuarioId });
+    const original = { ...srv.cenarios.get(salvo.id)!, entradas: {} };
+    srv.cenarios.set(salvo.id, original);
+    let responder!: () => void;
+    const excluir = vi.fn(async (id: string, version: number) => {
+      await new Promise<void>((resolve) => {
+        responder = resolve;
+      });
+      return srv.api.excluirCenario(id, version);
+    });
+    const m = montar(srv, { excluirCenario: excluir });
+    await aguardarSincronizado();
+    await user.click(
+      (await screen.findAllByRole('button', { name: '1 item precisa de atenção' }))[0]!,
+    );
+    const lista = await screen.findByRole('dialog', { name: 'Precisa de atenção' });
+    await user.click(within(lista).getByRole('button', { name: 'Excluir' }));
+    const dialog = await screen.findByRole('alertdialog', { name: 'Excluir este item?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Excluir' }));
+    await waitFor(() => expect(excluir).toHaveBeenCalled());
+    const gravar = vi.spyOn(m.estado, 'gravar');
+    await act(async () => {
+      m.controller.markUnauthorized();
+      responder();
+    });
+    expect(gravar).not.toHaveBeenCalled();
+    expect(screen.queryByText('Item excluído.')).not.toBeInTheDocument();
+  });
+
+  it('RF-079 exclusão local com falha de persistência mostra erro sem anunciar sucesso', async () => {
+    const user = userEvent.setup();
+    const srv = criarServidor();
+    const m = montar(srv, { criarLote: async () => ({ ok: false, kind: 'contrato' }) });
+    await aguardarSincronizado();
+    act(() => {
+      m.repo.salvarLote(COMPRA);
+    });
+    await sincronizarAgora();
+    await user.click(
+      (await screen.findAllByRole('button', { name: '1 item precisa de atenção' }))[0]!,
+    );
+    m.repo.flush = vi.fn().mockRejectedValue(new Error('quota'));
+    const lista = await screen.findByRole('dialog', { name: 'Precisa de atenção' });
+    await user.click(within(lista).getByRole('button', { name: 'Excluir' }));
+    const dialog = await screen.findByRole('alertdialog', { name: 'Excluir este item?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Excluir' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Não foi possível confirmar a alteração.',
+    );
+    expect(screen.queryByText('Item excluído.')).not.toBeInTheDocument();
+    expect(screen.getByRole('alertdialog', { name: 'Excluir este item?' })).toBeInTheDocument();
+  });
+
+  it('RF-079 renomear cenário recusado aguarda persistência antes de fechar e anunciar sucesso', async () => {
+    const user = userEvent.setup();
+    const srv = criarServidor();
+    const m = montar(srv, { criarCenario: async () => ({ ok: false, kind: 'contrato' }) });
+    await aguardarSincronizado();
+    act(() => {
+      m.repo.salvarCenario(cenario());
+    });
+    await sincronizarAgora();
+    await user.click(
+      (await screen.findAllByRole('button', { name: '1 item precisa de atenção' }))[0]!,
+    );
+    const lista = await screen.findByRole('dialog', { name: 'Precisa de atenção' });
+    await user.click(within(lista).getByRole('button', { name: 'Corrigir' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Renomear cenário' });
+    await user.clear(within(dialog).getByLabelText('Nome do cenário'));
+    await user.type(within(dialog).getByLabelText('Nome do cenário'), 'Novo nome');
+    let confirmar!: () => void;
+    m.repo.flush = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          confirmar = resolve;
+        }),
+    );
+    await user.click(within(dialog).getByRole('button', { name: 'Renomear' }));
+    expect(screen.queryByText('Cenário renomeado.')).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Renomear cenário' })).toBeInTheDocument();
+    await act(async () => {
+      confirmar();
+    });
+    expect(await screen.findByText('Cenário renomeado.')).toBeInTheDocument();
+  });
+
   it('aparece em "Precisa de atenção" com o motivo e permite excluir; as outras entidades seguem', async () => {
     const user = userEvent.setup();
     const srv = criarServidor();

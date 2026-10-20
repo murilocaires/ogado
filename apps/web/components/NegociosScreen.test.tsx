@@ -7,7 +7,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { BOM } from '../lib/exportacao/csv';
 import { brlComSinal } from '../lib/format';
 import { NegociosScreen } from './NegociosScreen';
-import { renderComApp } from './test-utils';
+import { criarStorageMemoria, renderComApp } from './test-utils';
+import { criarRepoLocal } from '../lib/repo/local-repo';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
@@ -53,6 +54,31 @@ async function confirmarSalvar(user: User) {
 }
 
 describe('RF-024 estado vazio', () => {
+  it('RNF-017: falha no commit mantém o lançamento recuperável, sem anunciar sucesso nem duplicar no retry', async () => {
+    const user = userEvent.setup();
+    let attempt = 0;
+    const local = criarStorageMemoria();
+    const repo = {
+      ...criarRepoLocal({ storage: () => local }),
+      flush: async () => {
+        if (++attempt === 1) throw new Error('quota');
+      },
+    };
+    renderComApp(<NegociosScreen />, repo);
+    await user.click(screen.getAllByRole('button', { name: 'Nova compra' })[0]!);
+    await preencherELancar(user, { qtd: '10', peso: '3000', preco: '300' });
+    await confirmarSalvar(user);
+    expect(await screen.findByText(/Não foi possível confirmar o salvamento/)).toBeVisible();
+    expect(screen.queryByText('Lote salvo.')).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Nova compra' })).toBeVisible();
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar lote' }),
+    );
+    await confirmarSalvar(user);
+    expect(await screen.findByText('Lote salvo.')).toBeVisible();
+    expect(screen.getByText('1 lançamento · 1 compra · 0 vendas')).toBeVisible();
+  });
+
   it('RF-024 sem lotes mostra o estado vazio e saldo zerado', () => {
     renderComApp(<NegociosScreen />);
     expect(screen.getByRole('heading', { name: 'Nenhum lote' })).toBeInTheDocument();
@@ -62,23 +88,30 @@ describe('RF-024 estado vazio', () => {
 
 describe('RF-024 botões de criar contextuais por aba', () => {
   const nomes = () =>
-    ['Nova compra', 'Nova venda'].filter((n) => screen.queryAllByRole('button', { name: n }).length);
+    ['Nova compra', 'Nova venda'].filter(
+      (n) => screen.queryAllByRole('button', { name: n }).length,
+    );
 
   it('RF-024 o topo não tem "Novo lote", só Exportar; a aba Todas oferece compra e venda', () => {
     renderComApp(<NegociosScreen />);
     expect(screen.queryByRole('button', { name: 'Novo lote' })).not.toBeInTheDocument();
     const topo = document.querySelector('.top-actions') as HTMLElement;
-    expect(within(topo).getAllByRole('button').map((b) => b.textContent)).toEqual(['Exportar']);
+    expect(
+      within(topo)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Exportar']);
     const barra = document.querySelector('.abas-barra') as HTMLElement;
-    expect(within(barra).getAllByRole('tab').map((b) => b.textContent)).toEqual([
-      'Todas',
-      'Compras',
-      'Vendas',
-    ]);
-    expect(within(barra).getAllByRole('button').map((b) => b.textContent)).toEqual([
-      'Nova compra',
-      'Nova venda',
-    ]);
+    expect(
+      within(barra)
+        .getAllByRole('tab')
+        .map((b) => b.textContent),
+    ).toEqual(['Todas', 'Compras', 'Vendas']);
+    expect(
+      within(barra)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Nova compra', 'Nova venda']);
   });
 
   it('RF-024 Compras mostra só "Nova compra" e Vendas só "Nova venda"', async () => {
@@ -101,7 +134,9 @@ describe('RF-024 botões de criar contextuais por aba', () => {
     await user.click(screen.getByRole('tab', { name: 'Vendas' }));
     await user.click(screen.getAllByRole('button', { name: 'Nova venda' })[0]!);
     const modal = screen.getByRole('dialog', { name: 'Nova venda' });
-    expect(within(modal).queryByRole('group', { name: 'Tipo de lançamento' })).not.toBeInTheDocument();
+    expect(
+      within(modal).queryByRole('group', { name: 'Tipo de lançamento' }),
+    ).not.toBeInTheDocument();
     expect(within(modal).getByRole('checkbox', { name: /Aplicar desconto/ })).toBeInTheDocument();
   });
 
@@ -113,9 +148,15 @@ describe('RF-024 botões de criar contextuais por aba', () => {
     await confirmarSalvar(user);
     const lista = document.querySelector('.lotes-m .ops') as HTMLElement;
     expect(within(lista).getByText('Lote 1 · Novilhas')).toBeInTheDocument();
-    expect(within(lista).getByText('2.900 kg líq. de 3.000 kg · peso vivo · desc. 10 kg/cab.')).toBeInTheDocument();
-    expect(within(lista).getByRole('button', { name: 'Editar lote 1 de venda' })).toBeInTheDocument();
-    expect(within(lista).getByRole('button', { name: 'Excluir lote 1 de venda' })).toBeInTheDocument();
+    expect(
+      within(lista).getByText('2.900 kg líq. de 3.000 kg · peso vivo · desc. 10 kg/cab.'),
+    ).toBeInTheDocument();
+    expect(
+      within(lista).getByRole('button', { name: 'Editar lote 1 de venda' }),
+    ).toBeInTheDocument();
+    expect(
+      within(lista).getByRole('button', { name: 'Excluir lote 1 de venda' }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -137,7 +178,14 @@ describe('RF-020/RF-021/RF-023/RN-006 compra e venda geram o saldo do domínio',
     const esperado = calcularCompraVenda({
       compras: [{ modo: 'total', qtd: '10', peso: '3000', preco: '300' }],
       vendas: [
-        { modo: 'total', qtd: '10', peso: '4500', preco: '320', base: 'vivo', aplicarDesconto: false },
+        {
+          modo: 'total',
+          qtd: '10',
+          peso: '4500',
+          preco: '320',
+          base: 'vivo',
+          aplicarDesconto: false,
+        },
       ],
     });
     // 100 @ x 300 = 30.000 comprados; 150 @ x 320 = 48.000 vendidos; saldo +18.000
@@ -196,7 +244,7 @@ describe('RF-020/RF-021/RF-023/RN-006 compra e venda geram o saldo do domínio',
 });
 
 describe('RN-027 modos de peso retêm o que foi digitado', () => {
-  it('RN-027 alternar total, média e peso a peso não perde valores e marca o modo guardado', async () => {
+  it('RN-027/RF-022 alternar total, média e peso a peso não perde valores e marca o modo guardado', async () => {
     const user = userEvent.setup();
     renderComApp(<NegociosScreen />);
     await user.click(screen.getAllByRole('button', { name: 'Nova compra' })[0]!);
@@ -205,7 +253,9 @@ describe('RN-027 modos de peso retêm o que foi digitado', () => {
     await user.type(within(modal).getByLabelText('Peso total do lote'), '3000');
     await user.click(within(modal).getByRole('tab', { name: /Média × qtd\./ }));
     // O modo "total" tem valor guardado e aparece marcado.
-    expect(within(modal).getByRole('tab', { name: /Total do lote.*valor guardado/ })).toBeInTheDocument();
+    expect(
+      within(modal).getByRole('tab', { name: /Total do lote.*valor guardado/ }),
+    ).toBeInTheDocument();
     const medio = within(modal).getByLabelText('Peso médio por cabeça');
     expect(medio).toHaveValue('');
     await user.type(medio, '300');
@@ -367,6 +417,8 @@ describe('RF-026 aba Vendas', () => {
     renderComApp(<NegociosScreen />);
     expect(screen.queryByText(/em vendas de fêmeas/)).not.toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: 'Vendas' }));
-    expect(screen.getByText(/em vendas de fêmeas, é comum descontar 10 kg por cabeça/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/em vendas de fêmeas, é comum descontar 10 kg por cabeça/),
+    ).toBeInTheDocument();
   });
 });

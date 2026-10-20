@@ -16,5 +16,23 @@ services:
       timeout: 5s
       retries: 10
 
+  postgres-test:
+    image: postgres:17-alpine
+    profiles: [test]
+    environment:
+      POSTGRES_USER: ogado_test
+      POSTGRES_PASSWORD: ogado_test_local
+      POSTGRES_DB: ogado_test
+    ports:
+      - '127.0.0.1:${POSTGRES_TEST_PORT:-55441}:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    mem_limit: 512m
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ogado_test -d ogado_test']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   ogado_pgdata:

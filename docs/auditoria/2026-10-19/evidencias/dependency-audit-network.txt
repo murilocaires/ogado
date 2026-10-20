@@ -1,0 +1,98 @@
+{
+  "advisories": {
+    "1115806": {
+      "findings": [
+        {
+          "version": "4.17.21",
+          "paths": [
+            "packages__db>@prisma/client>prisma>@prisma/studio-core>@visx/grid>@visx/shape>lodash",
+            "packages__db>@prisma/client>prisma>@prisma/studio-core>@visx/responsive>lodash",
+            "packages__db>@prisma/client>prisma>@prisma/studio-core>@visx/shape>lodash",
+            "packages__db>prisma>@prisma/studio-core>@visx/grid>@visx/shape>lodash",
+            "packages__db>prisma>@prisma/studio-core>@visx/responsive>lodash",
+            "packages__db>prisma>@prisma/studio-core>@visx/shape>lodash"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1115806,
+      "title": "lodash vulnerable to Code Injection via `_.template` imports key names",
+      "module_name": "lodash",
+      "vulnerable_versions": ">=4.0.0 <=4.17.23",
+      "patched_versions": ">=4.17.24",
+      "severity": "high",
+      "cwe": "CWE-94",
+      "github_advisory_id": "GHSA-r5fr-rjxr-66jc",
+      "url": "https://github.com/advisories/GHSA-r5fr-rjxr-66jc"
+    },
+    "1115810": {
+      "findings": [
+        {
+          "version": "4.17.21",
+          "paths": [
+            "packages__db>@prisma/client>prisma>@prisma/studio-core>@visx/grid>@visx/shape>lodash",
+            "packages__db>@prisma/client>prisma>@prisma/studio-core>@visx/responsive>lodash",
+            "packages__db>@prisma/client>prisma>@prisma/studio-core>@visx/shape>lodash",
+            "packages__db>prisma>@prisma/studio-core>@visx/grid>@visx/shape>lodash",
+            "packages__db>prisma>@prisma/studio-core>@visx/responsive>lodash",
+            "packages__db>prisma>@prisma/studio-core>@visx/shape>lodash"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1115810,
+      "title": "lodash vulnerable to Prototype Pollution via array path bypass in `_.unset` and `_.omit`",
+      "module_name": "lodash",
+      "vulnerable_versions": "<=4.17.23",
+      "patched_versions": ">=4.17.24",
+      "severity": "moderate",
+      "cwe": "CWE-1321",
+      "github_advisory_id": "GHSA-f23m-r3pf-42rh",
+      "url": "https://github.com/advisories/GHSA-f23m-r3pf-42rh"
+    },
+    "1120370": {
+      "findings": [
+        {
+          "version": "4.17.21",
+          "paths": [
+            "packages__db>@prisma/client>prisma>@prisma/studio-core>@visx/grid>@visx/shape>lodash",
+            "packages__db>@prisma/client>prisma>@prisma/studio-core>@visx/responsive>lodash",
+            "packages__db>@prisma/client>prisma>@prisma/studio-core>@visx/shape>lodash",
+            "packages__db>prisma>@prisma/studio-core>@visx/grid>@visx/shape>lodash",
+            "packages__db>prisma>@prisma/studio-core>@visx/responsive>lodash",
+            "packages__db>prisma>@prisma/studio-core>@visx/shape>lodash"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120370,
+      "title": "Lodash has Prototype Pollution Vulnerability in `_.unset` and `_.omit` functions",
+      "module_name": "lodash",
+      "vulnerable_versions": ">=4.0.0 <=4.17.22",
+      "patched_versions": ">=4.17.23",
+      "severity": "moderate",
+      "cwe": "CWE-1321",
+      "github_advisory_id": "GHSA-xxjr-mmjv-4gpg",
+      "url": "https://github.com/advisories/GHSA-xxjr-mmjv-4gpg"
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 2,
+      "high": 1,
+      "critical": 0
+    },
+    "dependencies": 235,
+    "devDependencies": 295,
+    "optionalDependencies": 162,
+    "totalDependencies": 581
+  }
+}

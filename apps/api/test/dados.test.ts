@@ -14,6 +14,7 @@ import {
 } from '@ogado/contracts';
 import { TEST_ORIGIN } from './support/env';
 import { buildTestApp, prisma, signup } from './support/harness';
+import { cenarioFixture as novoCenario } from './support/cenario';
 
 const app = buildTestApp();
 
@@ -63,21 +64,6 @@ const novoLote = (over: Record<string, unknown> = {}) => ({
   qtd: '100',
   peso: '12.500',
   preco: '300.00',
-  ...over,
-});
-
-const novoCenario = (over: Record<string, unknown> = {}) => ({
-  id: randomUUID(),
-  nome: 'Cenário 1',
-  criadoEm: '2026-10-18T12:00:00.000Z',
-  entradas: { area: '100', dias: '365' },
-  variantes: { lotacaoInicial: 'fixa80', faturamentoBruto: 'pesoVivo' },
-  parametros: { arrobaVivoKg: '30', uaKg: '450' },
-  resultado: {
-    cabecas: '100',
-    gmdImplicito: null,
-    custos: [{ id: 'suplemento', nome: 'Suplemento', valor: '1234.5678' }],
-  },
   ...over,
 });
 
@@ -432,6 +418,7 @@ describe('cenários na nuvem (RF-032)', () => {
     ).toBe(201);
     await rejeita(novoCenario({ nome: 'x'.repeat(81) }));
     await rejeita(novoCenario({ nome: '  ' }));
+    await rejeita(novoCenario({ entradas: {}, variantes: {}, parametros: {}, resultado: {} }));
     await rejeita(novoCenario({ entradas: { area: 100 } }));
     await rejeita(novoCenario({ resultado: { cabecas: 100 } }));
     await rejeita(novoCenario({ criadoEm: 'ontem' }));

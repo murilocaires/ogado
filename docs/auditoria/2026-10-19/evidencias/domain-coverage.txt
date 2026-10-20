@@ -1,0 +1,25 @@
+
+ RUN  v5.0.5 C:/Users/Murilo Caires/Desktop/Criando/ogado/ogado-dev-kit/ogado-dev-kit/packages/domain
+      Coverage enabled with v8
+
+
+ Test Files  6 passed (6)
+      Tests  130 passed (130)
+   Start at  23:09:31
+   Duration  4.32s (transform 58%, import 19%, worker 17%, tests 7%)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |     100 |    97.88 |     100 |     100 |                   
+ pt-br.ts          |     100 |    98.33 |     100 |     100 | 88                
+ recria.ts         |     100 |    95.12 |     100 |     100 | 192               
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 160/160 )
+Branches     : 97.88% ( 139/142 )
+Functions    : 100% ( 28/28 )
+Lines        : 100% ( 140/140 )
+================================================================================

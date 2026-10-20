@@ -1,0 +1,13 @@
+{
+  "label": "persistencia-browser-final",
+  "command": "node",
+  "args": [
+    ".scratch/correcoes-auditoria-2026-10-20/repo-browser-check.cjs"
+  ],
+  "cwd": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit",
+  "started": "2026-10-20T15:48:04.467Z",
+  "ended": "2026-10-20T15:48:24.059Z",
+  "durationSeconds": 19.592,
+  "exitCode": 0,
+  "signal": null
+}

@@ -9,9 +9,10 @@ import {
   type ReactNode,
 } from 'react';
 import { limparDadosDoAparelho } from '../sync/storage';
+import { canalLocal, LOCAL_ORIGIN } from '../repo/indexed-db';
 import { createApiClient } from './api-client';
+import { criarIdentidadeDuravel } from './durable-identity';
 import {
-  browserIdentityStore,
   createSessionController,
   type SessionController,
   type SessionState,
@@ -24,7 +25,7 @@ const SERVER_STATE: SessionState = { status: 'verificando' };
 function createBrowserController(): SessionController {
   return createSessionController({
     api: createApiClient(),
-    identity: browserIdentityStore(),
+    identity: criarIdentidadeDuravel(),
     // Logout confirmado (RF-078): apaga os dados do aparelho e o controle de sincronização.
     clearLocalData: limparDadosDoAparelho,
   });
@@ -42,8 +43,25 @@ export function SessionProvider({
     void value.verify();
     // Voltou a rede: reverifica (sai de offline-nao-verificado ou descobre que expirou).
     const onOnline = (): void => void value.verify();
+    const onIdentity = (event: StorageEvent): void => {
+      if (event.key === 'ogado.identidade' || event.key === null) void value.identityChanged();
+    };
+    const canal = canalLocal();
+    if (canal)
+      canal.onmessage = (event: MessageEvent<{ tipo?: string; origem?: string }>) => {
+        if (
+          event.data.origem !== LOCAL_ORIGIN &&
+          ['identidade', 'limpar'].includes(event.data.tipo ?? '')
+        )
+          void value.identityChanged();
+      };
     window.addEventListener('online', onOnline);
-    return () => window.removeEventListener('online', onOnline);
+    window.addEventListener('storage', onIdentity);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('storage', onIdentity);
+      canal?.close();
+    };
   }, [value]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

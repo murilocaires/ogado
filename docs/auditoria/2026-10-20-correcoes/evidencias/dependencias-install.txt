@@ -1,0 +1,56 @@
+Scope: all 6 workspace projects
+✓ Lockfile passes supply-chain policies (verified 19h ago)
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 21, reused 0, downloaded 0, added 0
+Progress: resolved 28, reused 5, downloaded 0, added 0
+Progress: resolved 34, reused 15, downloaded 0, added 0
+Progress: resolved 36, reused 19, downloaded 0, added 0
+Progress: resolved 37, reused 31, downloaded 0, added 0
+Progress: resolved 38, reused 36, downloaded 0, added 0
+Progress: resolved 39, reused 37, downloaded 0, added 0
+Progress: resolved 136, reused 62, downloaded 0, added 0
+Progress: resolved 169, reused 95, downloaded 0, added 0
+Progress: resolved 173, reused 110, downloaded 0, added 0
+Progress: resolved 176, reused 125, downloaded 0, added 0
+Progress: resolved 180, reused 131, downloaded 0, added 0
+Progress: resolved 182, reused 148, downloaded 0, added 0
+Progress: resolved 184, reused 162, downloaded 0, added 0
+Progress: resolved 185, reused 164, downloaded 0, added 0
+Progress: resolved 187, reused 166, downloaded 0, added 0
+Progress: resolved 187, reused 167, downloaded 0, added 0
+Progress: resolved 190, reused 170, downloaded 0, added 0
+Progress: resolved 248, reused 180, downloaded 0, added 0
+Progress: resolved 307, reused 193, downloaded 0, added 0
+Progress: resolved 308, reused 193, downloaded 0, added 0
+Progress: resolved 360, reused 198, downloaded 0, added 0
+Progress: resolved 388, reused 198, downloaded 0, added 0
+Progress: resolved 392, reused 200, downloaded 0, added 0
+Progress: resolved 393, reused 200, downloaded 0, added 0
+Progress: resolved 394, reused 202, downloaded 0, added 0
+Progress: resolved 395, reused 203, downloaded 0, added 0
+Progress: resolved 396, reused 209, downloaded 0, added 0
+Progress: resolved 398, reused 225, downloaded 0, added 0
+Progress: resolved 400, reused 246, downloaded 0, added 0
+Progress: resolved 401, reused 298, downloaded 0, added 0
+Progress: resolved 401, reused 308, downloaded 0, added 0
+Progress: resolved 402, reused 308, downloaded 0, added 0
+Progress: resolved 440, reused 311, downloaded 0, added 0
+Progress: resolved 459, reused 344, downloaded 0, added 0
+Progress: resolved 494, reused 368, downloaded 0, added 0
+Progress: resolved 502, reused 407, downloaded 0, added 0
+Progress: resolved 505, reused 409, downloaded 0, added 0
+Progress: resolved 516, reused 414, downloaded 0, added 0
+Progress: resolved 547, reused 429, downloaded 0, added 0
+Progress: resolved 549, reused 431, downloaded 0, added 0
+Progress: resolved 550, reused 431, downloaded 0, added 0
+Progress: resolved 550, reused 432, downloaded 0, added 0
+Progress: resolved 551, reused 432, downloaded 0, added 0
+Progress: resolved 570, reused 434, downloaded 0, added 0
+Progress: resolved 581, reused 462, downloaded 0, added 0
+Packages: +1 -1
++-
+Progress: resolved 581, reused 463, downloaded 1, added 0
+Progress: resolved 581, reused 463, downloaded 1, added 1
+Progress: resolved 581, reused 463, downloaded 1, added 1, done
+
+Done in 1m 53.9s using pnpm v11.13.0

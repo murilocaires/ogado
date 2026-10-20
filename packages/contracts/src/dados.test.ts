@@ -58,7 +58,7 @@ describe('contratos de dados da nuvem', () => {
     expect(lotePatchSchema.safeParse({ version: 1, numero: 3 }).success).toBe(false);
   });
 
-  it('RF-032: cenário só aceita strings nas folhas e nome até 80', () => {
+  it('RF-032/RF-079: cenário incompleto é recusado na borda antes de entrar na sincronização', () => {
     const base = {
       id: lote.id,
       nome: 'A',
@@ -68,7 +68,7 @@ describe('contratos de dados da nuvem', () => {
       parametros: {},
       resultado: { x: null, custos: [{ id: 'a', valor: null }] },
     };
-    expect(cenarioCreateSchema.safeParse(base).success).toBe(true);
+    expect(cenarioCreateSchema.safeParse(base).success).toBe(false);
     expect(cenarioCreateSchema.safeParse({ ...base, entradas: { a: 1 } }).success).toBe(false);
     expect(cenarioCreateSchema.safeParse({ ...base, nome: 'x'.repeat(81) }).success).toBe(false);
   });

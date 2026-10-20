@@ -1,7 +1,13 @@
 // Entidades e interface do repositório de dados da web (ADR-0007, seam de dados).
-// As telas só falam com `OGadoRepo`. Na E1 a implementação é o localStorage; na E3/E4 troca-se por
-// API/IndexedDB sem mexer nas telas. Valores de dinheiro/peso ficam como STRING (pt-BR digitado).
-import type { ModoPeso, VarianteFaturamentoBruto, VarianteLotacaoInicial } from '@ogado/domain';
+// As telas só falam com `OGadoRepo`; a implementação padrão é IndexedDB transacional (ADR-0016).
+// Valores de dinheiro/peso ficam como STRING (pt-BR digitado).
+import type { ModoPeso, VarianteLotacaoInicial } from '@ogado/domain';
+import type {
+  CenarioParametrosContrato,
+  CenarioResultadoContrato,
+  CenarioVariantesEntrada,
+  RecriaFormContrato,
+} from '@ogado/contracts';
 
 export type LoteTipo = 'compra' | 'venda';
 export type BaseArroba = 'vivo' | 'carcaca';
@@ -62,16 +68,20 @@ export const RECRIA_CAMPOS = [
 
 export type RecriaCampo = (typeof RECRIA_CAMPOS)[number];
 /** Campos como digitados (percentuais em %, não em fração). */
-export type RecriaForm = Record<RecriaCampo, string>;
+export type RecriaForm = RecriaFormContrato;
 
 export interface RecriaEntity extends EntityMeta {
   form: RecriaForm;
   lotacaoInicial: VarianteLotacaoInicial;
+  variantes?: CenarioVariantes;
+  parametros?: CenarioParametros;
 }
 
 export interface RecriaAtualizacao {
   form?: Partial<RecriaForm>;
   lotacaoInicial?: VarianteLotacaoInicial;
+  variantes?: CenarioVariantes;
+  parametros?: CenarioParametros;
 }
 
 /** Campos `Valor` do resultado do domínio guardados no snapshot do cenário (ADR-0003, RN-023). */
@@ -97,22 +107,12 @@ export const CENARIO_RESULTADO_CAMPOS = [
 export type CenarioResultadoCampo = (typeof CENARIO_RESULTADO_CAMPOS)[number];
 
 /** Resultado do domínio como string decimal SEM arredondar; `null` = indefinido (RN-022). */
-export type CenarioResultado = Record<CenarioResultadoCampo, string | null> & {
-  custos: { id: string; nome: string; valor: string | null }[];
-};
+export type CenarioResultado = CenarioResultadoContrato;
 
 /** Parâmetros efetivamente usados no cálculo (RN-021), como string decimal. */
-export interface CenarioParametros {
-  arrobaVivoKg: string;
-  arrobaCarcacaKg: string;
-  uaKg: string;
-  lotacaoFixaHa: string;
-}
+export type CenarioParametros = CenarioParametrosContrato;
 
-export interface CenarioVariantes {
-  lotacaoInicial: VarianteLotacaoInicial;
-  faturamentoBruto: VarianteFaturamentoBruto;
-}
+export type CenarioVariantes = CenarioVariantesEntrada;
 
 /**
  * Cenário salvo (RF-032, RN-023): SNAPSHOT imutável das entradas, variantes, parâmetros e do
@@ -136,7 +136,7 @@ export type CenarioSalvar = Pick<
 
 export const CENARIO_NOME_MAX = 80;
 
-export type PersistenciaStatus = 'ok' | 'indisponivel';
+export type PersistenciaStatus = 'ok' | 'salvando' | 'indisponivel';
 
 export type RepoSnapshot =
   | { status: 'carregando' }
@@ -178,6 +178,9 @@ export interface DadosCompletos {
 
 /** Repositório local que também deixa o motor de sincronização ler e aplicar dados da nuvem. */
 export interface SyncableRepo extends OGadoRepo {
+  /** Hidratação e confirmação de commit no armazenamento do aparelho. */
+  ready?(): Promise<void>;
+  flush?(): Promise<void>;
   exportar(): DadosCompletos;
   /** Substitui por `id` (ou acrescenta) o que veio da nuvem; não mexe no resto. */
   aplicar(mudanca: {

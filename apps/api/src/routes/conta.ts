@@ -26,6 +26,7 @@ import type { LoteRepository } from '../repositories/lote-repository';
 import type { RecriaRepository } from '../repositories/recria-repository';
 import { clearSessionCookie, sessionCookieName } from '../session/cookie';
 import type { SessionService } from '../session/session-service';
+import { parseToken } from '../session/tokens';
 import { requireTenant, type TenantContext } from '../tenant';
 import { toCenarioDto, toFazendaDto, toLoteDto, toRecriaEntradaDto } from './dto';
 
@@ -118,10 +119,15 @@ export function registerContaRoutes(app: FastifyInstance, deps: ContaRoutesDeps)
       }
     }
 
-    await deps.accounts.updateSenhaHash(tenant.usuarioId, await deps.hasher.hash(novaSenha));
     const token = request.cookies[sessionCookieName(deps.config)];
-    if (token) await deps.sessions.invalidateOthersForUser(tenant.usuarioId, token);
-    else await deps.sessions.invalidateAllForUser(tenant.usuarioId);
+    const changed = await deps.accounts.changeSenha({
+      usuarioId: tenant.usuarioId,
+      expectedHash: hashAtual,
+      senhaHash: await deps.hasher.hash(novaSenha),
+      currentSessionId: token ? (parseToken(token)?.id ?? null) : null,
+      now: deps.clock(),
+    });
+    if (!changed) throw new AppError(400, 'credenciais_invalidas', 'A senha atual está incorreta.');
     return reply.code(204).send();
   });
 
@@ -226,9 +232,9 @@ export function registerContaRoutes(app: FastifyInstance, deps: ContaRoutesDeps)
             content: Buffer.from(JSON.stringify(dados, null, 2), 'utf8').toString('base64'),
           }),
         )
-        .catch((error: unknown) => {
+        .catch(() => {
           request.log.error(
-            { motivo: error instanceof Error ? error.message : 'erro desconhecido' },
+            { category: 'email_delivery_failed', operation: 'data_export' },
             'falha ao enviar e-mail com os dados do titular',
           );
         });

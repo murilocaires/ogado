@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import Decimal from 'decimal.js';
-import { calcularCompraVenda, PARAMETROS_COMPRA_VENDA, type CompraVendaInput } from './compra-venda';
+import {
+  calcularCompraVenda,
+  PARAMETROS_COMPRA_VENDA,
+  type CompraVendaInput,
+} from './compra-venda';
 import {
   CONFIGURACAO_PADRAO,
   PARAMETROS_FAZENDA_PADRAO,
@@ -146,7 +150,7 @@ describe('tradução da configuração em argumentos de cálculo (RN-023, RN-009
     };
     const t = traduzirConfiguracao(config);
     const recria = calcularRecria(entradaOuro, t.variantes, t.parametrosRecria);
-    expect(recria.variantes).toEqual(config.variantes);
+    expect(recria.variantes).toEqual({ ...config.variantes, cabecasInteiras: false });
   });
 
   it('CA-20: X, depois Y, depois X de novo dá o mesmo resultado; cada resultado devolve os parâmetros usados; nada de estado global', () => {
@@ -179,7 +183,7 @@ describe('tradução da configuração em argumentos de cálculo (RN-023, RN-009
     );
 
     // snapshot (T-08): variantes e parâmetros efetivamente usados
-    expect(segundo.recria.variantes).toEqual(y.variantes);
+    expect(segundo.recria.variantes).toEqual({ ...y.variantes, cabecasInteiras: false });
     expect(segundo.recria.parametros.uaKg.toString()).toBe('500');
     expect(segundo.recria.parametros.arrobaCarcacaKg.toString()).toBe('16');
     expect(segundo.cv.params.arrobaCarcacaKg.toString()).toBe('16');

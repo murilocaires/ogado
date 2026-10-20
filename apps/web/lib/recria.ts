@@ -36,9 +36,15 @@ export interface RecriaCalculada {
 }
 
 export function calcularRecriaEntidade(recria: RecriaEntity): RecriaCalculada {
-  const resultado = calcularRecria(entradaRecria(recria.form), {
-    lotacaoInicial: recria.lotacaoInicial,
-    faturamentoBruto: 'pesoVivo',
-  });
+  const resultado = calcularRecria(
+    entradaRecria(recria.form),
+    {
+      // RN-009: na simulação atual, UA total / área pastável informada (decisão de 20/10/2026).
+      lotacaoInicial: 'areaPastavel',
+      faturamentoBruto: recria.variantes?.faturamentoBruto ?? 'pesoVivo',
+      cabecasInteiras: recria.variantes ? (recria.variantes.cabecasInteiras ?? false) : true,
+    },
+    recria.parametros,
+  );
   return { resultado, alertas: alertasRecria(resultado) };
 }

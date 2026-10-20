@@ -61,7 +61,25 @@ export function registerDadosRoutes(app: FastifyInstance, deps: DadosRoutesDeps)
     '/lotes',
     { schema: { querystring: loteListQuerySchema, response: { 200: loteListResponseSchema } } },
     async (request) => {
-      const { tipo, incluirExcluidos } = request.query;
+      const { tipo, incluirExcluidos, incremental, cursorUpdatedAt, cursorId, limit } =
+        request.query;
+      if (incremental === 'true') {
+        const lista = await deps.lotes.listPage(requireTenant(request), {
+          tipo,
+          limit,
+          cursor:
+            cursorUpdatedAt && cursorId ? { updatedAt: cursorUpdatedAt, id: cursorId } : undefined,
+        });
+        const pagina = lista.slice(0, limit);
+        const ultimo = pagina.at(-1);
+        return {
+          lotes: pagina.map(toLoteDto),
+          proximoCursor:
+            lista.length > limit && ultimo
+              ? { updatedAt: ultimo.updatedAt.toISOString(), id: ultimo.id }
+              : null,
+        };
+      }
       const lotes = await deps.lotes.list(requireTenant(request), {
         tipo,
         incluirExcluidos: incluirExcluidos === 'true',
@@ -130,6 +148,23 @@ export function registerDadosRoutes(app: FastifyInstance, deps: DadosRoutesDeps)
       schema: { querystring: cenarioListQuerySchema, response: { 200: cenarioListResponseSchema } },
     },
     async (request) => {
+      const { incremental, cursorUpdatedAt, cursorId, limit } = request.query;
+      if (incremental === 'true') {
+        const lista = await deps.cenarios.listPage(requireTenant(request), {
+          limit,
+          cursor:
+            cursorUpdatedAt && cursorId ? { updatedAt: cursorUpdatedAt, id: cursorId } : undefined,
+        });
+        const pagina = lista.slice(0, limit);
+        const ultimo = pagina.at(-1);
+        return {
+          cenarios: pagina.map(toCenarioDto),
+          proximoCursor:
+            lista.length > limit && ultimo
+              ? { updatedAt: ultimo.updatedAt.toISOString(), id: ultimo.id }
+              : null,
+        };
+      }
       const lista = await deps.cenarios.list(
         requireTenant(request),
         request.query.incluirExcluidos === 'true',

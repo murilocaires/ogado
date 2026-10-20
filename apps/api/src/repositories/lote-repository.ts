@@ -2,7 +2,8 @@ import type { PrismaClient } from '@ogado/db';
 import type { LoteCreate, LotePatch, LoteTipo } from '@ogado/contracts';
 import type { TenantContext } from '../tenant';
 import { IdConflictError } from './account-repository';
-import { isUniqueViolation, type WriteResult } from './sync';
+import { type WriteResult } from './sync';
+import { withSyncWrite } from './sync-write';
 
 export type LoteRecord = NonNullable<Awaited<ReturnType<PrismaClient['lote']['findFirst']>>>;
 
@@ -18,6 +19,23 @@ function toDate(data: string | null): Date | null {
  * contam, então nunca se reutiliza), protegido pela unicidade (fazendaId, tipo, numero).
  */
 export function createLoteRepository(prisma: PrismaClient) {
+  const leitura = loteOperations(prisma);
+  return {
+    ...leitura,
+    create: (ctx: TenantContext, input: LoteCreate, now = new Date()) =>
+      withSyncWrite(prisma, ctx, now, (tx, stamp) => loteOperations(tx).create(ctx, input, stamp)),
+    update: (ctx: TenantContext, id: string, patch: LotePatch, now = new Date()) =>
+      withSyncWrite(prisma, ctx, now, (tx, stamp) =>
+        loteOperations(tx).update(ctx, id, patch, stamp),
+      ),
+    softDelete: (ctx: TenantContext, id: string, version: number, now = new Date()) =>
+      withSyncWrite(prisma, ctx, now, (tx, stamp) =>
+        loteOperations(tx).softDelete(ctx, id, version, stamp),
+      ),
+  };
+}
+
+function loteOperations(prisma: Pick<PrismaClient, 'lote'>) {
   const scope = (ctx: TenantContext, id: string) => ({ id, fazendaId: ctx.fazendaId });
 
   async function finish(
@@ -33,6 +51,32 @@ export function createLoteRepository(prisma: PrismaClient) {
   }
 
   return {
+    async listPage(
+      ctx: TenantContext,
+      filtro: {
+        tipo?: LoteTipo | undefined;
+        cursor?: { updatedAt: string; id: string } | undefined;
+        limit: number;
+      },
+    ): Promise<LoteRecord[]> {
+      const cursor = filtro.cursor;
+      return prisma.lote.findMany({
+        where: {
+          fazendaId: ctx.fazendaId,
+          ...(filtro.tipo ? { tipo: filtro.tipo } : {}),
+          ...(cursor
+            ? {
+                OR: [
+                  { updatedAt: { gt: new Date(cursor.updatedAt) } },
+                  { updatedAt: new Date(cursor.updatedAt), id: { gt: cursor.id } },
+                ],
+              }
+            : {}),
+        },
+        orderBy: [{ updatedAt: 'asc' }, { id: 'asc' }],
+        take: filtro.limit + 1,
+      });
+    },
     list(
       ctx: TenantContext,
       filtro: { tipo?: LoteTipo | undefined; incluirExcluidos: boolean },
@@ -68,42 +112,42 @@ export function createLoteRepository(prisma: PrismaClient) {
           where: { fazendaId: ctx.fazendaId, tipo: input.tipo },
           _max: { numero: true },
         });
-        try {
-          const record = await prisma.lote.create({
-            data: {
-              id: input.id,
-              fazendaId: ctx.fazendaId,
-              tipo: input.tipo,
-              numero: (ultimo._max.numero ?? 0) + 1,
-              categoria: input.categoria,
-              data: toDate(input.data),
-              modo: input.modo,
-              qtd: input.qtd,
-              peso: input.peso,
-              pesos: input.pesos,
-              preco: input.preco,
-              base: input.base,
-              aplicarDesconto: input.aplicarDesconto,
-              descontoKg: input.descontoKg,
-              createdAt: now,
-              updatedAt: now,
-            },
-          });
+        const { count } = await prisma.lote.createMany({
+          skipDuplicates: true,
+          data: {
+            id: input.id,
+            fazendaId: ctx.fazendaId,
+            tipo: input.tipo,
+            numero: (ultimo._max.numero ?? 0) + 1,
+            categoria: input.categoria,
+            data: toDate(input.data),
+            modo: input.modo,
+            qtd: input.qtd,
+            peso: input.peso,
+            pesos: input.pesos,
+            preco: input.preco,
+            base: input.base,
+            aplicarDesconto: input.aplicarDesconto,
+            descontoKg: input.descontoKg,
+            createdAt: now,
+            updatedAt: now,
+          },
+        });
+        if (count === 1) {
+          const record = await prisma.lote.findUniqueOrThrow({ where: { id: input.id } });
           return { record, created: true };
-        } catch (error) {
-          if (!isUniqueViolation(error)) throw error;
-          const noutra = await prisma.lote.findUnique({
-            where: { id: input.id },
-            select: { fazendaId: true },
-          });
-          if (noutra) {
-            // corrida da mesma requisição repetida (nossa) ou colisão de UUID com outra fazenda
-            const meu = await prisma.lote.findFirst({ where: scope(ctx, input.id) });
-            if (meu) return { record: meu, created: false };
-            throw new IdConflictError();
-          }
-          // senão: outro lote do mesmo tipo pegou o número; recalcula e tenta de novo
         }
+        const noutra = await prisma.lote.findUnique({
+          where: { id: input.id },
+          select: { fazendaId: true },
+        });
+        if (noutra) {
+          // corrida da mesma requisição repetida (nossa) ou colisão de UUID com outra fazenda
+          const meu = await prisma.lote.findFirst({ where: scope(ctx, input.id) });
+          if (meu) return { record: meu, created: false };
+          throw new IdConflictError();
+        }
+        // senão: outro lote do mesmo tipo pegou o número; recalcula e tenta de novo
       }
       throw new Error('numero_de_lote_indisponivel');
     },

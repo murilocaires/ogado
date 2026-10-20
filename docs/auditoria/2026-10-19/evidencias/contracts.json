@@ -1,0 +1,15 @@
+{
+  "label": "contracts",
+  "command": "node",
+  "args": [
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--root",
+    "packages/contracts"
+  ],
+  "started": "2026-10-20T02:09:22.058Z",
+  "finished": "2026-10-20T02:09:27.358Z",
+  "durationSeconds": 5.3,
+  "exitCode": 0,
+  "signal": null
+}

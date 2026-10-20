@@ -16,6 +16,21 @@ function erro(codigo: string): unknown {
 const credenciais = { email: 'ana@fazenda.com', senha: 'Segredo#1', aceiteTermos: true as const };
 
 describe('RF-001 cliente HTTP: login e cadastro', () => {
+  it('RF-078/RNF-014 operações privadas e logout conservam a conta capturada', async () => {
+    const enviados: (string | null)[] = [];
+    const api = createApiClient({
+      fetch: async (_url, init) => {
+        enviados.push(new Headers(init?.headers).get('x-ogado-usuario'));
+        return new Response(null, { status: 204 });
+      },
+    });
+    await api.forUser!('usuario-a').logout();
+    await api.forUser!('usuario-b').changePassword({ novaSenha: 'Nova#Senha2026' });
+    await api.forUser!('usuario-a').logout();
+    await api.logout();
+    expect(enviados).toEqual(['usuario-a', 'usuario-b', 'usuario-a', null]);
+  });
+
   it('RF-001 envia JSON com cookies incluídos para /api e devolve a sessão tipada', async () => {
     const fetchMock = vi.fn().mockResolvedValue(json(200, sessionBody));
     const api = createApiClient({ fetch: fetchMock });

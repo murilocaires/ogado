@@ -109,7 +109,11 @@ describe('recria: variantes padrao = ouro (RN-007..RN-019)', () => {
   });
 
   it('RN-023: devolve a variante usada (padrao fixa80 + pesoVivo)', () => {
-    expect(r.variantes).toEqual({ lotacaoInicial: 'fixa80', faturamentoBruto: 'pesoVivo' });
+    expect(r.variantes).toEqual({
+      lotacaoInicial: 'fixa80',
+      faturamentoBruto: 'pesoVivo',
+      cabecasInteiras: false,
+    });
     expect(VARIANTES_PADRAO).toEqual(r.variantes);
   });
 
@@ -142,8 +146,16 @@ describe('recria: variantes padrao = ouro (RN-007..RN-019)', () => {
 describe('recria: variantes nao padrao (ADR-0008) - NAO planilha, PRECISA DE REVISAO HUMANA', () => {
   const entrada: EntradaRecria = variantes.entrada;
   const casos: [string, VariantesRecria, Record<string, string>][] = [
-    ['areaPastavel', variantes.casos.areaPastavel.variantes as VariantesRecria, variantes.casos.areaPastavel.esperado],
-    ['carcaca', variantes.casos.carcaca.variantes as VariantesRecria, variantes.casos.carcaca.esperado],
+    [
+      'areaPastavel',
+      variantes.casos.areaPastavel.variantes as VariantesRecria,
+      variantes.casos.areaPastavel.esperado,
+    ],
+    [
+      'carcaca',
+      variantes.casos.carcaca.variantes as VariantesRecria,
+      variantes.casos.carcaca.esperado,
+    ],
     ['ambas', variantes.casos.ambas.variantes as VariantesRecria, variantes.casos.ambas.esperado],
     ['padrao (mesma entrada)', VARIANTES_PADRAO, variantes.padraoComMesmaEntrada.esperado],
   ];
@@ -156,7 +168,7 @@ describe('recria: variantes nao padrao (ADR-0008) - NAO planilha, PRECISA DE REV
   for (const [nome, v, esperado] of casos) {
     it(`RN-023: ${nome} confere com a conta a mao (tests/fixtures/variantes.json)`, () => {
       const r = calcularRecria(entrada, v);
-      expect(r.variantes).toEqual(v);
+      expect(r.variantes).toEqual({ ...v, cabecasInteiras: v.cabecasInteiras ?? false });
       for (const [campo, valor] of Object.entries(esperado)) {
         const atual = r[campo as keyof ResultadoRecria] as Decimal | null;
         expect(atual?.toString(), campo).toBe(valor);
@@ -165,14 +177,23 @@ describe('recria: variantes nao padrao (ADR-0008) - NAO planilha, PRECISA DE REV
   }
 
   it('RN-009: areaPastavel so muda a lotacao inicial; resultado fica igual (ADR-0004)', () => {
-    const a = calcularRecria(entradaOuro, { lotacaoInicial: 'fixa80', faturamentoBruto: 'pesoVivo' });
-    const b = calcularRecria(entradaOuro, { lotacaoInicial: 'areaPastavel', faturamentoBruto: 'pesoVivo' });
+    const a = calcularRecria(entradaOuro, {
+      lotacaoInicial: 'fixa80',
+      faturamentoBruto: 'pesoVivo',
+    });
+    const b = calcularRecria(entradaOuro, {
+      lotacaoInicial: 'areaPastavel',
+      faturamentoBruto: 'pesoVivo',
+    });
     expect(b.faturamentoLiquido?.toString()).toBe(a.faturamentoLiquido?.toString());
     expect(b.lotacaoHaInicial?.toString()).not.toBe(a.lotacaoHaInicial?.toString());
   });
 
   it('RN-017: carcaca usa @ de carcaca/cab (RN-013) x cab x R$/@ e nao altera custos', () => {
-    const r = calcularRecria(entradaOuro, { lotacaoInicial: 'fixa80', faturamentoBruto: 'carcaca' });
+    const r = calcularRecria(entradaOuro, {
+      lotacaoInicial: 'fixa80',
+      faturamentoBruto: 'carcaca',
+    });
     const esperado = new Decimal(gx.arrobasCarcacaCab).times(gx.cabecas).times(ge.precoVenda);
     perto(r.faturamentoBruto, esperado.toNumber());
     perto(r.custoTotal, gx.custoTotal);
@@ -252,7 +273,11 @@ describe('recria: indefinido sem excecao (RN-022)', () => {
   });
 
   it('RN-022: aceita Decimal e string na entrada', () => {
-    const r = calcularRecria({ ...entradaOuro, investimento: new Decimal('122534.8'), dias: '270' });
+    const r = calcularRecria({
+      ...entradaOuro,
+      investimento: new Decimal('122534.8'),
+      dias: '270',
+    });
     perto(r.faturamentoLiquido, gx.faturamentoLiquido);
   });
 });

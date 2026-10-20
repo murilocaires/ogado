@@ -1,0 +1,15 @@
+{
+  "label": "e2e-offline",
+  "command": "node",
+  "args": [
+    "apps/web/node_modules/@playwright/test/cli.js",
+    "test",
+    "-c",
+    ".scratch/auditoria-2026-10-19/playwright.config.ts"
+  ],
+  "started": "2026-10-20T02:30:22.163Z",
+  "finished": "2026-10-20T02:33:25.558Z",
+  "durationSeconds": 183.395,
+  "exitCode": 1,
+  "signal": null
+}

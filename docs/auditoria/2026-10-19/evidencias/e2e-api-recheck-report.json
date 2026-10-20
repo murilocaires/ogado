@@ -1,0 +1,160 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "../../.scratch/auditoria-2026-10-19/playwright.config.ts",
+      "--grep",
+      "termos atualizados pedem aceite"
+    ],
+    "configFile": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\.scratch\\auditoria-2026-10-19\\playwright.config.ts",
+    "rootDir": "C:/Users/Murilo Caires/Desktop/Criando/ogado/ogado-dev-kit/ogado-dev-kit/apps/web/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\warmup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Murilo Caires/Desktop/Criando/ogado/ogado-dev-kit/ogado-dev-kit/docs/auditoria/2026-10-19/evidencias/playwright-api-recheck",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/Murilo Caires/Desktop/Criando/ogado/ogado-dev-kit/ogado-dev-kit/apps/web/e2e",
+        "testIgnore": [
+          "/e[124]-.*\\.spec\\.ts/"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 90000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\docs\\auditoria\\2026-10-19\\evidencias\\playwright-api-recheck",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e",
+        "snapshotDir": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e",
+        "testIgnore": {},
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 90000,
+        "use": {
+          "baseURL": "http://localhost:3100",
+          "channel": "msedge",
+          "trace": "retain-on-failure"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\docs\\auditoria\\2026-10-19\\evidencias\\e2e-api-recheck-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "termos.spec.ts",
+      "file": "termos.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "aceite apenas no cadastro",
+          "file": "termos.spec.ts",
+          "line": 53,
+          "column": 6,
+          "specs": [
+            {
+              "title": "termos atualizados pedem aceite em dialogo sem substituir o painel",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10773,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-20T02:33:42.643Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6e2b9df4c4ee9eb68d26-145e2120031970218578",
+              "file": "termos.spec.ts",
+              "line": 93,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-20T02:33:29.001Z",
+    "duration": 26556.776,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

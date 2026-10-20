@@ -1,7 +1,7 @@
 // Parser e formatação pt-BR (RNF-007). Puro: sem I/O, sem Intl (resultado determinístico).
-import Decimal from 'decimal.js';
-
-Decimal.set({ precision: 28 });
+import DecimalBase from 'decimal.js';
+const Decimal = DecimalBase.clone({ precision: 28 });
+type Decimal = DecimalBase;
 
 const MENOS_TIPOGRAFICO = '−';
 const TRACO = '—';
@@ -62,7 +62,7 @@ interface PartesFormatadas {
 }
 
 function formatarPartes(
-  valor: Decimal.Value | null | undefined,
+  valor: DecimalBase.Value | null | undefined,
   casas: number,
 ): PartesFormatadas | null {
   if (valor === null || valor === undefined) return null;
@@ -83,13 +83,13 @@ function formatarPartes(
 }
 
 /** Formata para exibição (`1.234,56`); arredonda só aqui, meio para cima. `—` se inválido. */
-export function formatarNumero(valor: Decimal.Value | null | undefined, casas = 2): string {
+export function formatarNumero(valor: DecimalBase.Value | null | undefined, casas = 2): string {
   const p = formatarPartes(valor, casas);
   return p === null ? TRACO : `${p.negativo ? MENOS_TIPOGRAFICO : ''}${p.texto}`;
 }
 
 /** Formata em BRL (`R$ 1.234,50`); negativo como `−R$ 89.475,83`. `—` se inválido. */
-export function formatarBRL(valor: Decimal.Value | null | undefined, casas = 2): string {
+export function formatarBRL(valor: DecimalBase.Value | null | undefined, casas = 2): string {
   const p = formatarPartes(valor, casas);
   return p === null ? TRACO : `${p.negativo ? MENOS_TIPOGRAFICO : ''}R$ ${p.texto}`;
 }

@@ -14,6 +14,35 @@ afterAll(async () => {
 });
 
 describe('rate limit', () => {
+  it('RNF-003: o teto global protege rotas comuns e a terceira chamada retorna 429', async () => {
+    const limitado = buildTestApp({
+      config: { rateLimit: { global: { max: 2, windowMs: 60_000 } } },
+    });
+    try {
+      await limitado.ready();
+      const statuses: number[] = [];
+      for (let i = 0; i < 3; i += 1) {
+        const res = await limitado.inject({
+          method: 'GET',
+          url: '/health',
+          remoteAddress: '10.1.9.1',
+        });
+        statuses.push(res.statusCode);
+        if (i === 2) {
+          expect(res.statusCode).toBe(429);
+          expect(errorEnvelopeSchema.parse(res.json()).erro.codigo).toBe('muitas_tentativas');
+          expect(Number(res.headers['retry-after'])).toBeGreaterThan(0);
+        }
+      }
+      expect(statuses).toEqual([200, 200, 429]);
+      expect(
+        (await limitado.inject({ method: 'GET', url: '/health', remoteAddress: '10.1.9.2' }))
+          .statusCode,
+      ).toBe(200);
+    } finally {
+      await limitado.close();
+    }
+  });
   it('RNF-003 CA-16: a 6ª tentativa de login em 1 minuto para o mesmo IP + e-mail responde 429 muitas_tentativas com Retry-After', async () => {
     const ip = '10.1.0.1';
     const email = uniqueEmail();

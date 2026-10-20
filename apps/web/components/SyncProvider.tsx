@@ -16,6 +16,7 @@ import type { SessionState } from '../lib/auth/session-controller';
 import { pedirPersistencia, verificarCota } from '../lib/pwa/armazenamento';
 import { useRepo, useRepoState } from '../lib/repo/repo-provider';
 import type { OGadoRepo, SyncableRepo } from '../lib/repo/types';
+import { cenarioSchema } from '@ogado/contracts';
 import { criarDadosClient, type DadosClient } from '../lib/sync/data-client';
 import {
   pendentes as calcularPendentes,
@@ -48,6 +49,8 @@ export interface SyncInfo {
   cotaQuaseCheia: number | null;
   /** Força uma rodada agora (RF-074). */
   sincronizarAgora: () => void;
+  /** RF-079: exclui snapshot remoto em quarentena e confirma a remoção da atenção no aparelho. */
+  excluirRejeitado?: (rejeitado: Rejeitado) => Promise<void>;
 }
 
 const INFO_VAZIA: SyncInfo = {
@@ -107,6 +110,7 @@ export function SyncProvider({
   const estavaLogado = useRef(false);
   const acoes = useRef<{
     agora: () => void;
+    excluir: (rejeitado: Rejeitado) => Promise<void>;
   } | null>(null);
 
   const usuarioId = sessao.status === 'autenticado' ? sessao.usuario.id : null;
@@ -114,10 +118,12 @@ export function SyncProvider({
   useEffect(() => {
     if (!controller || !ehSincronizavel(repo)) return;
     if (usuarioId === null) {
-      // Saiu (logout confirmado): zera a memória do app; o disco já foi limpo pelo controlador.
+      // O controlador já limpou o disco. Outra aba pode ter entrado novamente nesse intervalo:
+      // reler a geração atual atualiza a memória sem apagar os dados da nova sessão.
       if (sessao.status === 'anonimo' && estavaLogado.current) {
         estavaLogado.current = false;
-        repo.limpar();
+        if (repo.ready) void repo.ready().catch(() => undefined);
+        else repo.limpar();
       }
       setStatus('desligado');
       setLeitura({ carregado: false, estado: null });
@@ -125,9 +131,14 @@ export function SyncProvider({
       return;
     }
     estavaLogado.current = true;
-    setLeitura({ carregado: true, estado: armazem.ler() });
+    setLeitura({ carregado: false, estado: null });
 
     let ativo = true;
+    // O controlador muda antes do cleanup do React. Cancelar nessa notificação fecha a janela
+    // em que uma resposta antiga poderia adotar dados após uma troca de sessão já confirmada.
+    const cancelarSessao = controller.subscribe(() => {
+      if (controller.getState() !== sessao) ativo = false;
+    });
     let rodando = false;
     let repetir = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -149,7 +160,13 @@ export function SyncProvider({
       if (retentativa) clearTimeout(retentativa);
       setStatus('sincronizando');
       atual = (async () => {
-        const resultado = await sincronizar({ repo, api: cliente, estado: armazem, usuarioId });
+        const resultado = await sincronizar({
+          repo,
+          api: cliente,
+          estado: armazem,
+          usuarioId,
+          ativo: () => ativo,
+        });
         rodando = false;
         if (!ativo) return;
         setLeitura({ carregado: true, estado: armazem.ler() });
@@ -173,7 +190,97 @@ export function SyncProvider({
       timer = setTimeout(() => void rodar(), ESPERA_MS);
     };
 
+    const excluirRejeitadoDaSessao = async (r: Rejeitado): Promise<void> => {
+      if (r.tipo !== 'cenario' || r.original === undefined) throw new Error('item_invalido');
+      if (rodando) await atual;
+      const origem = controller.getState();
+      if (origem.status !== 'autenticado' || origem.usuario.id !== usuarioId)
+        throw new Error('sessao_alterada');
+      const vigente = () => {
+        const sessaoAtual = controller.getState();
+        return (
+          ativo &&
+          sessaoAtual.status === 'autenticado' &&
+          sessaoAtual.usuario.id === usuarioId &&
+          sessaoAtual.fazenda.id === origem.fazenda.id &&
+          !controller.getAccountMismatch()
+        );
+      };
+      const exigirAtivo = () => {
+        if (!vigente()) throw new Error('sessao_alterada');
+      };
+      const excluir = async (): Promise<void> => {
+        exigirAtivo();
+        await repo.ready?.();
+        exigirAtivo();
+        await repo.flush?.();
+        exigirAtivo();
+        await armazem.ready?.();
+        exigirAtivo();
+        const anterior = armazem.ler();
+        if (!anterior || anterior.usuarioId !== usuarioId) throw new Error('sessao_alterada');
+        const preservado = anterior.rejeitados?.find(
+          (item) =>
+            item.id === r.id &&
+            item.tipo === 'cenario' &&
+            item.versaoLocal === r.versaoLocal &&
+            item.original !== undefined,
+        );
+        const original = cenarioSchema.safeParse(preservado?.original);
+        if (
+          !original.success ||
+          original.data.id !== r.id ||
+          original.data.version !== r.versaoLocal
+        )
+          throw new Error('item_alterado');
+        const vinculado = cliente.paraUsuario?.(usuarioId) ?? cliente;
+        exigirAtivo();
+        const resposta = await vinculado.excluirCenario(r.id, r.versaoLocal);
+        exigirAtivo();
+        if (!resposta.ok) {
+          if (resposta.kind === 'nao-autenticado') controller.markUnauthorized();
+          throw new Error('exclusao_nao_confirmada');
+        }
+        if (resposta.data.id !== r.id || resposta.data.deletedAt === null)
+          throw new Error('exclusao_nao_confirmada');
+        const proximo: EstadoSync = {
+          ...anterior,
+          versoes: { ...anterior.versoes, [r.id]: resposta.data.version },
+          bases: { ...anterior.bases, [r.id]: resposta.data },
+          rejeitados: (anterior.rejeitados ?? []).filter((item) => item.id !== r.id),
+        };
+        exigirAtivo();
+        armazem.gravar(proximo);
+        try {
+          await armazem.flush?.();
+        } catch (erro) {
+          // O servidor pode já ter excluído; preservar o original permite recuperar/repetir o pull.
+          if (vigente()) armazem.gravar(anterior);
+          throw erro;
+        }
+        exigirAtivo();
+        setLeitura({ carregado: true, estado: armazem.ler() });
+      };
+      if (timer) clearTimeout(timer);
+      rodando = true;
+      const operacao =
+        typeof navigator !== 'undefined' && navigator.locks
+          ? navigator.locks.request('ogado.sync', excluir)
+          : excluir();
+      atual = operacao.catch(() => undefined);
+      try {
+        await operacao;
+      } finally {
+        rodando = false;
+        if (ativo && repetir) {
+          repetir = false;
+          agendar();
+        }
+      }
+    };
+
     acoes.current = {
+      excluir: excluirRejeitadoDaSessao,
       agora: () => {
         if (timer) clearTimeout(timer);
         void rodar();
@@ -195,13 +302,23 @@ export function SyncProvider({
       if (timer) clearTimeout(timer);
       if (retentativa) clearTimeout(retentativa);
       cancelar();
+      cancelarSessao();
       window.removeEventListener('online', aoVoltarRede);
     };
-  }, [repo, controller, cliente, armazem, usuarioId, sessao.status]);
+  }, [repo, controller, cliente, armazem, usuarioId, sessao]);
 
   const sincronizarAgora = useCallback(() => acoes.current?.agora(), []);
+  const excluirRejeitado = useCallback(async (r: Rejeitado) => {
+    const acao = acoes.current;
+    if (!acao) throw new Error('sessao_indisponivel');
+    await acao.excluir(r);
+  }, []);
   const info = useMemo<SyncInfo>(() => {
-    const logado = usuarioId !== null && leitura.carregado && ehSincronizavel(repo);
+    const logado =
+      usuarioId !== null &&
+      leitura.carregado &&
+      ehSincronizavel(repo) &&
+      (!leitura.estado || leitura.estado.usuarioId === usuarioId);
     const ids = new Set<string>();
     let conflitos: readonly Conflito[] = [];
     let rejeitados: readonly Rejeitado[] = [];
@@ -215,7 +332,9 @@ export function SyncProvider({
         ...completos.lotes.filter((l) => l.deletedAt === null).map((l) => l.id),
         ...completos.cenarios.filter((c) => c.deletedAt === null).map((c) => c.id),
       ]);
-      rejeitados = (leitura.estado?.rejeitados ?? []).filter((r) => vivos.has(r.id));
+      rejeitados = (leitura.estado?.rejeitados ?? []).filter(
+        (r) => vivos.has(r.id) || r.original !== undefined,
+      );
       conflitos = [];
     }
     return {
@@ -225,8 +344,9 @@ export function SyncProvider({
       rejeitados,
       cotaQuaseCheia: cota,
       sincronizarAgora,
+      excluirRejeitado,
     };
-  }, [dados, leitura, repo, usuarioId, cota, sincronizarAgora]);
+  }, [dados, leitura, repo, usuarioId, cota, sincronizarAgora, excluirRejeitado]);
 
   return (
     <SyncContext.Provider value={status}>

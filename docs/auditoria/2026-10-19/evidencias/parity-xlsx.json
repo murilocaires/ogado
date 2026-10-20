@@ -1,0 +1,12 @@
+{
+  "label": "parity-xlsx",
+  "command": "C:/Users/Murilo Caires/.pyenv/pyenv-win/versions/3.9.6/python.exe",
+  "args": [
+    "references/calculo/verify.py"
+  ],
+  "started": "2026-10-20T02:11:09.619Z",
+  "finished": "2026-10-20T02:11:13.725Z",
+  "durationSeconds": 4.106,
+  "exitCode": 1,
+  "signal": null
+}

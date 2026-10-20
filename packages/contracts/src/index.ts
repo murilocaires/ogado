@@ -6,6 +6,7 @@ export * from './fazenda';
 export * from './session';
 export * from './decimal';
 export * from './dados';
+export * from './cenarios';
 export * from './conta';
 export * from './recuperacao-senha';
 export * from './termos';

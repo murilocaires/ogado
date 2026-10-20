@@ -12,6 +12,8 @@ interface NomeDialogProps {
   label?: string;
   placeholder?: string;
   confirmar?: string;
+  erro?: string;
+  ocupado?: boolean;
 }
 
 /** Pede o nome do cenário (salvar e renomear): máx. 80, Enter confirma, Esc cancela. */
@@ -23,6 +25,8 @@ export function NomeDialog({
   label = 'Nome do cenário',
   placeholder = 'ex.: Safra 26/27 — preço otimista',
   confirmar = 'Confirmar',
+  erro,
+  ocupado = false,
 }: NomeDialogProps) {
   const [nome, setNome] = useState(valorInicial);
   const campo = useRef<HTMLInputElement>(null);
@@ -32,7 +36,13 @@ export function NomeDialog({
   }, []);
 
   return (
-    <Dialog titulo={titulo} onClose={onCancel} estreito fecharNoFundo focoInicial="#nome-in">
+    <Dialog
+      titulo={titulo}
+      onClose={ocupado ? () => undefined : onCancel}
+      estreito
+      fecharNoFundo
+      focoInicial="#nome-in"
+    >
       <div className="lbl">
         <label htmlFor="nome-in">{label}</label>
         <div className="fld">
@@ -43,9 +53,10 @@ export function NomeDialog({
             value={nome}
             placeholder={placeholder}
             autoComplete="off"
+            disabled={ocupado}
             onChange={(e) => setNome(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === 'Enter' && !ocupado) {
                 e.preventDefault();
                 onConfirm(nome.trim());
               }
@@ -53,11 +64,17 @@ export function NomeDialog({
           />
         </div>
       </div>
-      <div className="actions">
-        <button type="button" className="btn sec" onClick={onCancel}>
+      {erro && <p role="alert">{erro}</p>}
+      <div className="actions" aria-busy={ocupado}>
+        <button type="button" className="btn sec" onClick={onCancel} disabled={ocupado}>
           Cancelar
         </button>
-        <button type="button" className="btn" onClick={() => onConfirm(nome.trim())}>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => onConfirm(nome.trim())}
+          disabled={ocupado}
+        >
           {confirmar}
         </button>
       </div>

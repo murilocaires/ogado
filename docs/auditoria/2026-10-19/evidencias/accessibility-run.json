@@ -1,0 +1,12 @@
+{
+  "label": "accessibility-run",
+  "command": "node",
+  "args": [
+    ".scratch/auditoria-2026-10-19/accessibility.mjs"
+  ],
+  "started": "2026-10-20T02:23:08.581Z",
+  "finished": "2026-10-20T02:23:40.263Z",
+  "durationSeconds": 31.682,
+  "exitCode": 0,
+  "signal": null
+}

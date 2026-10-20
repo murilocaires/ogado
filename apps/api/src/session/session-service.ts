@@ -74,7 +74,7 @@ export function createSessionService(
       return session;
     },
 
-    async validate(token: string): Promise<SessionValidation> {
+    async validate(token: string, expectedUsuarioId?: string): Promise<SessionValidation> {
       const parsed = parseToken(token);
       if (!parsed) return { status: 'invalida' };
 
@@ -94,6 +94,10 @@ export function createSessionService(
         },
       });
       if (!row || !secretMatches(parsed.segredo, row.segredoHash)) return { status: 'invalida' };
+      // Uma requisição iniciada por outra identidade nunca renova ou apaga esta sessão.
+      if (expectedUsuarioId !== undefined && row.usuario.id !== expectedUsuarioId) {
+        return { status: 'invalida' };
+      }
 
       const now = clock();
       const inactiveFor = now.getTime() - row.ultimaVerificacaoEm.getTime();

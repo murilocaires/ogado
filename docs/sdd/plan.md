@@ -1,5 +1,7 @@
 # Plano técnico v1 (rascunho)
 
+**Estado reconciliado em 20/10/2026:** o desenho abaixo conserva propostas iniciais. A implementação efetiva usa `lib/repo/{durable-repo,indexed-db}` com IndexedDB nativo e outbox transacional; `lib/sync` chama as rotas idempotentes existentes de lotes/cenários e GET incremental opt-in `(updatedAt,id)`, não endpoints novos `/sync/push` e `/sync/pull`. O SW é o adapter já existente em `public/sw.js`, não Serwist. Conflitos seguem [sincronização automática](../sincronizacao-automatica.md); persistência/cursor seguem ADR-0016. CI inclui trace estrito, audit, budget do cálculo e E2E local/API/offline em cada PR. Propostas ainda não implementadas não devem ser contadas como entregues.
+
 ## Arquitetura
 ```
 apps/web (Next) ──HTTP/JSON (Zod)──▶ apps/api (Fastify) ──Prisma──▶ PostgreSQL

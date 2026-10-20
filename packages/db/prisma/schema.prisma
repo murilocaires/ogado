@@ -142,6 +142,7 @@ model Lote {
 
   @@unique([fazendaId, tipo, numero])
   @@index([fazendaId, updatedAt])
+  @@index([fazendaId, updatedAt, id])
 }
 
 model Cenario {
@@ -164,6 +165,7 @@ model Cenario {
 
   @@index([fazendaId, criadoEm])
   @@index([fazendaId, updatedAt])
+  @@index([fazendaId, updatedAt, id])
 }
 
 // Entradas do simulador da recria: uma por fazenda (campos como string decimal).

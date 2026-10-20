@@ -1,0 +1,134 @@
+[
+    {
+        "file":  "auth-google.test.ts",
+        "tests":  29,
+        "status":  "passed",
+        "durationSeconds":  22.157
+    },
+    {
+        "file":  "auth-login.test.ts",
+        "tests":  3,
+        "status":  "passed",
+        "durationSeconds":  3.099
+    },
+    {
+        "file":  "auth-recuperar-senha.test.ts",
+        "tests":  19,
+        "status":  "passed",
+        "durationSeconds":  23.547
+    },
+    {
+        "file":  "auth-session.test.ts",
+        "tests":  5,
+        "status":  "passed",
+        "durationSeconds":  2.091
+    },
+    {
+        "file":  "auth-signup.test.ts",
+        "tests":  7,
+        "status":  "passed",
+        "durationSeconds":  7.136
+    },
+    {
+        "file":  "client-ip.test.ts",
+        "tests":  3,
+        "status":  "passed",
+        "durationSeconds":  1.962
+    },
+    {
+        "file":  "conta-aceite.test.ts",
+        "tests":  8,
+        "status":  "passed",
+        "durationSeconds":  6.002
+    },
+    {
+        "file":  "conta-exportar-email.test.ts",
+        "tests":  4,
+        "status":  "passed",
+        "durationSeconds":  3.316
+    },
+    {
+        "file":  "conta-exportar.test.ts",
+        "tests":  5,
+        "status":  "passed",
+        "durationSeconds":  7.650
+    },
+    {
+        "file":  "conta.test.ts",
+        "tests":  16,
+        "status":  "passed",
+        "durationSeconds":  24.636
+    },
+    {
+        "file":  "dados.test.ts",
+        "tests":  19,
+        "status":  "passed",
+        "durationSeconds":  32.368
+    },
+    {
+        "file":  "env.test.ts",
+        "tests":  20,
+        "status":  "passed",
+        "durationSeconds":  0.407
+    },
+    {
+        "file":  "fazenda-repository.test.ts",
+        "tests":  5,
+        "status":  "passed",
+        "durationSeconds":  3.522
+    },
+    {
+        "file":  "google-client.test.ts",
+        "tests":  9,
+        "status":  "passed",
+        "durationSeconds":  4.659
+    },
+    {
+        "file":  "health.test.ts",
+        "tests":  3,
+        "status":  "passed",
+        "durationSeconds":  0.926
+    },
+    {
+        "file":  "historico-sync.test.ts",
+        "tests":  1,
+        "status":  "passed",
+        "durationSeconds":  1.816
+    },
+    {
+        "file":  "historico-sync.unit.test.ts",
+        "tests":  3,
+        "status":  "passed",
+        "durationSeconds":  0.940
+    },
+    {
+        "file":  "isolation.test.ts",
+        "tests":  6,
+        "status":  "passed",
+        "durationSeconds":  23.543
+    },
+    {
+        "file":  "rate-limit.test.ts",
+        "tests":  3,
+        "status":  "passed",
+        "durationSeconds":  3.724
+    },
+    {
+        "file":  "security.test.ts",
+        "tests":  18,
+        "status":  "passed",
+        "durationSeconds":  7.559
+    },
+    {
+        "file":  "session-lifecycle.test.ts",
+        "tests":  5,
+        "status":  "passed",
+        "durationSeconds":  3.221
+    },
+    {
+        "file":  "storage.test.ts",
+        "tests":  4,
+        "status":  "passed",
+        "durationSeconds":  2.029
+    }
+]

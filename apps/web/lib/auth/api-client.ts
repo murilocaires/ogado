@@ -35,6 +35,8 @@ export type ApiFailure =
 export type ApiResult<T> = { ok: true; data: T } | ApiFailure;
 
 export interface ApiClient {
+  /** Contexto imutável para chamadas privadas e logout; cookie de outra conta é recusado. */
+  forUser?(usuarioId: string): ApiClient;
   signup(body: SignupRequest): Promise<ApiResult<SessionResponse>>;
   login(body: LoginRequest): Promise<ApiResult<SessionResponse>>;
   /** Só é sucesso com 204 (o chamador limpa o aparelho depois disso, e só depois). */
@@ -63,6 +65,7 @@ export interface ApiClient {
 }
 
 export interface ApiClientOptions {
+  usuarioId?: string;
   /** Mesma origem: o Next repassa `/api/*` para a API (ADR-0010 a.5). */
   baseUrl?: string;
   fetch?: typeof fetch;
@@ -122,7 +125,10 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
         ...init,
         credentials: 'include',
         cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(options.usuarioId ? { 'X-OGado-Usuario': options.usuarioId } : {}),
+        },
       });
     } catch {
       return null;
@@ -156,6 +162,7 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
   }
 
   return {
+    forUser: (usuarioId) => createApiClient({ ...options, usuarioId }),
     signup: (body) => sessionCall('/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
     login: (body) => sessionCall('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
     getSession: () => sessionCall('/auth/session', { method: 'GET' }),

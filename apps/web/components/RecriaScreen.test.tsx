@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { calcularRecria, ENTRADA_PADRAO, formatarBRL, formatarNumero } from '@ogado/domain';
+import { calcularRecria, ENTRADA_PADRAO, VARIANTES_PADRAO, formatarBRL, formatarNumero } from '@ogado/domain';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -17,12 +17,14 @@ function hero() {
   return regiao.querySelector('.hero') as HTMLElement;
 }
 
+const COM_CABECAS_INTEIRAS = { ...VARIANTES_PADRAO, cabecasInteiras: true };
+
 describe('RF-030/RF-031 simulador de recria', () => {
-  it('RF-031 com as entradas da planilha preenchidas mostra o líquido de ouro R$ 102.408,05', () => {
+  it('RF-031 com as entradas da planilha preenchidas mostra o líquido de ouro R$ 103.307,60', () => {
     renderComPlanilha();
-    const ouro = formatarBRL(calcularRecria(ENTRADA_PADRAO).faturamentoLiquido);
-    expect(ouro).toBe('R$ 102.408,05');
-    expect(within(hero()).getByText('R$ 102.408,05')).toHaveClass('big');
+    const ouro = formatarBRL(calcularRecria(ENTRADA_PADRAO, COM_CABECAS_INTEIRAS).faturamentoLiquido);
+    expect(ouro).toBe('R$ 103.307,60');
+    expect(within(hero()).getByText('R$ 103.307,60')).toHaveClass('big');
     expect(screen.getByLabelText('Proteinado')).toHaveValue('0,30');
     expect(screen.getByLabelText('Se')).toHaveValue('52,00');
     expect(screen.getAllByLabelText('Imposto').find((e) => e.tagName === 'INPUT')).toHaveValue('1,50');
@@ -30,7 +32,7 @@ describe('RF-030/RF-031 simulador de recria', () => {
 
   it('RF-031 mostra por mês, por hectare, total em caixa, custos, números do lote e alerta de cabeças', () => {
     renderComPlanilha();
-    const r = calcularRecria(ENTRADA_PADRAO);
+    const r = calcularRecria(ENTRADA_PADRAO, COM_CABECAS_INTEIRAS);
     expect(within(hero()).getByText(formatarBRL(r.liquidoMes))).toBeInTheDocument();
     expect(within(hero()).getByText(formatarBRL(r.liquidoHa))).toBeInTheDocument();
     expect(within(hero()).getByText(formatarBRL(r.totalEmCaixa))).toBeInTheDocument();
@@ -40,7 +42,7 @@ describe('RF-030/RF-031 simulador de recria', () => {
     expect(within(hero()).getByText(formatarBRL(r.faturamentoBruto))).toBeInTheDocument();
     expect(within(hero()).getByText(formatarBRL(r.custoTotal))).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Dados do lote' })).toBeInTheDocument();
-    // O aviso de fracao de animais nao deve aparecer na tela.
+    // 122.534,80 / 2.050 = 59,77 -> 60 cabeças inteiras (não há fração de cabeça, sem aviso)
     expect(screen.queryByText(/O investimento compra/)).not.toBeInTheDocument();
     // RF-051: GMD é campo calculado (somente leitura, com cadeado)
     expect(screen.getByText(/GMD implícito/)).toBeInTheDocument();
@@ -52,7 +54,7 @@ describe('RF-030/RF-031 simulador de recria', () => {
     const preco = screen.getByLabelText('R$/cab (venda)');
     await user.clear(preco);
     await user.type(preco, '330');
-    const esperado = calcularRecria({ ...ENTRADA_PADRAO, precoVenda: '330' }).faturamentoLiquido;
+    const esperado = calcularRecria({ ...ENTRADA_PADRAO, precoVenda: '330' }, COM_CABECAS_INTEIRAS).faturamentoLiquido;
     expect(within(hero()).getByText(formatarBRL(esperado))).toBeInTheDocument();
   });
 
@@ -61,14 +63,14 @@ describe('RF-030/RF-031 simulador de recria', () => {
     renderComPlanilha();
     await user.clear(screen.getByLabelText('Investimento (compra)'));
     expect(within(hero()).getAllByText('—').length).toBeGreaterThanOrEqual(1);
-    expect(within(hero()).queryByText('R$ 102.408,05')).not.toBeInTheDocument();
+    expect(within(hero()).queryByText('R$ 103.307,60')).not.toBeInTheDocument();
     expect(screen.getAllByText('Preencha este campo para calcular.')).toHaveLength(1);
     expect(screen.getByLabelText('Investimento (compra)')).toHaveAccessibleDescription(
       'Preencha este campo para calcular.',
     );
   });
 
-  it('bloqueia separadores manuais e conserva dias inteiros', async () => {
+  it('bloqueia separadores manuais e mant?m os dias inteiros', async () => {
     const user = userEvent.setup();
     renderComPlanilha();
     const dias = screen.getByLabelText('Dias de Recria');
@@ -76,7 +78,7 @@ describe('RF-030/RF-031 simulador de recria', () => {
     await user.type(dias, '2.,70');
     expect(dias).toHaveValue('270');
     expect(dias).not.toHaveAttribute('aria-invalid', 'true');
-    expect(within(hero()).getByText('R$ 102.408,05')).toBeInTheDocument();
+    expect(within(hero()).getByText('R$ 103.307,60')).toBeInTheDocument();
   });
 
   it('RF-051 "Números do lote" são campos calculados com cadeado, não editáveis', () => {
@@ -148,7 +150,7 @@ describe('ADR-0014 simulador sem padrões', () => {
     const area = screen.getByLabelText('Área Pastável');
     await user.clear(area);
     await user.type(area, '50');
-    const r = calcularRecria({ ...ENTRADA_PADRAO, area: '50' }, { lotacaoInicial: 'areaPastavel', faturamentoBruto: 'pesoVivo' });
+    const r = calcularRecria({ ...ENTRADA_PADRAO, area: '50' }, { lotacaoInicial: 'areaPastavel', faturamentoBruto: 'pesoVivo', cabecasInteiras: true });
     expect(r.lotacaoHaInicial).not.toBeNull();
     const lote = screen.getByRole('region', { name: 'Dados do lote' });
     expect(within(lote).getByText(`${formatarNumero(r.lotacaoHaInicial, 2)} UA/ha`)).toBeInTheDocument();

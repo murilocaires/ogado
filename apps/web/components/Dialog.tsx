@@ -131,6 +131,8 @@ interface ConfirmDialogProps {
   perigo?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  erro?: string;
+  ocupado?: boolean;
 }
 
 /** Confirmação antes de salvar e de excluir (RF-025, RN-024..027). */
@@ -141,19 +143,28 @@ export function ConfirmDialog({
   perigo,
   onConfirm,
   onCancel,
+  erro,
+  ocupado = false,
 }: ConfirmDialogProps) {
   return (
     <Dialog
       titulo={titulo}
-      onClose={onCancel}
+      onClose={ocupado ? () => undefined : onCancel}
       role="alertdialog"
       estreito
       confirmacao
       focoInicial={perigo ? '[data-cancelar]' : '[data-confirmar]'}
     >
       <p style={{ color: 'var(--tinta-2)', margin: 0, lineHeight: 1.5 }}>{texto}</p>
-      <div className="actions">
-        <button type="button" className="btn sec" data-cancelar onClick={onCancel}>
+      {erro && <p role="alert">{erro}</p>}
+      <div className="actions" aria-busy={ocupado}>
+        <button
+          type="button"
+          className="btn sec"
+          data-cancelar
+          onClick={onCancel}
+          disabled={ocupado}
+        >
           Cancelar
         </button>
         <button
@@ -161,6 +172,7 @@ export function ConfirmDialog({
           className={`btn${perigo ? ' danger' : ''}`}
           data-confirmar
           onClick={onConfirm}
+          disabled={ocupado}
         >
           {confirmar}
         </button>

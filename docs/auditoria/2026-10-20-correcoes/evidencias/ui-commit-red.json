@@ -1,0 +1,21 @@
+{
+  "label": "ui-commit-red",
+  "command": "node",
+  "args": [
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--root",
+    "apps/web",
+    "components/NegociosScreen.test.tsx",
+    "--maxWorkers=1",
+    "--no-file-parallelism",
+    "-t",
+    "falha no commit"
+  ],
+  "cwd": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit",
+  "started": "2026-10-20T10:17:11.284Z",
+  "ended": "2026-10-20T10:17:53.216Z",
+  "durationSeconds": 41.932,
+  "exitCode": 1,
+  "signal": null
+}

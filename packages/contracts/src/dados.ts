@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { decimalStringSchema } from './decimal';
 import { errorEnvelopeSchema } from './errors';
+import {
+  cenarioParametrosSchema,
+  cenarioResultadoSchema,
+  cenarioVariantesSchema,
+  recriaFormSchema,
+} from './cenarios';
 
 // E3 (ADR-0007, ADR-0011 §3-4): dados do site no servidor. Um schema para API e telas.
 // Decimais trafegam como string canônica (sem zeros à direita na resposta). Validação só técnica.
@@ -116,12 +122,30 @@ export const loteSchema = z.object({
 });
 export type LoteDto = z.infer<typeof loteSchema>;
 
+export const syncCursorSchema = z.strictObject({ updatedAt: z.iso.datetime(), id: z.uuid() });
+export const syncPageQueryFields = {
+  incremental: z.enum(['true', 'false']).default('false'),
+  cursorUpdatedAt: z.iso.datetime().optional(),
+  cursorId: z.uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+};
+
+function cursorCompleto(query: { cursorUpdatedAt?: string; cursorId?: string }): boolean {
+  return Boolean(query.cursorUpdatedAt) === Boolean(query.cursorId);
+}
+
 /** GET /lotes?tipo=&incluirExcluidos=true. Ordem estável: tipo, numero. */
-export const loteListQuerySchema = z.strictObject({
-  tipo: loteTipoSchema.optional(),
-  incluirExcluidos: z.enum(['true', 'false']).default('false'),
+export const loteListQuerySchema = z
+  .strictObject({
+    ...syncPageQueryFields,
+    tipo: loteTipoSchema.optional(),
+    incluirExcluidos: z.enum(['true', 'false']).default('false'),
+  })
+  .refine(cursorCompleto, 'Informe os dois campos do cursor.');
+export const loteListResponseSchema = z.object({
+  lotes: z.array(loteSchema),
+  proximoCursor: syncCursorSchema.nullable().optional(),
 });
-export const loteListResponseSchema = z.object({ lotes: z.array(loteSchema) });
 export type LoteListResponse = z.infer<typeof loteListResponseSchema>;
 
 // --- Cenário (RF-032, RN-023: snapshot imutável) ------------------------------------------------
@@ -130,14 +154,6 @@ export type LoteListResponse = z.infer<typeof loteListResponseSchema>;
 const textoCurto = z.string().max(2000, 'Texto longo demais.');
 const chave = z.string().max(100);
 const mapaDeTextos = z.record(chave, textoCurto);
-const resultadoSchema = z.record(
-  chave,
-  z.union([
-    textoCurto,
-    z.null(),
-    z.array(z.record(chave, z.union([textoCurto, z.null()]))).max(200),
-  ]),
-);
 
 export const CENARIO_NOME_MAX = 80;
 const nome = z
@@ -151,10 +167,10 @@ export const cenarioCreateSchema = z.strictObject({
   nome,
   /** Data de criação (ISO); preserva o momento em que foi salvo no aparelho. */
   criadoEm: z.iso.datetime({ error: 'A data de criação é inválida.' }),
-  entradas: mapaDeTextos,
-  variantes: mapaDeTextos,
-  parametros: mapaDeTextos,
-  resultado: resultadoSchema,
+  entradas: recriaFormSchema,
+  variantes: cenarioVariantesSchema,
+  parametros: cenarioParametrosSchema,
+  resultado: cenarioResultadoSchema,
 });
 export type CenarioCreate = z.infer<typeof cenarioCreateSchema>;
 
@@ -166,18 +182,26 @@ export const cenarioSchema = z.object({
   id: z.uuid(),
   nome: z.string(),
   criadoEm: z.iso.datetime(),
-  entradas: mapaDeTextos,
-  variantes: mapaDeTextos,
-  parametros: mapaDeTextos,
-  resultado: resultadoSchema,
+  // Leitura preserva JSON histórico para validação/quarentena individual no consumidor.
+  // Escrita continua estrita em cenarioCreateSchema; um legado inválido não bloqueia a página.
+  entradas: z.unknown(),
+  variantes: z.unknown(),
+  parametros: z.unknown(),
+  resultado: z.unknown(),
   ...syncMeta,
 });
 export type CenarioDto = z.infer<typeof cenarioSchema>;
 
-export const cenarioListQuerySchema = z.strictObject({
-  incluirExcluidos: z.enum(['true', 'false']).default('false'),
+export const cenarioListQuerySchema = z
+  .strictObject({
+    ...syncPageQueryFields,
+    incluirExcluidos: z.enum(['true', 'false']).default('false'),
+  })
+  .refine(cursorCompleto, 'Informe os dois campos do cursor.');
+export const cenarioListResponseSchema = z.object({
+  cenarios: z.array(cenarioSchema),
+  proximoCursor: syncCursorSchema.nullable().optional(),
 });
-export const cenarioListResponseSchema = z.object({ cenarios: z.array(cenarioSchema) });
 export type CenarioListResponse = z.infer<typeof cenarioListResponseSchema>;
 
 // --- Entradas da recria (1 por fazenda) ---------------------------------------------------------

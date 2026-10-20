@@ -1,0 +1,19 @@
+PASS RF-073/RNF-017: duas abas, BroadcastChannel e recarga preservam ambos os IDs
+PASS RF-073/RNF-017: edições concorrentes da mesma entidade conservam campos independentes
+PASS RF-073/RNF-017: quota na fila aborta entidade, informa erro e retry confirma sem duplicar
+PASS RF-078/RNF-017: migração conserva UUID, versão suja, controle de envio e identidade
+PASS RF-078/RNF-017: logout limpa aparelho e escrita de aba antiga não ressuscita dados
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ 'GARROTES'
+- 'NOVILHAS'
+
+    at C:\Users\Murilo Caires\Desktop\Criando\ogado\ogado-dev-kit\ogado-dev-kit\.scratch\correcoes-auditoria-2026-10-20\repo-browser-check.cjs:132:14 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 'GARROTES',
+  expected: 'NOVILHAS',
+  operator: 'strictEqual',
+  diff: 'simple'
+}

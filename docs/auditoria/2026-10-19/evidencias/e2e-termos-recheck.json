@@ -1,0 +1,17 @@
+{
+  "label": "e2e-termos-recheck",
+  "command": "node",
+  "args": [
+    "node_modules/@playwright/test/cli.js",
+    "test",
+    "-c",
+    "../../.scratch/auditoria-2026-10-19/playwright.config.ts",
+    "--grep",
+    "termos atualizados pedem aceite"
+  ],
+  "started": "2026-10-20T02:33:27.430Z",
+  "finished": "2026-10-20T02:33:55.626Z",
+  "durationSeconds": 28.196,
+  "exitCode": 0,
+  "signal": null
+}

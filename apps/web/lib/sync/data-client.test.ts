@@ -25,6 +25,23 @@ const CORPO_LOTE = {
 };
 
 describe('data-client: falhas', () => {
+  it('RF-078/RNF-014 cada rodada captura seu usuário sem alterar outros clientes', async () => {
+    const enviados: (string | null)[] = [];
+    const api = criarDadosClient({
+      fetch: async (_url, init) => {
+        enviados.push(new Headers(init?.headers).get('x-ogado-usuario'));
+        return new Response(JSON.stringify({ lotes: [] }), { status: 200 });
+      },
+    });
+    const a = api.paraUsuario!('usuario-a');
+    const b = api.paraUsuario!('usuario-b');
+    await a.listarLotes();
+    await b.listarLotes();
+    await a.listarLotes();
+    await api.listarLotes();
+    expect(enviados).toEqual(['usuario-a', 'usuario-b', 'usuario-a', null]);
+  });
+
   it('400 validacao_invalida expõe os campos recusados em vez de "contrato"', async () => {
     const api = clienteCom(400, {
       erro: {

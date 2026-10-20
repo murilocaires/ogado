@@ -1,0 +1,21 @@
+{
+  "label": "sessao-respostas-antigas-red",
+  "command": "node",
+  "args": [
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--root",
+    "apps/web",
+    "lib/auth/session-controller.test.ts",
+    "--maxWorkers=1",
+    "--no-file-parallelism",
+    "-t",
+    "em voo não restaura sessão|perfil antigo|antigo não apaga"
+  ],
+  "cwd": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit",
+  "started": "2026-10-20T15:36:46.840Z",
+  "ended": "2026-10-20T15:37:15.768Z",
+  "durationSeconds": 28.928,
+  "exitCode": 1,
+  "signal": null
+}

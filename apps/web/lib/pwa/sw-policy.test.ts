@@ -30,7 +30,7 @@ const P = modulo.exports;
 const O = 'https://app.ogado.test';
 const cab = (h: Record<string, string>) => ({ get: (n: string) => h[n.toLowerCase()] ?? null });
 
-describe('service worker: o que entra no cache (ADR-0007 §3, RF-071)', () => {
+describe('service worker: o que entra no cache (ADR-0007 §3, RF-071, RNF-014)', () => {
   it('nunca toca em /api/*, nem em métodos que não são GET', () => {
     expect(P.estrategia({ method: 'GET', url: `${O}/api/auth/session` }, O)).toBe('ignorar');
     expect(

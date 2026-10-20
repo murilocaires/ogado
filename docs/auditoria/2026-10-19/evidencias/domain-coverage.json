@@ -1,0 +1,16 @@
+{
+  "label": "domain-coverage",
+  "command": "node",
+  "args": [
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--root",
+    "packages/domain",
+    "--coverage"
+  ],
+  "started": "2026-10-20T02:09:21.625Z",
+  "finished": "2026-10-20T02:09:36.999Z",
+  "durationSeconds": 15.374,
+  "exitCode": 0,
+  "signal": null
+}

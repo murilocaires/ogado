@@ -50,7 +50,110 @@ function fakeApi(overrides: Partial<ApiClient> = {}): ApiClient {
   };
 }
 
+function respostaPendente<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((r) => {
+    resolve = r;
+  });
+  return { promise, resolve };
+}
+
 describe('RF-002 máquina de estados da sessão', () => {
+  it.each(['login', 'signup'] as const)(
+    'RF-078/RNF-014 %s em voo não restaura sessão encerrada em outra aba',
+    async (acao) => {
+      const store = memoryStore(identity);
+      const pendente = respostaPendente<ApiResult<SessionResponse>>();
+      const api = fakeApi({ [acao]: () => pendente.promise });
+      const c = createSessionController({ api, identity: store, clearLocalData: vi.fn() });
+      await c.verify();
+      const resposta = c[acao]({
+        email: 'ana@fazenda.com',
+        senha: 'Segredo#1',
+        aceiteTermos: true,
+      });
+      store.clear();
+      await c.identityChanged();
+      pendente.resolve({ ok: true, data: sessionBody });
+      expect((await resposta).ok).toBe(false);
+      expect(c.getState()).toEqual({ status: 'anonimo' });
+      expect(store.current).toBeNull();
+    },
+  );
+
+  it('RF-078/RNF-014 perfil antigo não substitui a sessão de outra conta', async () => {
+    const store = memoryStore(identity);
+    const pendente = respostaPendente<ApiResult<SessionResponse>>();
+    const api = fakeApi({ updatePerfil: () => pendente.promise });
+    const c = createSessionController({ api, identity: store, clearLocalData: vi.fn() });
+    await c.verify();
+    const resposta = c.updatePerfil({ nome: 'Ana', email: 'ana@fazenda.com' });
+    const outra = {
+      ...sessionBody,
+      usuario: { ...sessionBody.usuario, id: 'outra-conta' },
+      fazenda: { ...sessionBody.fazenda, id: 'outra-fazenda' },
+    };
+    store.write({ usuarioId: outra.usuario.id, fazendaId: outra.fazenda.id });
+    api.getSession = async () => ({ ok: true, data: outra });
+    await c.identityChanged();
+    pendente.resolve({ ok: true, data: sessionBody });
+    expect((await resposta).ok).toBe(false);
+    expect(c.getState()).toEqual({
+      status: 'autenticado',
+      usuario: outra.usuario,
+      fazenda: outra.fazenda,
+    });
+  });
+
+  it.each(['logout', 'deleteAccount'] as const)(
+    'RF-078/RNF-014 %s antigo não apaga dados da nova sessão',
+    async (acao) => {
+      const store = memoryStore(identity);
+      const pendente = respostaPendente<ApiResult<void>>();
+      const clearLocalData = vi.fn();
+      const api = fakeApi({ [acao]: () => pendente.promise });
+      const c = createSessionController({ api, identity: store, clearLocalData });
+      await c.verify();
+      const resposta = c[acao]();
+      store.clear();
+      await c.identityChanged();
+      await c.login({ email: 'ana@fazenda.com', senha: 'Segredo#1' });
+      pendente.resolve({ ok: true, data: undefined });
+      expect((await resposta).ok).toBe(false);
+      expect(clearLocalData).not.toHaveBeenCalled();
+      expect(c.getState().status).toBe('autenticado');
+    },
+  );
+
+  it('RF-078/RNF-014 sair em outra aba encerra a identidade local sem apagar os dados da nova aba', async () => {
+    const store = memoryStore(identity);
+    const clearLocalData = vi.fn();
+    const c = createSessionController({ api: fakeApi(), identity: store, clearLocalData });
+    await c.verify();
+    store.clear();
+    await c.identityChanged();
+    expect(c.getState()).toEqual({ status: 'anonimo' });
+    expect(clearLocalData).not.toHaveBeenCalled();
+  });
+
+  it('RF-078/RNF-014 resposta em voo não restaura conta que saiu em outra aba', async () => {
+    const store = memoryStore(identity);
+    let resolve: (value: ApiResult<SessionResponse>) => void = () => {};
+    const pending = new Promise<ApiResult<SessionResponse>>((r) => {
+      resolve = r;
+    });
+    const api = fakeApi();
+    const c = createSessionController({ api, identity: store, clearLocalData: vi.fn() });
+    await c.verify();
+    api.getSession = () => pending;
+    const old = c.verify();
+    store.clear();
+    await c.identityChanged();
+    resolve({ ok: true, data: sessionBody });
+    await old;
+    expect(c.getState()).toEqual({ status: 'anonimo' });
+  });
+
   it('RF-002 começa desconhecida e verificar com 200 vai para autenticado e guarda só a identidade', async () => {
     const store = memoryStore();
     const c = createSessionController({ api: fakeApi(), identity: store, clearLocalData: vi.fn() });
@@ -214,8 +317,10 @@ describe('RF-002 máquina de estados da sessão', () => {
       onAccountMismatch,
     });
 
-    await c.login({ email: 'ana@fazenda.com', senha: 'Segredo#1' });
+    const result = await c.login({ email: 'ana@fazenda.com', senha: 'Segredo#1' });
 
+    expect(result).toEqual({ ok: false, kind: 'bloqueada' });
+    expect(c.getState()).toEqual({ status: 'anonimo' });
     expect(onAccountMismatch).toHaveBeenCalledWith(previous, identity);
     expect(c.getAccountMismatch()).toEqual({ previous, next: identity });
     expect(clearLocalData).not.toHaveBeenCalled();

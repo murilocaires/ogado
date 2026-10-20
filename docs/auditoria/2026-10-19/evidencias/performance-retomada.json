@@ -1,0 +1,80 @@
+{
+  "status": "Complete: only three previously interrupted benchmarks, run sequentially.",
+  "methodology": "Local microbenchmarks with real calculation/sync modules and in-memory Storage/HTTP adapters. No browser disk/IPC, network, PostgreSQL or React rendering. Shared Windows host; no other audit build or suite ran concurrently. Five samples for 5000 scenarios: percentiles near maximum are diagnostic, not a certified tail-latency estimate. Earlier measurements were preserved separately.",
+  "environment": {
+    "node": "v22.23.2",
+    "v8": "12.4.254.21-node.56",
+    "platform": "win32",
+    "arch": "x64",
+    "os": "10.0.26200",
+    "cpu": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+    "logicalCpus": 8,
+    "totalMemoryGiB": 7.729602813720703,
+    "freeMemoryBeforeGiB": 1.3145294189453125,
+    "freeMemoryAfterGiB": 1.2681121826171875,
+    "runAt": "2026-10-20T09:33:18.272Z"
+  },
+  "results": [
+    {
+      "name": "web.cenarios.allBestBadges.5000",
+      "samples": 5,
+      "batch": 1,
+      "operations": 5,
+      "warmupOperations": 1,
+      "p50Ms": 16560.6535,
+      "p95Ms": 19920.629800000002,
+      "maxMs": 19920.629800000002,
+      "throughputOpsSec": 0.05811858691760325
+    },
+    {
+      "name": "sync.cleanPull.memoryAdapters.1000",
+      "samples": 30,
+      "operations": 30,
+      "warmupOperations": 5,
+      "p50Ms": 8.768199999991339,
+      "p95Ms": 12.233900000006543,
+      "maxMs": 13.376700000007986,
+      "throughputOpsSec": 109.29407684394003
+    },
+    {
+      "name": "sync.cleanPull.memoryAdapters.10000",
+      "samples": 30,
+      "operations": 30,
+      "warmupOperations": 5,
+      "p50Ms": 88.57050000000163,
+      "p95Ms": 126.92799999999988,
+      "maxMs": 130.19580000000133,
+      "throughputOpsSec": 10.663741483891608
+    }
+  ],
+  "checks": {
+    "decimalGlobalMutation": {
+      "normal": "122535.8333333333333333333333",
+      "afterPrecision5": "122530",
+      "changed": true
+    },
+    "snapshotReplay": {
+      "recordedCabecas": "60",
+      "replayCabecas": "59.77307317073170731707317073",
+      "recordedLiquido": "103307.6",
+      "replayLiquido": "102408.0529717073170731707317",
+      "savedVariantes": {
+        "lotacaoInicial": "fixa80",
+        "faturamentoBruto": "pesoVivo"
+      }
+    },
+    "contractPoisonScenario": {
+      "createAccepted": true,
+      "mapperReturnsNull": true,
+      "syncResult": "erro"
+    },
+    "twoTabsBeforeSync": {
+      "tabAInMemory": 1,
+      "tabBInMemory": 1,
+      "persistedAfterBothWrites": 1,
+      "persistedCategories": [
+        "f46b5ef0-8a4f-49a7-b36c-60f12375d814"
+      ]
+    }
+  }
+}

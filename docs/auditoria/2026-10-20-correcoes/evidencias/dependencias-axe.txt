@@ -1,0 +1,50 @@
+Scope: all 6 workspace projects
+✓ Lockfile passes supply-chain policies (verified 5h ago)
+Progress: resolved 1, reused 0, downloaded 0, added 0
+
+   ╭──────────────────────────────────────────╮
+   │                                          │
+   │   Update available! 11.13.0 → 12.14.0.   │
+   │   Changelog: https://pnpm.io/v/12.14.0   │
+   │     To update, run: pnpm add -g pnpm     │
+   │                                          │
+   ╰──────────────────────────────────────────╯
+
+Progress: resolved 25, reused 6, downloaded 0, added 0
+Progress: resolved 31, reused 13, downloaded 0, added 0
+Progress: resolved 34, reused 33, downloaded 0, added 0
+Progress: resolved 36, reused 34, downloaded 0, added 0
+Progress: resolved 36, reused 35, downloaded 0, added 0
+Progress: resolved 38, reused 37, downloaded 0, added 0
+Progress: resolved 39, reused 38, downloaded 0, added 0
+Progress: resolved 40, reused 38, downloaded 0, added 0
+Progress: resolved 168, reused 69, downloaded 0, added 0
+Progress: resolved 182, reused 91, downloaded 0, added 0
+Progress: resolved 184, reused 102, downloaded 0, added 0
+Progress: resolved 185, reused 103, downloaded 0, added 0
+Progress: resolved 185, reused 104, downloaded 0, added 0
+Progress: resolved 185, reused 105, downloaded 0, added 0
+Progress: resolved 186, reused 108, downloaded 0, added 0
+Progress: resolved 249, reused 127, downloaded 0, added 0
+Progress: resolved 370, reused 145, downloaded 0, added 0
+Progress: resolved 393, reused 164, downloaded 0, added 0
+Progress: resolved 397, reused 176, downloaded 0, added 0
+Progress: resolved 400, reused 186, downloaded 0, added 0
+Progress: resolved 401, reused 197, downloaded 0, added 0
+Progress: resolved 402, reused 217, downloaded 0, added 0
+Progress: resolved 402, reused 235, downloaded 0, added 0
+Progress: resolved 402, reused 277, downloaded 0, added 0
+Progress: resolved 405, reused 301, downloaded 0, added 0
+Progress: resolved 507, reused 377, downloaded 0, added 0
+Progress: resolved 548, reused 431, downloaded 0, added 0
+Progress: resolved 550, reused 432, downloaded 0, added 0
+Progress: resolved 551, reused 433, downloaded 0, added 0
+Progress: resolved 552, reused 434, downloaded 0, added 0
+Progress: resolved 563, reused 434, downloaded 0, added 0
+Progress: resolved 580, reused 462, downloaded 0, added 0
+Packages: +1
++
+Progress: resolved 582, reused 465, downloaded 0, added 0
+Progress: resolved 582, reused 465, downloaded 0, added 1, done
+
+Done in 44.1s using pnpm v11.13.0

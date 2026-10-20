@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { calcularRecria, ENTRADA_PADRAO, formatarBRL } from '@ogado/domain';
+import { calcularRecria, ENTRADA_PADRAO, VARIANTES_PADRAO, formatarBRL } from '@ogado/domain';
 import { screen, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -46,6 +46,8 @@ function lote(numero: number, data: string, tipo: 'compra' | 'venda' = 'compra')
   };
 }
 
+const COM_CABECAS_INTEIRAS = { ...VARIANTES_PADRAO, cabecasInteiras: true };
+
 describe('RF-040 Painel', () => {
   it('RF-040 sem lançamentos: estado vazio, saudação genérica e a recria atual', () => {
     renderComApp(<PainelScreen />);
@@ -61,8 +63,8 @@ describe('RF-040 Painel', () => {
   it('RF-040 com as entradas da planilha preenchidas, a recria atual mostra o valor de ouro', () => {
     const repo = criarRepoComPlanilha(() => criarStorageMemoria());
     renderComApp(<PainelScreen />, repo);
-    const liquido = formatarBRL(calcularRecria(ENTRADA_PADRAO).faturamentoLiquido);
-    expect(liquido).toBe('R$ 102.408,05');
+    const liquido = formatarBRL(calcularRecria(ENTRADA_PADRAO, COM_CABECAS_INTEIRAS).faturamentoLiquido);
+    expect(liquido).toBe('R$ 103.307,60');
     const cartao = screen.getByRole('region', { name: /Recria, simulação atual/ });
     expect(within(cartao).getByText(liquido)).toBeInTheDocument();
     expect(within(cartao).queryByText(/Preencha o simulador/)).not.toBeInTheDocument();

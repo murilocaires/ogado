@@ -1,14 +1,14 @@
 'use client';
 
 import { createContext, useContext, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { criarRepoLocal } from './local-repo';
+import { criarRepoDuravel } from './durable-repo';
 import type { OGadoRepo, RepoSnapshot } from './types';
 
 const RepoContext = createContext<OGadoRepo | null>(null);
 
-/** Entrega o repositório às telas. Em produção da E1 é o localStorage; testes injetam o seu. */
+/** Entrega IndexedDB às telas; testes podem injetar outro adapter pela mesma interface. */
 export function RepoProvider({ children, repo }: { children: ReactNode; repo?: OGadoRepo }) {
-  const [valor] = useState<OGadoRepo>(() => repo ?? criarRepoLocal());
+  const [valor] = useState<OGadoRepo>(() => repo ?? criarRepoDuravel());
   return <RepoContext.Provider value={valor}>{children}</RepoContext.Provider>;
 }
 

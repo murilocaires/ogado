@@ -2,28 +2,28 @@
 // Compra espelha calc.js/planilha; venda: base da @ por lote (ADR-0012, RN-024) e desconto em kg por
 // cabeça como na planilha (ADR-0013, RN-025).
 // Sem imports locais: o parity.mjs carrega este arquivo direto (Node strip-types).
-import Decimal from 'decimal.js';
-
-Decimal.set({ precision: 28 });
+import DecimalBase from 'decimal.js';
+const Decimal = DecimalBase.clone({ precision: 28 });
+type Decimal = DecimalBase;
 
 export type ModoPeso = 'total' | 'medio' | 'individual';
 
 export interface LoteInput {
   modo: ModoPeso;
   /** Cabeças (modos total/médio). No modo individual vale o nº de pesos informados. */
-  qtd?: Decimal.Value | null;
+  qtd?: DecimalBase.Value | null;
   /** kg do lote (modo total) ou kg por cabeça (modo médio). */
-  peso?: Decimal.Value | null;
+  peso?: DecimalBase.Value | null;
   /** kg de cada animal (modo individual). */
-  pesos?: (Decimal.Value | null)[];
+  pesos?: (DecimalBase.Value | null)[];
   /** R$ por @. */
-  preco?: Decimal.Value | null;
+  preco?: DecimalBase.Value | null;
   /** Só venda (RN-024): `vivo` (padrão) usa `arrobaVivoKg`; `carcaca` usa `arrobaCarcacaKg`. */
   base?: 'vivo' | 'carcaca';
   /** Só venda (RN-025): `false` desliga o desconto; qualquer outro valor mantém ligado (padrão). */
   aplicarDesconto?: boolean;
   /** Só venda (RN-025): kg descontados POR CABEÇA. Vazio/null/inválido usa `params.descontoVendaKgCab`. */
-  desconto?: Decimal.Value | null;
+  desconto?: DecimalBase.Value | null;
 }
 
 export interface CompraVendaInput {
@@ -79,7 +79,7 @@ export interface CompraVendaResultado {
 const ZERO = new Decimal(0);
 
 /** Valor numérico ou `null` se vazio/inválido/infinito (RN-022: nunca lança). */
-function tentar(v: Decimal.Value | null | undefined): Decimal | null {
+function tentar(v: DecimalBase.Value | null | undefined): Decimal | null {
   if (v === undefined || v === null) return null;
   try {
     const d = new Decimal(v);
@@ -89,12 +89,12 @@ function tentar(v: Decimal.Value | null | undefined): Decimal | null {
   }
 }
 
-function dec(v: Decimal.Value | null | undefined): Decimal {
+function dec(v: DecimalBase.Value | null | undefined): Decimal {
   return tentar(v) ?? ZERO;
 }
 
 /** Parâmetro sobrescrito: vazio ou inválido cai no padrão da planilha (RN-021). */
-function parametro(v: Decimal.Value | null | undefined, padrao: Decimal): Decimal {
+function parametro(v: DecimalBase.Value | null | undefined, padrao: Decimal): Decimal {
   return tentar(v) ?? padrao;
 }
 
@@ -159,17 +159,14 @@ export function calcularVenda(
   return fechar(qtd, kg, kgLiquido, descontoKgCab, kgLiquido.div(kgPorArroba), lote);
 }
 
-function soma(
-  linhas: LinhaCalculada[],
-  campo: 'qtd' | 'arrobas' | 'total',
-): Decimal {
+function soma(linhas: LinhaCalculada[], campo: 'qtd' | 'arrobas' | 'total'): Decimal {
   return Decimal.sum(ZERO, ...linhas.map((l) => l[campo]));
 }
 
 /** RN-006: saldo = total de vendas − total de compras. */
 export function calcularCompraVenda(
   entrada: CompraVendaInput,
-  sobrescritas: Partial<Record<keyof ParametrosCompraVenda, Decimal.Value | null>> = {},
+  sobrescritas: Partial<Record<keyof ParametrosCompraVenda, DecimalBase.Value | null>> = {},
 ): CompraVendaResultado {
   const padrao = PARAMETROS_COMPRA_VENDA;
   const params: ParametrosCompraVenda = {

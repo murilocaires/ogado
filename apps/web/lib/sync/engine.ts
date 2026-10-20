@@ -20,7 +20,7 @@ import type {
   LoteEntity,
   SyncableRepo,
 } from '../repo/types';
-import type { DadosClient, DadosFalha, DadosResult } from './data-client';
+import type { DadosClient, DadosFalha, DadosResult, PaginaDados, SyncCursor } from './data-client';
 import { cenarioDeDto, cenarioParaCriar, loteDeDto, loteParaCriar, lotePatchDe } from './mappers';
 import { mesclarLote, mesclarCenario } from './mesclar';
 import { MOTIVO_CONTRATO, motivoDeValidacao } from './motivos';
@@ -53,6 +53,7 @@ export interface Rejeitado {
   versaoLocal: number;
   motivo: string;
   detectadoEm: string;
+  original?: unknown;
 }
 
 export interface EstadoSync {
@@ -63,9 +64,12 @@ export interface EstadoSync {
   historicoPendente?: HistoricoSyncCreate[];
   conflitos?: Conflito[];
   rejeitados?: Rejeitado[];
+  cursores?: Partial<Record<'lote' | 'cenario', { updatedAt: string; id: string }>>;
 }
 
 export interface EstadoSyncStore {
+  ready?(): Promise<void>;
+  flush?(): Promise<void>;
   ler(): EstadoSync | null;
   gravar(estado: EstadoSync): void;
   limpar(): void;
@@ -122,11 +126,13 @@ interface DtoBase {
   id: string;
   version: number;
   deletedAt: string | null;
+  updatedAt: string;
 }
 
 interface Adaptador<E extends EntityMeta, D extends DtoBase> {
   tipo: TipoEntidade;
   listar(): Promise<DadosResult<D[]>>;
+  pagina?: ((cursor?: SyncCursor) => Promise<DadosResult<PaginaDados<D>>>) | undefined;
   locais(): E[];
   daDto(d: D): E | null;
   /** Valida o `atual` de um 409; `null` se não tiver o formato esperado. */
@@ -146,6 +152,8 @@ export interface DepsSync {
   estado: EstadoSyncStore;
   usuarioId: string;
   agora?: () => Date;
+  /** A sessão/efeito que iniciou a rodada continua vigente. */
+  ativo?: () => boolean;
 }
 
 function conteudoDoLote(l: LoteEntity): string {
@@ -163,6 +171,50 @@ function igualCenario(c: CenarioEntity, d: CenarioDto): boolean {
 }
 
 export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
+  const exigirAtivo = () => {
+    if (deps.ativo && !deps.ativo()) throw new Interrompe('nao-autenticado');
+  };
+  const original = deps.api.paraUsuario?.(deps.usuarioId) ?? deps.api;
+  const api = new Proxy(original, {
+    get(target, campo) {
+      const valor: unknown = Reflect.get(target, campo);
+      if (typeof valor !== 'function') return valor;
+      return async (...args: unknown[]) => {
+        exigirAtivo();
+        const resposta: unknown = await Reflect.apply(valor, target, args);
+        exigirAtivo();
+        return resposta;
+      };
+    },
+  });
+  const rodar = async (): Promise<ResultadoSync> => {
+    try {
+      exigirAtivo();
+      await deps.repo.ready?.();
+      exigirAtivo();
+      await deps.repo.flush?.();
+      exigirAtivo();
+      await deps.estado.ready?.();
+      exigirAtivo();
+      const resultado = await executarSincronizacao({ ...deps, api });
+      exigirAtivo();
+      await deps.repo.flush?.();
+      exigirAtivo();
+      await deps.estado.flush?.();
+      return resultado;
+    } catch (erro) {
+      if (erro instanceof Interrompe) return erro.resultado;
+      return 'erro';
+    }
+  };
+  // Uma única rodada por origem entre abas: versões/checkpoints nunca se atropelam.
+  if (typeof navigator !== 'undefined' && navigator.locks) {
+    return navigator.locks.request('ogado.sync', rodar).catch(() => 'erro' as ResultadoSync);
+  }
+  return rodar();
+}
+
+async function executarSincronizacao(deps: DepsSync): Promise<ResultadoSync> {
   const { repo, api, estado, usuarioId } = deps;
   const agora = deps.agora ?? (() => new Date());
   const lido = estado.ler();
@@ -171,6 +223,7 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
   const versoes: Record<string, number> = { ...(lido?.versoes ?? {}) };
   const conflitos = new Map<string, Conflito>();
   const bases: Record<string, unknown> = { ...(lido?.bases ?? {}) };
+  const cursores = { ...(lido?.cursores ?? {}) };
   let historicoPendente = (
     Array.isArray(lido?.historicoPendente) ? lido.historicoPendente : []
   ).flatMap((h) => {
@@ -182,6 +235,7 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
   );
 
   const salvarEstado = (): void => {
+    if (deps.ativo && !deps.ativo()) return;
     // Pendência de entidade que não existe mais no aparelho não tem o que mostrar.
     const dados = repo.exportar();
     const existentes = new Set<string>([
@@ -189,7 +243,8 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
       ...dados.cenarios.map((c) => c.id),
     ]);
     for (const id of [...conflitos.keys()]) if (!existentes.has(id)) conflitos.delete(id);
-    for (const id of [...rejeitados.keys()]) if (!existentes.has(id)) rejeitados.delete(id);
+    for (const id of [...rejeitados.keys()])
+      if (!existentes.has(id) && !rejeitados.get(id)?.original) rejeitados.delete(id);
     estado.gravar({
       usuarioId,
       versoes,
@@ -197,6 +252,7 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
       historicoPendente,
       conflitos: [...conflitos.values()],
       rejeitados: [...rejeitados.values()],
+      cursores,
     });
   };
 
@@ -267,6 +323,8 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
       existente ?? historicoSyncCreateSchema.parse({ id: crypto.randomUUID(), ...dados });
     if (!existente) historicoPendente.push(evento);
     salvarEstado();
+    await repo.flush?.();
+    await estado.flush?.();
     const res = await api.arquivarHistorico(evento);
     if (!res.ok) {
       checar(res);
@@ -276,8 +334,12 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
 
   async function reconciliar<E extends EntityMeta, D extends DtoBase>(
     a: Adaptador<E, D>,
+    recebidos?: D[],
+    modo: 'legado' | 'pagina' | 'pendentes' = 'legado',
   ): Promise<void> {
-    const remoto = await a.listar();
+    const remoto: DadosResult<D[]> = recebidos
+      ? { ok: true, data: recebidos, created: false }
+      : await a.listar();
     if (!remoto.ok) return checar(remoto);
     const locais = new Map(a.locais().map((e) => [e.id, e]));
     const candidatos: { entidade: E; lida: E | null }[] = [];
@@ -292,6 +354,33 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
     try {
       for (const inicial of remoto.data) {
         lidos.add(inicial.id);
+        if (!a.daDto(inicial)) {
+          if (inicial.deletedAt !== null) {
+            const local = locais.get(inicial.id);
+            if (local)
+              candidatos.push({
+                entidade: {
+                  ...local,
+                  version: inicial.version,
+                  updatedAt: inicial.updatedAt,
+                  deletedAt: inicial.deletedAt,
+                },
+                lida: local,
+              });
+            bases[inicial.id] = inicial;
+            sincronizado(inicial.id, inicial.version);
+            continue;
+          }
+          rejeitados.set(inicial.id, {
+            tipo: a.tipo,
+            id: inicial.id,
+            versaoLocal: inicial.version,
+            motivo: MOTIVO_CONTRATO,
+            detectadoEm: agora().toISOString(),
+            original: inicial,
+          });
+          continue;
+        }
         const local = locais.get(inicial.id);
         const versaoBase = versoes[inicial.id];
         if (!local) {
@@ -348,7 +437,26 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
             atual = novo;
           } else if (res.kind === 'nao-encontrado') {
             // A exclusao pode ter ocorrido entre GET e PATCH; busca a lapide.
-            const lista = await a.listar();
+            const lista = a.pagina
+              ? await (async (): Promise<DadosResult<D[]>> => {
+                  let cursor: SyncCursor | undefined;
+                  while (true) {
+                    const pagina = await a.pagina!(cursor);
+                    if (!pagina.ok) return pagina;
+                    const encontrado = pagina.data.itens.find((d) => d.id === local.id);
+                    if (encontrado) return { ok: true, data: [encontrado], created: false };
+                    const proximo = pagina.data.proximoCursor;
+                    if (!proximo) return { ok: true, data: [], created: false };
+                    if (
+                      cursor &&
+                      (proximo.updatedAt < cursor.updatedAt ||
+                        (proximo.updatedAt === cursor.updatedAt && proximo.id <= cursor.id))
+                    )
+                      return { ok: false, kind: 'contrato' };
+                    cursor = proximo;
+                  }
+                })()
+              : await a.listar();
             if (!lista.ok) {
               checar(lista);
               throw new Interrompe('erro');
@@ -366,6 +474,12 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
       }
       for (const local of locais.values()) {
         if (lidos.has(local.id)) continue;
+        if (modo === 'pagina') continue;
+        if (
+          modo === 'pendentes' &&
+          (versoes[local.id] === local.version || a.dtoDe(bases[local.id]))
+        )
+          continue;
         if (local.deletedAt !== null) {
           sincronizado(local.id, local.version);
           continue;
@@ -395,16 +509,60 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
           continue;
         }
         // Mescla tambem edicoes feitas enquanto a requisicao estava em andamento.
-        const proxima = entidade.deletedAt ? hoje : a.mesclar(hoje, entidade, lida);
+        const proxima = entidade.deletedAt ? entidade : a.mesclar(hoje, entidade, lida);
         saida.push({ ...proxima, version: Math.max(hoje.version, entidade.version) + 1 });
       }
-      if (saida.length) a.aplicar(saida);
+      if (saida.length && (!deps.ativo || deps.ativo())) a.aplicar(saida);
     }
+  }
+
+  async function reconciliarIncremental<E extends EntityMeta, D extends DtoBase>(
+    a: Adaptador<E, D>,
+  ): Promise<void> {
+    if (!a.pagina || a.tipo === 'recria') return reconciliar(a);
+    let cursor = cursores[a.tipo];
+    while (true) {
+      const resposta = await a.pagina(cursor);
+      if (!resposta.ok) {
+        checar(resposta);
+        throw new Interrompe('erro');
+      }
+      await reconciliar(a, resposta.data.itens, 'pagina');
+      const ultimo = resposta.data.itens.at(-1);
+      if (ultimo) {
+        cursores[a.tipo] = { updatedAt: ultimo.updatedAt, id: ultimo.id };
+        salvarEstado();
+        // Checkpoint só é confirmado depois dos dados da página (interrupção pode repetir, nunca pular).
+        await repo.flush?.();
+        await estado.flush?.();
+      }
+      const proximo = resposta.data.proximoCursor;
+      if (!proximo) break;
+      if (
+        cursor &&
+        (proximo.updatedAt < cursor.updatedAt ||
+          (proximo.updatedAt === cursor.updatedAt && proximo.id <= cursor.id))
+      )
+        throw new Interrompe('erro');
+      cursor = proximo;
+    }
+    const checkpoint = cursores[a.tipo];
+    // Releitura inclusiva do último milissegundo cobre commits concorrentes com o mesmo timestamp.
+    if (checkpoint)
+      cursores[a.tipo] = { ...checkpoint, id: '00000000-0000-0000-0000-000000000000' };
+    const alterados = a.locais().flatMap((local) => {
+      if (versoes[local.id] === local.version) return [];
+      const base = a.dtoDe(bases[local.id]);
+      return base ? [base] : [];
+    });
+    if (alterados.length) await reconciliar(a, alterados, 'pagina');
+    await reconciliar(a, [], 'pendentes');
   }
 
   const lotes: Adaptador<LoteEntity, LoteDto> = {
     tipo: 'lote',
     listar: () => api.listarLotes(),
+    pagina: api.paginaLotes?.bind(api),
     locais: () => repo.exportar().lotes,
     daDto: loteDeDto,
     dtoDe: (v) => {
@@ -422,13 +580,20 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
   const cenarios: Adaptador<CenarioEntity, CenarioDto> = {
     tipo: 'cenario',
     listar: () => api.listarCenarios(),
+    pagina: api.paginaCenarios?.bind(api),
     locais: () => repo.exportar().cenarios,
     daDto: cenarioDeDto,
     dtoDe: (v) => {
       const p = cenarioSchema.safeParse(v);
       return p.success ? p.data : null;
     },
-    criar: (c) => api.criarCenario(cenarioParaCriar(c)),
+    criar: async (c) => {
+      try {
+        return await api.criarCenario(cenarioParaCriar(c));
+      } catch {
+        return { ok: false, kind: 'contrato' };
+      }
+    },
     alterar: (c, versao) => api.renomearCenario(c.id, c.nome, versao),
     excluir: (c, versao) => api.excluirCenario(c.id, versao),
     igual: igualCenario,
@@ -445,8 +610,8 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
         throw new Interrompe('erro');
       }
     }
-    await reconciliar(lotes);
-    await reconciliar(cenarios);
+    await reconciliarIncremental(lotes);
+    await reconciliarIncremental(cenarios);
     salvarEstado();
     return 'ok';
   } catch (e) {

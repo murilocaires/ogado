@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { preencherPlanilha } from './planilha';
+import { preencherPlanilha, RESULTADO_CABECAS_INTEIRAS } from './planilha';
 
 /**
  * E2 (cenários da recria): jornada SEM API e SEM login, dados no navegador.
@@ -26,7 +26,7 @@ for (const vp of viewports) {
       await page.goto('/recria');
       const resultado = page.getByRole('region', { name: 'Resultado da recria' });
       await preencherPlanilha(page);
-      await expect(resultado.locator('.hero .big')).toHaveText('R$ 102.408,05');
+      await expect(resultado.locator('.hero .big')).toHaveText(RESULTADO_CABECAS_INTEIRAS);
 
       // 1) salva o cenário com os padrões da planilha
       await page.getByRole('button', { name: 'Salvar como cenário' }).click();
@@ -44,7 +44,7 @@ for (const vp of viewports) {
 
       // 2) volta ao simulador, muda o preço e salva outro
       await page.getByRole('tab', { name: 'Simulador' }).click();
-      await page.getByLabel('Preço de venda', { exact: true }).fill('350');
+      await page.getByLabel('R$/cab (venda)', { exact: true }).fill('350');
       await page.getByRole('button', { name: 'Salvar como cenário' }).click();
       const nome2 = page.getByRole('dialog', { name: 'Salvar como cenário' });
       await nome2.getByLabel('Nome do cenário').fill('Safra 26/27 — preço otimista');
@@ -91,10 +91,10 @@ test('RF-035 abrir no simulador substitui as entradas pelas do cenário', async 
   await page.getByRole('button', { name: 'Salvar como cenário' }).click();
   await page.keyboard.press('Enter');
   await page.getByRole('tab', { name: 'Simulador' }).click();
-  await page.getByLabel('Preço de venda', { exact: true }).fill('400');
+  await page.getByLabel('R$/cab (venda)', { exact: true }).fill('400');
   await page.getByRole('tab', { name: /^Cenários/ }).click();
   await page.getByRole('button', { name: 'Abrir Cenário 1' }).click();
-  await expect(page.getByLabel('Preço de venda', { exact: true })).toHaveValue('325');
+  await expect(page.getByLabel('R$/cab (venda)', { exact: true })).toHaveValue('325,00');
 });
 
 test('RF-034 a lista de cenários em 390 px oculta colunas e mantém abrir e excluir', async ({

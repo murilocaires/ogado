@@ -48,6 +48,11 @@ function isUniqueViolation(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
 }
 
+/** Mesmo bloqueio para emissão, resgate e troca de credenciais: serializa por titular. */
+async function lockUsuario(tx: Pick<PrismaClient, '$queryRaw'>, usuarioId: string): Promise<void> {
+  await tx.$queryRaw`SELECT "id" FROM "Usuario" WHERE "id" = ${usuarioId}::uuid FOR UPDATE`;
+}
+
 export function createAccountRepository(prisma: PrismaClient) {
   return {
     async findUsuarioByEmail(email: string): Promise<UsuarioRecord | null> {
@@ -130,8 +135,74 @@ export function createAccountRepository(prisma: PrismaClient) {
       );
     },
 
-    async updateSenhaHash(usuarioId: string, senhaHash: string): Promise<void> {
-      await prisma.usuario.update({ where: { id: usuarioId }, data: { senhaHash } });
+    /** Login só emite sessão se a credencial verificada continua vigente sob o mesmo bloqueio. */
+    async createPasswordSession(input: {
+      usuarioId: string;
+      expectedHash: string;
+      expectedEmail: string;
+      rehash?: string;
+      session: NewSessionData;
+    }): Promise<boolean> {
+      return prisma.$transaction(async (tx) => {
+        await lockUsuario(tx, input.usuarioId);
+        const usuario = await tx.usuario.findUnique({
+          where: { id: input.usuarioId },
+          select: { senhaHash: true, email: true },
+        });
+        if (
+          !usuario ||
+          usuario.senhaHash !== input.expectedHash ||
+          usuario.email !== input.expectedEmail
+        )
+          return false;
+        // Rehash técnico é separado da troca de credenciais: conserva links e sessões vigentes.
+        if (input.rehash) {
+          await tx.usuario.update({
+            where: { id: input.usuarioId },
+            data: { senhaHash: input.rehash },
+          });
+        }
+        await tx.sessao.create({
+          data: {
+            id: input.session.id,
+            segredoHash: input.session.segredoHash,
+            usuarioId: input.usuarioId,
+            criadaEm: input.session.criadaEm,
+            ultimaVerificacaoEm: input.session.criadaEm,
+            expiraEm: input.session.expiraEm,
+          },
+        });
+        return true;
+      });
+    },
+
+    /** RF-005: senha, links e sessões mudam juntos; verificação obsoleta não pode vencer uma troca. */
+    async changeSenha(input: {
+      usuarioId: string;
+      expectedHash: string | null;
+      senhaHash: string;
+      currentSessionId: string | null;
+      now: Date;
+    }): Promise<boolean> {
+      return prisma.$transaction(async (tx) => {
+        await lockUsuario(tx, input.usuarioId);
+        const updated = await tx.usuario.updateMany({
+          where: { id: input.usuarioId, senhaHash: input.expectedHash },
+          data: { senhaHash: input.senhaHash, atualizadoEm: input.now },
+        });
+        if (updated.count !== 1) return false;
+        await tx.tokenRedefinicao.updateMany({
+          where: { usuarioId: input.usuarioId, usadoEm: null },
+          data: { usadoEm: input.now },
+        });
+        await tx.sessao.deleteMany({
+          where: {
+            usuarioId: input.usuarioId,
+            ...(input.currentSessionId ? { id: { not: input.currentSessionId } } : {}),
+          },
+        });
+        return true;
+      });
     },
 
     /** Hash atual da senha (nulo = conta sem senha). Usuário inexistente = `undefined`. */
@@ -149,11 +220,19 @@ export function createAccountRepository(prisma: PrismaClient) {
      */
     async createResetToken(input: {
       usuarioId: string;
+      email: string;
       tokenHash: string;
       now: Date;
       expiraEm: Date;
-    }): Promise<void> {
-      await prisma.$transaction(async (tx) => {
+    }): Promise<boolean> {
+      return prisma.$transaction(async (tx) => {
+        await lockUsuario(tx, input.usuarioId);
+        // O lookup do handler pode ter ocorrido antes de uma troca de e-mail concorrente.
+        const usuario = await tx.usuario.findUnique({
+          where: { id: input.usuarioId },
+          select: { email: true },
+        });
+        if (!usuario || usuario.email !== input.email) return false;
         await tx.tokenRedefinicao.updateMany({
           where: { usuarioId: input.usuarioId, usadoEm: null },
           data: { usadoEm: input.now },
@@ -166,6 +245,7 @@ export function createAccountRepository(prisma: PrismaClient) {
             expiraEm: input.expiraEm,
           },
         });
+        return true;
       });
     },
 
@@ -180,14 +260,20 @@ export function createAccountRepository(prisma: PrismaClient) {
       now: Date;
     }): Promise<boolean> {
       return prisma.$transaction(async (tx) => {
+        const token = await tx.tokenRedefinicao.findUnique({
+          where: { tokenHash: input.tokenHash },
+          select: { usuarioId: true },
+        });
+        if (!token) return false;
+        await lockUsuario(tx, token.usuarioId);
         const consumed = await tx.tokenRedefinicao.updateMany({
           where: { tokenHash: input.tokenHash, usadoEm: null, expiraEm: { gt: input.now } },
           data: { usadoEm: input.now },
         });
         if (consumed.count !== 1) return false;
-        const token = await tx.tokenRedefinicao.findUniqueOrThrow({
-          where: { tokenHash: input.tokenHash },
-          select: { usuarioId: true },
+        await tx.tokenRedefinicao.updateMany({
+          where: { usuarioId: token.usuarioId, usadoEm: null },
+          data: { usadoEm: input.now },
         });
         await tx.usuario.update({
           where: { id: token.usuarioId },
@@ -205,13 +291,25 @@ export function createAccountRepository(prisma: PrismaClient) {
       now: Date,
     ): Promise<UsuarioDto> {
       try {
-        return toUsuarioDto(
-          await prisma.usuario.update({
+        return await prisma.$transaction(async (tx) => {
+          await lockUsuario(tx, usuarioId);
+          const anterior = await tx.usuario.findUniqueOrThrow({
+            where: { id: usuarioId },
+            select: { email: true },
+          });
+          const usuario = await tx.usuario.update({
             where: { id: usuarioId },
             data: { nome: perfil.nome, email: perfil.email, atualizadoEm: now },
             select: usuarioDtoSelect,
-          }),
-        );
+          });
+          if (anterior.email !== perfil.email) {
+            await tx.tokenRedefinicao.updateMany({
+              where: { usuarioId, usadoEm: null },
+              data: { usadoEm: now },
+            });
+          }
+          return toUsuarioDto(usuario);
+        });
       } catch (error) {
         if (isUniqueViolation(error)) throw new EmailTakenError();
         throw error;

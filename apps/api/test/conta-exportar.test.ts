@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { exportacaoDadosSchema, sessionResponseSchema } from '@ogado/contracts';
 import { TEST_ORIGIN } from './support/env';
+import { cenarioFixture } from './support/cenario';
 import { buildTestApp, getWithCookie, prisma, signup } from './support/harness';
 
 const app = buildTestApp();
@@ -57,15 +58,7 @@ describe('GET /conta/exportar (RNF-009)', () => {
       headers: { cookie: c.cookie, origin: TEST_ORIGIN },
     });
     expect(del.statusCode).toBe(200);
-    await post(c.cookie, '/cenarios', {
-      id: randomUUID(),
-      nome: 'Cenário 1',
-      criadoEm: '2026-10-18T00:00:00.000Z',
-      entradas: { a: '1' },
-      variantes: {},
-      parametros: {},
-      resultado: {},
-    });
+    await post(c.cookie, '/cenarios', cenarioFixture());
 
     const res = await getWithCookie(app, '/conta/exportar', c.cookie);
     expect(res.statusCode).toBe(200);

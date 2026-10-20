@@ -1,0 +1,23 @@
+# ADR-0016 — Persistência transacional e sincronização incremental
+
+**Status:** aceito como correção de integridade autorizada pelo dono em 20/10/2026.
+
+RF-073/074/078/079/080 e RNF-014/017 exigem conservar os lançamentos offline. O envelope agregado em localStorage perdia gravações concorrentes entre abas. A implementação padrão passa a usar IndexedDB nativo, sem nova biblioteca, sob a interface pública do repositório. O adapter legado em memória/localStorage continua disponível para testes e migração.
+
+As stores `entidades`, `outbox` e `meta` conservam entidades e estado de sincronização. Cada gravação confirma a entidade e sua pendência na mesma transação. `ready()` conclui a hidratação/migração; `flush()` confirma gravações antes de fechar diálogos, anunciar sucesso ou enviar à API. Falha de gravação mantém o aviso e permite tentar novamente com o mesmo ID. BroadcastChannel informa outras abas; Web Locks serializa rodadas de sincronização. A geração de sessão invalida gravações atrasadas após sair da conta. A mudança da identidade em outra aba invalida também verificações de sessão em andamento.
+
+A migração preserva IDs, versões, identidade e dados originais em backup. Não inventa valores para payloads inválidos. Cenários históricos inválidos ficam individualmente em quarentena e não bloqueiam os válidos. A atualização dos documentos legais e de `TERMOS_VERSAO` acompanha a mudança de armazenamento.
+
+O pull opt-in de lotes/cenários tem páginas de 100 itens por padrão, máximo 200, cursor estável `(updatedAt, id)` e inclui tombstones. O cliente só confirma o checkpoint depois de gravar a página e a quarentena. A retomada relê o último milissegundo para absorver escritas com o mesmo timestamp; versões/idempotência tornam a repetição segura. Os formatos GET legados continuam aceitos. A migração aditiva `20261020110000_sync_cursor_indexes` cria índices `(fazendaId, updatedAt, id)` e não reescreve dados.
+
+A política de conflitos permanece a já implementada em `d36a844`, descrita em [sincronizacao-automatica.md](../sincronizacao-automatica.md). Não se restaura a escolha manual de versões. Novas simulações e a ação limpar usam `areaPastavel` conforme ADR-0014; históricos com `fixa80` continuam reproduzíveis.
+
+O proprietário do banco é confirmado em IndexedDB, junto dos dados. localStorage é espelho; falha/perda dessa chave não autoriza outra conta a abrir o banco. Dados sem proprietário identificável são preservados e o acesso falha fechado. A limpeza deixa um marcador explícito de ausência de dono para não reimportar um espelho atrasado. Migração incompleta ou leitura bloqueada do legado não permite apagar a origem.
+
+Requisições privadas e logout do cliente atual levam `X-OGado-Usuario`, capturado da sessão/rodada que iniciou a operação. A API compara esse código com o usuário do cookie antes de tocar/renovar sessão ou executar a operação; divergência recebe 401 sem Set-Cookie. O cabeçalho é uma verificação de contexto, não uma credencial. A autenticação continua exclusivamente pelo cookie. Clientes legados sem o cabeçalho conservam o protocolo anterior. O motor também verifica a vigência da rodada antes/depois de cada I/O, adoção e checkpoint, evitando que uma resposta antiga restaure dados após sair.
+
+Na publicação, as abas precisam carregar o cliente atualizado para obter essa verificação adicional. JavaScript antigo que omite o cabeçalho mantém o comportamento legado; a compatibilidade não elimina retroativamente sua corrida. Publicar API antes/junto da web e atualizar/reabrir as abas faz parte da validação da implantação. Dados locais sem proprietário conhecido não são adotados automaticamente por outra conta: permanecem preservados para recuperação explícita.
+
+As escritas sincronizáveis do servidor são serializadas por lock da linha da fazenda, em transação curta. O `updatedAt` é maior que o máximo já confirmado de lotes/cenários, mesmo se o relógio retroceder ou a requisição tiver começado antes de outra escrita. Isso impede que um commit atrasado caia antes do cursor. Não exige tabela de eventos nem migração adicional. Toda escrita direta por manutenção precisa respeitar essa mesma convenção; alterações SQL fora do repositório exigem ressincronização completa. A concorrência por fazenda fica serial, adequada à v1 de um usuário/fazenda, e deve ser medida antes de ampliar o modelo de equipe.
+
+Os testes cobrem IndexedDB real, duas abas, recarga, falha de cota, migração, invalidação no logout, cursor com empate, exclusões e isolamento de fazenda. Isso não mede armazenamento a frio em telefone nem garante retenção quando o próprio sistema operacional remove os dados do site.

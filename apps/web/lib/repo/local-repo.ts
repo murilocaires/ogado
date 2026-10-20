@@ -17,6 +17,7 @@ import {
   type RecriaForm,
   type RepoSnapshot,
 } from './types';
+import { normalizarCenarioSnapshot } from '@ogado/contracts';
 
 /** Chave atual (E2, esquema 3: lotes + recria + cenários; o 3 troca descontoPct por descontoKg). */
 export const STORAGE_KEY = 'ogado.e2.v2';
@@ -155,7 +156,15 @@ function lerEnvelope(bruto: string): Envelope | null {
   if (!Array.isArray(dados['lotes']) || !ehRecria(dados['recria'])) return null;
   const lotes = (dados['lotes'] as unknown[]).map(migrarLoteDescontoKg).filter(ehLote);
   const cenarios = Array.isArray(dados['cenarios'])
-    ? (dados['cenarios'] as unknown[]).filter(ehCenario)
+    ? (dados['cenarios'] as unknown[]).filter(ehCenario).map((cenario) => {
+        const normalizado = normalizarCenarioSnapshot({
+          form: cenario.form,
+          variantes: cenario.variantes,
+          parametros: cenario.parametros,
+          resultado: cenario.resultado,
+        });
+        return normalizado ? { ...cenario, ...normalizado } : cenario;
+      })
     : [];
   return { schema: SCHEMA, lotes, recria: dados['recria'], cenarios };
 }
@@ -189,7 +198,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
   let persistencia: PersistenciaStatus = 'ok';
   let snapshot: RepoSnapshot | null = null;
 
-  /** Simulador novo: todos os campos vazios e lotação inicial sobre 80 ha, como na planilha. */
+  /** Simulador novo: campos vazios e lotação inicial na área pastável (ADR-0014). */
   function recriaInicial(): RecriaEntity {
     return {
       id: gerarId(),
@@ -197,7 +206,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
       updatedAt: agora().toISOString(),
       deletedAt: null,
       form: recriaFormVazio(),
-      lotacaoInicial: 'fixa80',
+      lotacaoInicial: 'areaPastavel',
     };
   }
 
@@ -362,6 +371,8 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
         ...recria,
         form: { ...recria.form, ...atualizacao.form },
         lotacaoInicial: atualizacao.lotacaoInicial ?? recria.lotacaoInicial,
+        ...(atualizacao.variantes ? { variantes: { ...atualizacao.variantes } } : {}),
+        ...(atualizacao.parametros ? { parametros: { ...atualizacao.parametros } } : {}),
         version: recria.version + 1,
         updatedAt: agora().toISOString(),
       };
@@ -372,7 +383,9 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
       recria = {
         ...recria,
         form: recriaFormVazio(),
-        lotacaoInicial: 'fixa80',
+        lotacaoInicial: 'areaPastavel',
+        variantes: undefined,
+        parametros: undefined,
         version: recria.version + 1,
         updatedAt: agora().toISOString(),
       };

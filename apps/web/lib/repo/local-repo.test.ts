@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { criarStorageMemoria } from '../../components/test-utils';
 import { snapshotDaRecria } from '../cenarios';
-import {
-  criarRepoLocal,
-  STORAGE_KEY,
-  STORAGE_KEY_E1,
-} from './local-repo';
+import { criarRepoLocal, STORAGE_KEY, STORAGE_KEY_E1 } from './local-repo';
 import type { LoteSalvar, RecriaEntity } from './types';
 import { recriaFormPlanilha } from './planilha.test-support';
 
@@ -74,7 +70,7 @@ describe('RF-020 repositório local (ADR-0007)', () => {
     if (snap.status !== 'pronto') return;
     expect(Object.values(snap.recria.form).every((v) => v === '')).toBe(true);
     expect(Object.keys(snap.recria.form)).toHaveLength(14);
-    expect(snap.recria.lotacaoInicial).toBe('fixa80');
+    expect(snap.recria.lotacaoInicial).toBe('areaPastavel');
   });
 
   it('a recria é rascunho: recarregar sem salvar como cenário limpa as entradas', () => {
@@ -106,7 +102,7 @@ describe('RF-020 repositório local (ADR-0007)', () => {
     const snap = repo.getSnapshot();
     expect(chamadas).toBe(2);
     expect(snap.status === 'pronto' && snap.recria.form.dias).toBe('');
-    expect(snap.status === 'pronto' && snap.recria.lotacaoInicial).toBe('fixa80');
+    expect(snap.status === 'pronto' && snap.recria.lotacaoInicial).toBe('areaPastavel');
     cancelar();
     repo.limparRecria();
     expect(chamadas).toBe(2);
@@ -207,9 +203,15 @@ describe('RF-032 cenários no repositório (snapshot, RN-023)', () => {
   it('RN-023 guarda resultado do domínio como string decimal sem arredondar (ADR-0003)', () => {
     const repo = criarRepoLocal({ storage: () => criarStorageMemoria() });
     const salvo = repo.salvarCenario(snapshotPadrao());
-    expect(salvo.resultado.faturamentoLiquido).toMatch(/^-?\d+\.\d{3,}$/);
-    expect(salvo.resultado.faturamentoLiquido?.startsWith('102408.05')).toBe(true);
-    expect(salvo.variantes).toEqual({ lotacaoInicial: 'fixa80', faturamentoBruto: 'pesoVivo' });
+    expect(salvo.resultado.faturamentoLiquido).toMatch(/^-?\d+(\.\d+)?$/);
+    expect(salvo.resultado.faturamentoLiquido?.startsWith('103307.6')).toBe(true);
+    expect(salvo.variantes).toEqual({
+      lotacaoInicial: 'areaPastavel',
+      faturamentoBruto: 'pesoVivo',
+      cabecasInteiras: true,
+      schemaVersao: 1,
+      calculoVersao: 'recria-2',
+    });
     expect(salvo.parametros).toEqual({
       arrobaVivoKg: '30',
       arrobaCarcacaKg: '15',
@@ -222,11 +224,11 @@ describe('RF-032 cenários no repositório (snapshot, RN-023)', () => {
   it('RN-023 mudar a recria depois não altera o cenário salvo', () => {
     const repo = criarRepoLocal({ storage: () => criarStorageMemoria() });
     const salvo = repo.salvarCenario(snapshotPadrao());
-    repo.atualizarRecria({ form: { precoVenda: '999' }, lotacaoInicial: 'areaPastavel' });
+    repo.atualizarRecria({ form: { precoVenda: '999' }, lotacaoInicial: 'fixa80' });
     const snap = repo.getSnapshot();
     const guardado = snap.status === 'pronto' ? snap.cenarios[0] : undefined;
     expect(guardado?.form.precoVenda).toBe('325');
-    expect(guardado?.variantes.lotacaoInicial).toBe('fixa80');
+    expect(guardado?.variantes.lotacaoInicial).toBe('areaPastavel');
     expect(guardado?.resultado.faturamentoLiquido).toBe(salvo.resultado.faturamentoLiquido);
   });
 
@@ -279,7 +281,11 @@ describe('RNF-004 migração do storage da E1 para a E2', () => {
         preco: '300',
       },
     ],
-    recria: { ...recriaPadraoEntidade(), id: 'r-e1', form: { ...recriaFormPlanilha(), dias: '300' } },
+    recria: {
+      ...recriaPadraoEntidade(),
+      id: 'r-e1',
+      form: { ...recriaFormPlanilha(), dias: '300' },
+    },
   };
 
   it('RNF-004 lê a chave da E1 sem perder lotes nem a recria e passa a gravar na chave nova', () => {

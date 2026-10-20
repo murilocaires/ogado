@@ -50,7 +50,11 @@ export function snapshotDaRecria(recria: RecriaEntity, nome: string): CenarioSal
   return {
     nome,
     form: { ...recria.form },
-    variantes: { ...r.variantes },
+    variantes: {
+      ...r.variantes,
+      schemaVersao: 1,
+      calculoVersao: recria.variantes?.calculoVersao ?? 'recria-2',
+    },
     parametros: {
       arrobaVivoKg: r.parametros.arrobaVivoKg.toFixed(),
       arrobaCarcacaKg: r.parametros.arrobaCarcacaKg.toFixed(),
@@ -81,6 +85,23 @@ export function ehMelhor(c: CenarioEntity, todos: readonly CenarioEntity[]): boo
   const l = liquidoDe(c);
   const melhor = melhorLiquido(todos);
   return !!l && !!melhor && l.eq(melhor);
+}
+
+/** RF-036: uma passagem para todos os destaques; empates preservados, sem varredura por linha. */
+export function idsMelhores(cenarios: readonly CenarioEntity[]): Set<string> {
+  const ids = new Set<string>();
+  if (cenarios.length < 2) return ids;
+  let melhor: Decimal | null = null;
+  for (const cenario of cenarios) {
+    const liquido = liquidoDe(cenario);
+    if (!liquido) continue;
+    if (!melhor || liquido.gt(melhor)) {
+      melhor = liquido;
+      ids.clear();
+      ids.add(cenario.id);
+    } else if (liquido.eq(melhor)) ids.add(cenario.id);
+  }
+  return ids;
 }
 
 /** Último cenário salvo (mais recente; no mesmo instante, o salvo depois). */

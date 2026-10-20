@@ -65,7 +65,7 @@ describe('paridade com o ouro da planilha (compras e vendas, ADR-0013)', () => {
     expect(r.compras).toHaveLength(2);
     r.compras.forEach((l, i) => linhaPerto(l, e.compras[i]!));
   });
-  it('RN-002: venda da planilha F11/H11: (2.920 − 16×10) ÷ 15 = 184 @ → R$ 53.360; R$/cab. 3.335', () => {
+  it('RN-002/RN-005: venda da planilha F11/H11: (2.920 − 16×10) ÷ 15 = 184 @ → R$ 53.360; R$/cab. 3.335', () => {
     expect(r.vendas).toHaveLength(1);
     linhaPerto(r.vendas[0]!, e.vendas[0]!);
     expect(r.vendas[0]!.kgLiquido.toString()).toBe('2760');
@@ -133,7 +133,12 @@ describe('RN-003: modo individual (soma dos pesos; qtd = nº de pesos)', () => {
     perto(r.cabVenda, 0);
   });
   it('RN-003: individual vale também na venda; ignora pesos não positivos e qtd informada', () => {
-    const lote: LoteInput = { modo: 'individual', qtd: 99, pesos: [200, 210, 0, -5, 220], preco: 300 };
+    const lote: LoteInput = {
+      modo: 'individual',
+      qtd: 99,
+      pesos: [200, 210, 0, -5, 220],
+      preco: 300,
+    };
     const v = calcularVenda(lote);
     expect(v.qtd.toString()).toBe('3');
     expect(v.kg.toString()).toBe('630');

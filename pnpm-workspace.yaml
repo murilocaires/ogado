@@ -2,6 +2,10 @@ packages:
   - apps/*
   - packages/*
 
+# SEC-05: Prisma Studio/visx também resolvem uma versão corrigida do Lodash.
+overrides:
+  lodash: 4.18.1
+
 # pnpm 11 bloqueia scripts de build por padrão; liberamos só o necessário.
 allowBuilds:
   '@prisma/engines': true

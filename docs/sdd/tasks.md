@@ -1,5 +1,7 @@
 # Backlog inicial de tickets (tracer bullets) — refinar com `to-tickets`
 
+**Reconciliação de 20/10/2026:** as tabelas registram entregas históricas. O estado atual do T-14 inclui IndexedDB nativo, outbox atômica, migração do localStorage e pull incremental nas rotas existentes (ADR-0016). RF-076 segue a sincronização automática já implementada, com histórico antes de substituir; não exige "Manter o meu / Usar o do servidor". A variante atual da interface de Recria é versionada e conserva legados (ADR-0015). Primeiros passos/importação continuam adiados; validação iOS, acessibilidade humana, carga representativa e revisão jurídica continuam pendentes. Evidências das correções: `docs/auditoria/2026-10-20-correcoes/`.
+
 Formato: `T-nn · título · bloqueado por · requisitos`
 
 | Ticket | Entrega demonstrável | Bloqueado por | Requisitos |
@@ -39,7 +41,7 @@ Princípio: **cada entrega termina com uma URL que o cliente abre e usa**. Backe
 | **E2 · Cenários** — **pronta (2026-10-18, versão local; aguardando revisão humana)** | Salvar, duplicar, renomear, buscar, comparar 2–3 | T-08 + T-19, alertas RN-026, painel (T-09) | login/API (E3): os cenários ficam no navegador (`lib/repo`, chave `ogado.e2.v2`) |
 | **E3 · Conta e dados na nuvem** — **código pronto (2026-10-19; falta deploy Railway/Vercel e e2e com API real)** | Entrar, e os dados seguem o usuário em qualquer aparelho | T-04 (pronto) + T-18 enxuto (perfil, senha, nome/área da fazenda, apagar conta) + API de lotes/cenários | primeiros passos, tela de parâmetros (Q-D), Google |
 | **E4 · Instalável e offline** — **código pronto (2026-10-19; falta Lighthouse e teste em iOS real)** | "Instalar app" e uso sem sinal | T-13, parte local do T-14 | conflito entre aparelhos |
-| **E5 · Robustez** — **E5-A (sincronização robusta) pronta na web (2026-10-19; falta revisão humana)** | Sincronização entre aparelhos, Google, recuperar senha, exportar | T-14/T-15, T-16, T-11, T-12 | E5-A entregue: indicador e selo, "Sincronizar agora", conflitos (Manter o meu / Usar o do servidor), "Precisa de atenção", nova versão, cota. Fora: IndexedDB/outbox, Google, exportar |
+| **E5 · Robustez** — **atualizada em 2026-10-20; evidências no parecer de correções** | Sincronização entre aparelhos, Google, recuperar senha, exportar | T-14/T-15, T-16, T-11, T-12 | Indicador e selo, "Sincronizar agora", resolução automática com histórico, "Precisa de atenção", atualização, cota e IndexedDB/outbox. Integrações reais Google/e-mail e validação em dispositivos seguem pendentes |
 
 Regras para ganhar velocidade:
 - **Uma mini-spec de 1 página por entrega** (requisitos + critérios + o que fica de fora); ADR só para decisão estrutural nova.

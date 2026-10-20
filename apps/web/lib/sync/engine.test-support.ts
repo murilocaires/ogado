@@ -207,7 +207,13 @@ export function cenario(): CenarioSalvar {
       liquidoMes: null,
       liquidoHa: null,
       gmdImplicito: null,
-      custos: [{ id: 'a', nome: 'Compra', valor: '1' }],
+      custos: [
+        { id: 'supl', nome: 'Suplemento', valor: '1' },
+        { id: 'san', nome: 'Sanidade', valor: '0' },
+        { id: 'imp', nome: 'Imposto', valor: '0' },
+        { id: 'frete', nome: 'Frete', valor: '0' },
+        { id: 'func', nome: 'Funcionário', valor: '0' },
+      ],
     },
   };
 }

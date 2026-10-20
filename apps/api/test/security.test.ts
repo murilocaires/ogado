@@ -30,6 +30,24 @@ async function expectNoAccount(email: string): Promise<void> {
 }
 
 describe('CSRF (Origin, Sec-Fetch-Site, JSON)', () => {
+  it('RNF-014: respostas de autenticação e dados privados não permitem cache, incluindo 401', async () => {
+    const c = await signup(app);
+    expect(c.res.headers['cache-control']).toBe('no-store');
+    for (const url of ['/auth/session', '/lotes', '/conta/exportar']) {
+      const authorized = await getWithCookie(app, url, c.cookie);
+      expect(authorized.statusCode, url).toBe(200);
+      expect(authorized.headers['cache-control'], url).toBe('no-store');
+      const anonymous = await getWithCookie(app, url);
+      expect(anonymous.statusCode, url).toBe(401);
+      expect(anonymous.headers['cache-control'], url).toBe('no-store');
+    }
+    const login = await postJson(app, '/auth/login', { email: c.email, senha: 'Errada#Senha2030' });
+    expect(login.statusCode).toBe(401);
+    expect(login.headers['cache-control']).toBe('no-store');
+    const health = await app.inject({ method: 'GET', url: '/health' });
+    expect(health.statusCode).toBe(200);
+    expect(health.headers['cache-control']).toBeUndefined();
+  });
   it('RNF-003 CA-17: Origin fora da lista responde 403 e nada muda', async () => {
     const email = uniqueEmail('csrf');
     const res = await postJson(
@@ -135,6 +153,42 @@ function captureLogs(): { stream: Writable; text: () => string } {
 }
 
 describe('erros inesperados', () => {
+  it.each(['/auth/senha/esqueci', '/conta/exportar/enviar'])(
+    'RNF-008: falha assíncrona de e-mail em %s usa categoria fixa, sem conteúdo do provedor',
+    async (url) => {
+      const logs = captureLogs();
+      const marker = 'provider-secret-token-92834';
+      const providerError = Object.assign(
+        new Error(`email=private@provider.invalid token=${marker}`),
+        {
+          name: marker,
+          code: marker,
+        },
+      );
+      const isolated = buildTestApp({
+        logger: true,
+        logStream: logs.stream,
+        emailSender: { send: () => Promise.reject(providerError) },
+      });
+      try {
+        await isolated.ready();
+        const c = await signup(isolated);
+        const res = await postJson(
+          isolated,
+          url,
+          url.includes('esqueci') ? { email: c.email } : {},
+          { cookie: c.cookie },
+        );
+        expect(res.statusCode).toBe(202);
+        await new Promise<void>((resolve) => setImmediate(resolve));
+        expect(logs.text()).not.toContain(marker);
+        expect(logs.text()).not.toContain('private@provider.invalid');
+        expect(logs.text()).toContain('email_delivery_failed');
+      } finally {
+        await isolated.close();
+      }
+    },
+  );
   it('RNF-003 CA-18: falha do banco no login responde 500 erro_interno com requestId, sem stack nem mensagem do ORM, e o log não tem senha, cookie nem e-mail', async () => {
     const email = uniqueEmail('log');
     const senha = 'Segredo#Unico987';

@@ -1,0 +1,5 @@
+{
+    "exitCode":  0,
+    "command":  "node ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts --reporter=verbose --reporter=json",
+    "durationSeconds":  107.06972119999999
+}

@@ -5,7 +5,7 @@ import {
   COMPARAR_MAX,
   decimalDe,
   diferenca,
-  ehMelhor,
+  idsMelhores,
   filtrarOrdenar,
   LINHAS_COMPARACAO,
   liquidoDe,
@@ -17,6 +17,7 @@ import { CUSTO_CORES } from '../lib/custo-cores';
 import { baixarArquivo, gerarArquivo } from '../lib/exportacao/baixar';
 import { tabelaDeCenarios } from '../lib/exportacao/dados';
 import { brl, dataBR, ehNegativo, num, valorCampo } from '../lib/format';
+import { aguardarGravacao } from '../lib/persistencia';
 import { useRepo } from '../lib/repo/repo-provider';
 import type { CenarioEntity } from '../lib/repo/types';
 import { ConfirmDialog } from './Dialog';
@@ -79,9 +80,12 @@ export function CenariosScreen({
   const [excluindo, setExcluindo] = useState<CenarioEntity | null>(null);
   const [exportando, setExportando] = useState(false);
   const painelComparacao = useRef<HTMLElement>(null);
+  const copiasPendentes = useRef(new Set<string>());
+  const duplicando = useRef(new Set<string>());
 
   // Cenário excluído (ou duplicado em outra aba) sai da seleção.
   const ids = useMemo(() => new Set(cenarios.map((c) => c.id)), [cenarios]);
+  const melhores = useMemo(() => idsMelhores(cenarios), [cenarios]);
   const selecionados = marcados.filter((id) => ids.has(id));
   const visiveis = useMemo(() => filtrarOrdenar(cenarios, busca, ordem), [cenarios, busca, ordem]);
   const comparaveis = selecionados
@@ -120,15 +124,38 @@ export function CenariosScreen({
     setMarcados([...selecionados, c.id]);
   }
 
-  function abrir(c: CenarioEntity): void {
-    repo.atualizarRecria({ form: c.form, lotacaoInicial: c.variantes.lotacaoInicial });
-    toast(`Cenário "${c.nome}" aberto no simulador.`);
-    onAbrirNoSimulador();
+  async function abrir(c: CenarioEntity): Promise<void> {
+    try {
+      repo.atualizarRecria({
+        form: c.form,
+        lotacaoInicial: c.variantes.lotacaoInicial,
+        variantes: c.variantes,
+        parametros: c.parametros,
+      });
+      await aguardarGravacao(repo);
+      toast(`Cenário "${c.nome}" aberto no simulador.`);
+      onAbrirNoSimulador();
+    } catch {
+      toast('Não foi possível gravar o simulador no aparelho. Tente novamente.');
+    }
   }
 
-  function duplicar(c: CenarioEntity): void {
-    repo.duplicarCenario(c.id);
-    toast('Cenário duplicado.');
+  async function duplicar(c: CenarioEntity): Promise<void> {
+    if (duplicando.current.has(c.id)) return;
+    duplicando.current.add(c.id);
+    try {
+      if (!copiasPendentes.current.has(c.id)) {
+        if (!repo.duplicarCenario(c.id)) return;
+        copiasPendentes.current.add(c.id);
+      }
+      await aguardarGravacao(repo);
+      copiasPendentes.current.delete(c.id);
+      toast('Cenário duplicado.');
+    } catch {
+      toast('Não foi possível gravar a cópia no aparelho. Tente novamente.');
+    } finally {
+      duplicando.current.delete(c.id);
+    }
   }
 
   const contagem = `${visiveis.length} ${visiveis.length === 1 ? 'cenário' : 'cenários'}${busca.trim() ? ' encontrados' : ''}`;
@@ -258,7 +285,7 @@ export function CenariosScreen({
                   <b>
                     {c.nome}
                     <SeloSync id={c.id} />
-                    {ehMelhor(c, cenarios) && (
+                    {melhores.has(c.id) && (
                       <>
                         {' '}
                         <Estrela />
@@ -321,7 +348,7 @@ export function CenariosScreen({
                   <b>
                     {c.nome}
                     <SeloSync id={c.id} />
-                    {ehMelhor(c, cenarios) && (
+                    {melhores.has(c.id) && (
                       <>
                         {' '}
                         <Estrela />
@@ -424,12 +451,17 @@ export function CenariosScreen({
           valorInicial={renomeando.nome}
           confirmar="Renomear"
           onCancel={() => setRenomeando(null)}
-          onConfirm={(nome) => {
-            if (nome) {
-              repo.renomearCenario(renomeando.id, nome);
-              toast('Cenário renomeado.');
+          onConfirm={async (nome) => {
+            try {
+              if (nome) {
+                repo.renomearCenario(renomeando.id, nome);
+                await aguardarGravacao(repo);
+                toast('Cenário renomeado.');
+              }
+              setRenomeando(null);
+            } catch {
+              toast('Não foi possível gravar o nome no aparelho. Tente novamente.');
             }
-            setRenomeando(null);
           }}
         />
       )}
@@ -441,10 +473,15 @@ export function CenariosScreen({
           confirmar="Excluir"
           perigo
           onCancel={() => setExcluindo(null)}
-          onConfirm={() => {
-            repo.excluirCenario(excluindo.id);
-            toast('Cenário excluído.');
-            setExcluindo(null);
+          onConfirm={async () => {
+            try {
+              repo.excluirCenario(excluindo.id);
+              await aguardarGravacao(repo);
+              toast('Cenário excluído.');
+              setExcluindo(null);
+            } catch {
+              toast('Não foi possível gravar a exclusão no aparelho. Tente novamente.');
+            }
           }}
         />
       )}

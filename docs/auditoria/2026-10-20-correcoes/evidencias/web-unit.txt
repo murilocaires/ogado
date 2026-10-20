@@ -1,0 +1,12 @@
+
+ RUN  v5.0.5 C:/Users/Murilo Caires/Desktop/Criando/ogado/ogado-dev-kit/ogado-dev-kit/apps/web
+
+
+ Test Files  33 passed (33)
+      Tests  429 passed (429)
+   Start at  12:37:51
+   Duration  178.80s (tests 37%, environment 27%, import 17%, setup 15%, transform 4%)
+
+    Isolate  33 workers spawned · ~1.71s startup each (spawn + environment, per file)
+             at least ~54.86s faster with isolate: false — reuses workers across files instead of one per file
+

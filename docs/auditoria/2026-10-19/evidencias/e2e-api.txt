@@ -1,0 +1,135 @@
+
+Running 26 tests using 1 worker
+
+(node:1764) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 apps\web\e2e\auth.spec.ts:72:3 › CA-22 jornada completa: cadastrar, sair, entrar › cadastra, sai e entra de novo sem deixar token no navegador (11.0s)
+  ok  2 apps\web\e2e\auth.spec.ts:135:3 › CA-22 jornada completa: cadastrar, sair, entrar › CA-20 credenciais inválidas: mensagem genérica com o foco no erro (2.7s)
+  ok  3 apps\web\e2e\auth.spec.ts:147:3 › CA-22 jornada completa: cadastrar, sair, entrar › CA-20 cadastro com senha fraca não é enviado e foca no campo (2.8s)
+  ok  4 apps\web\e2e\auth.spec.ts:161:3 › CA-22 jornada completa: cadastrar, sair, entrar › RF-001 cadastro com confirmação diferente não é enviado e foca na confirmação (4.0s)
+  ok  5 apps\web\e2e\auth.spec.ts:189:3 › CA-22 jornada completa: cadastrar, sair, entrar › CA-21 sessão expirada mostra "Entre de novo" e não apaga o que há no aparelho (7.5s)
+  ok  6 apps\web\e2e\auth.spec.ts:230:3 › CA-22 jornada completa: cadastrar, sair, entrar › CA-21 401 no meio do uso (sem recarregar) expira a sessão e não apaga nada local (6.0s)
+  ok  7 apps\web\e2e\e3-sync.spec.ts:24:1 › telas do produto sem login levam a /entrar (7.5s)
+  ok  8 apps\web\e2e\e3-sync.spec.ts:31:1 › o lote lançado no aparelho A aparece no aparelho B (8.2s)
+  ok  9 apps\web\e2e\e5-sync-robusta.spec.ts:69:1 › RF-075 lançar offline mostra "1 pendente" e o selo; ao voltar a rede some (5.4s)
+  ok 10 apps\web\e2e\e5-sync-robusta.spec.ts:95:1 › RF-075 o indicador também aparece em tela estreita (4.9s)
+  ok 11 apps\web\e2e\e5-sync-robusta.spec.ts:129:1 › conflito no mesmo campo e resolvido sem perguntar e preserva historico (16.4s)
+  ok 12 apps\web\e2e\e5-sync-robusta.spec.ts:156:1 › edicoes em campos diferentes sao combinadas automaticamente (15.8s)
+  ok 13 apps\web\e2e\e6-exportacao.spec.ts:16:1 › RF-041 e RNF-009: lança um lote, baixa o CSV e o XLSX e baixa os dados da Conta (9.0s)
+  ok 14 apps\web\e2e\recuperar-senha.spec.ts:11:1 › RF-002 a tela Entrar leva a Esqueci minha senha (4.5s)
+  ok 15 apps\web\e2e\recuperar-senha.spec.ts:18:1 › RF-002 e-mail sem conta recebe a mesma confirmação neutra (2.7s)
+  ok 16 apps\web\e2e\recuperar-senha.spec.ts:29:1 › RF-002 redefinir sem token mostra o link inválido e leva a pedir novo (4.3s)
+  ok 17 apps\web\e2e\termos.spec.ts:23:3 › páginas públicas › /termos e /privacidade abrem sem sessão, com h1 único e título próprio (3.9s)
+  ok 18 apps\web\e2e\termos.spec.ts:43:3 › páginas públicas › a tela de cadastro leva aos textos em nova aba (3.3s)
+  ok 19 apps\web\e2e\termos.spec.ts:54:3 › aceite apenas no cadastro › o cadastro exige o checkbox; marcado, cria a conta e a Conta mostra a versão aceita (4.1s)
+  x  20 apps\web\e2e\termos.spec.ts:93:3 › aceite apenas no cadastro › termos atualizados pedem aceite em dialogo sem substituir o painel (39.3s)
+(node:5736) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 21 apps\web\e2e\termos.spec.ts:116:1 › RNF-009 Conta: "Enviar meus dados por e-mail" pede o envio e avisa (8.0s)
+[WebServer] [browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+[WebServer] 
+[WebServer] - A server/client branch `if (typeof window !== 'undefined')`.
+[WebServer] - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+[WebServer] - Date formatting in a user's locale which doesn't match the server.
+[WebServer] - External changing data without sending a snapshot of it along with the HTML.
+[WebServer] - Invalid HTML tag nesting.
+[WebServer] 
+[WebServer] It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+[WebServer] 
+[WebServer] https://react.dev/link/hydration-mismatch
+[WebServer] 
+[WebServer]   ...
+[WebServer]     <LoadingBoundary name="entrar/" loading={null}>
+[WebServer]       <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+[WebServer]         <RedirectBoundary>
+[WebServer]           <RedirectErrorBoundary router={{...}}>
+[WebServer]             <InnerLayoutRouter url="/entrar" tree={[...]} params={{}} renderTree={{...}} segmentPath={[...]} ...>
+[WebServer]               <SegmentViewNode type="page" pagePath="(auth)/ent...">
+[WebServer]                 <SegmentTrieNode>
+[WebServer]                 <EntrarPage>
+[WebServer]                   <AuthScreen mode="entrar">
+[WebServer]                     <AuthShell mobileTitle="Bem-vindo ...">
+[WebServer]                       <div className="auth-page">
+[WebServer]                         <section>
+[WebServer]                         <div>
+[WebServer]                         <main className="auth-main">
+[WebServer]                           <form className="auth-card" onSubmit={function onSubmit} noValidate={true}>
+[WebServer]                             <div>
+[WebServer]                             <div className="lbl">
+[WebServer]                               <label>
+[WebServer]                               <div className="fld" data-invalid="false">
+[WebServer]                                 <input
+[WebServer]                                   ref={{current:null}}
+[WebServer]                                   id="_R_15esneitqlb_-email"
+[WebServer]                                   type="email"
+[WebServer]                                   inputMode="email"
+[WebServer]                                   autoComplete="email"
+[WebServer]                                   autoCapitalize="none"
+[WebServer]                                   spellCheck={false}
+[WebServer]                                   placeholder="voce@fazenda.com"
+[WebServer]                                   value=""
+[WebServer]                                   onChange={function onChange}
+[WebServer]                                   aria-invalid={undefined}
+[WebServer]                                   aria-describedby={undefined}
+[WebServer] -                                 style={{caret-color:"transparent"}}
+[WebServer]                                 >
+[WebServer]                             <div className="lbl">
+[WebServer]                               <label>
+[WebServer]                               <div className="fld" data-invalid="false">
+[WebServer]                                 <input
+[WebServer]                                   ref={{current:null}}
+[WebServer]                                   id="_R_15esneitqlb_-senha"
+[WebServer]                                   type="password"
+[WebServer]                                   autoComplete="current-password"
+[WebServer]                                   placeholder="Sua senha"
+[WebServer]                                   value=""
+[WebServer]                                   onChange={function onChange}
+[WebServer]                                   onFocus={function onFocus}
+[WebServer]                                   aria-invalid={undefined}
+[WebServer]                                   aria-describedby={undefined}
+[WebServer] -                                 style={{caret-color:"transparent"}}
+[WebServer]                                 >
+[WebServer]                                 ...
+[WebServer]                             ...
+[WebServer]               ...
+[WebServer]             ...
+[WebServer]  
+  ok 22 apps\web\e2e\visual.spec.ts:16:5 › captura /entrar em 1440px (3.0s)
+  ok 23 apps\web\e2e\visual.spec.ts:16:5 › captura /cadastrar em 1440px (2.9s)
+  ok 24 apps\web\e2e\visual.spec.ts:16:5 › captura /entrar em 390px (2.2s)
+  ok 25 apps\web\e2e\visual.spec.ts:16:5 › captura /cadastrar em 390px (2.1s)
+  ok 26 apps\web\e2e\visual.spec.ts:28:1 › captura /entrar com erro em 390px (2.3s)
+
+
+  1) apps\web\e2e\termos.spec.ts:93:3 › aceite apenas no cadastro › termos atualizados pedem aceite em dialogo sem substituir o painel 
+
+    Error: Command failed: pnpm --filter @ogado/api exec tsx scripts/set-aceite-termos.ts gate-1792463354621-448799@teste.ogado.invalid 2020-01-01
+    (node:18352) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+    (Use `node --trace-warnings ...` to show where the warning was created)
+    (node:6580) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+    (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+      13 | /** Simula "termos atualizados": muda a versão aceita direto no banco. */
+      14 | function definirVersaoAceita(email: string, versao: string): void {
+    > 15 |   execSync(`pnpm --filter @ogado/api exec tsx scripts/set-aceite-termos.ts ${email} ${versao}`, {
+         |   ^
+      16 |     cwd: '../..',
+      17 |     stdio: 'pipe',
+      18 |     env: process.env,
+        at definirVersaoAceita (C:\Users\Murilo Caires\Desktop\Criando\ogado\ogado-dev-kit\ogado-dev-kit\apps\web\e2e\termos.spec.ts:15:3)
+        at C:\Users\Murilo Caires\Desktop\Criando\ogado\ogado-dev-kit\ogado-dev-kit\apps\web\e2e\termos.spec.ts:104:5
+
+    Error Context: docs\auditoria\2026-10-19\evidencias\playwright-api\termos-aceite-apenas-no-ca-c3bb6-ogo-sem-substituir-o-painel\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs\auditoria\2026-10-19\evidencias\playwright-api\termos-aceite-apenas-no-ca-c3bb6-ogo-sem-substituir-o-painel\trace.zip
+    Usage:
+
+        npx playwright show-trace docs\auditoria\2026-10-19\evidencias\playwright-api\termos-aceite-apenas-no-ca-c3bb6-ogo-sem-substituir-o-painel\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    apps\web\e2e\termos.spec.ts:93:3 › aceite apenas no cadastro › termos atualizados pedem aceite em dialogo sem substituir o painel 
+  25 passed (3.5m)

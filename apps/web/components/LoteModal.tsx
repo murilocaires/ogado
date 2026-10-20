@@ -19,6 +19,7 @@ import {
 } from '../lib/lote-draft';
 import { pesosValidos, proximoNumero, separarPesos } from '../lib/negocios';
 import { useRepo, useRepoState } from '../lib/repo/repo-provider';
+import { aguardarGravacao } from '../lib/persistencia';
 import type { LoteEntity, LoteTipo } from '../lib/repo/types';
 import { ConfirmDialog, Dialog } from './Dialog';
 import { CampoCalculado, CampoNumero } from './Fields';
@@ -50,6 +51,7 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
   );
   const [confirmando, setConfirmando] = useState(false);
   const [erroSalvar, setErroSalvar] = useState('');
+  const [salvando, setSalvando] = useState(false);
   const listaId = useId();
   const pesosId = useId();
 
@@ -81,17 +83,29 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
     setConfirmando(true);
   }
 
-  function salvar(): void {
+  async function salvar(): Promise<void> {
+    if (salvando) return;
     const r = validarRascunho(d);
     if (!r.ok) {
       setConfirmando(false);
       setErroSalvar(r.mensagem);
       return;
     }
-    repo.salvarLote(r.lote);
-    toast(novo ? 'Lote salvo.' : 'Alterações salvas.');
-    setConfirmando(false);
-    onClose();
+    setSalvando(true);
+    try {
+      const salvo = repo.salvarLote(r.lote);
+      // Repetir uma gravação que falhou deve reutilizar o mesmo lançamento, sem duplicá-lo.
+      setD((atual) => ({ ...atual, id: salvo.id }));
+      await aguardarGravacao(repo);
+      toast(novo ? 'Lote salvo.' : 'Alterações salvas.');
+      setConfirmando(false);
+      onClose();
+    } catch {
+      setConfirmando(false);
+      setErroSalvar('Não foi possível confirmar o salvamento. Mantenha esta tela aberta e tente novamente.');
+    } finally {
+      setSalvando(false);
+    }
   }
 
   const qtdConfirmacao = num(linha.qtd, 0);

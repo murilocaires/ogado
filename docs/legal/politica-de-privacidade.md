@@ -2,9 +2,9 @@
 
 > **Rascunho.** Este texto deve ser revisado por profissional jurídico antes de qualquer uso comercial.
 
-**Versão 2026-10-19**
+**Versão 2026-10-20**
 
-**Vigência:** a partir de 19 de outubro de 2026.
+**Vigência:** a partir de 20 de outubro de 2026.
 
 Esta Política explica, em linguagem simples, quais dados pessoais o **O Gado** guarda, para que, com quem compartilha e quais são os seus direitos, conforme a Lei Geral de Proteção de Dados (LGPD, Lei 13.709/2018). Ela vale junto com os [Termos de Uso](/termos).
 
@@ -35,7 +35,7 @@ Contato para assuntos de privacidade e para exercer seus direitos: **[E-MAIL DE 
 
 - **Sessão**: guardamos um identificador de sessão (com o segredo apenas em hash), a data de criação, da última verificação e de expiração.
 - **Endereço IP**: é usado **apenas na memória do servidor**, para limitar tentativas em excesso (por exemplo, muitos logins errados). **Não é gravado no banco de dados e não aparece nos nossos registros (logs).** Os logs também não guardam e-mail, senha, cookie nem o conteúdo das requisições.
-- **Recuperação de senha**: guardamos um código temporário (somente em hash), com validade de 1 hora e uso único.
+- **Recuperação de senha**: guardamos um código temporário (somente em hash), com validade de 1 hora e uso único. Pedir um novo link, trocar a senha ou mudar o e-mail invalida os links anteriores; redefinir a senha encerra as sessões anteriores.
 
 **Não coletamos** dados de localização, contatos, câmera, microfone nem dados sensíveis.
 
@@ -71,7 +71,8 @@ Como a API e o banco ficam em servidores nos Estados Unidos, e alguns dos fornec
 ## 5. Cookies e armazenamento no seu aparelho
 
 - **Cookie de sessão** (essencial): mantém você logado. É HttpOnly (o JavaScript da página não consegue lê-lo), enviado só por conexão segura e restrito ao nosso site. Sem ele não há login.
-- **Armazenamento local do navegador (localStorage)**: guarda no seu aparelho uma cópia dos seus lotes, cenários e dados de recria, a identidade da conta (apenas códigos internos) e o controle da sincronização. Isso permite usar o app **sem internet**.
+- **Banco local do navegador (IndexedDB)**: guarda no seu aparelho uma cópia dos seus lotes e cenários salvos, as alterações pendentes, o controle da sincronização e os códigos internos da conta dona desses dados. O simulador de recria não salvo é um rascunho em memória. As gravações são coordenadas entre abas para preservar seus lançamentos. Isso permite usar o app **sem internet**. Na atualização, os dados da versão anterior são transferidos do armazenamento local para esse banco, preservando as alterações ainda não enviadas. A cópia preservada pode incluir rascunhos da versão anterior.
+- **Armazenamento local e da aba (localStorage/sessionStorage)**: guardam a identidade da conta (apenas códigos internos) e controles de funcionamento do aplicativo. Não guardamos senha nem segredo de sessão nesses locais ou no IndexedDB.
 - **Service worker e cache**: guardam as telas e os arquivos do aplicativo no aparelho para ele abrir offline e poder ser instalado. Não guardam respostas da API com dados da sua conta.
 - Ao sair da conta ou apagar a conta, os dados locais do aparelho são removidos.
 

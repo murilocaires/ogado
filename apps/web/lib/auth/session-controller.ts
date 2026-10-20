@@ -18,8 +18,9 @@ export interface LocalIdentity {
 }
 
 export interface IdentityStore {
+  ready?(): Promise<void>;
   read(): LocalIdentity | null;
-  write(identity: LocalIdentity): void;
+  write(identity: LocalIdentity): void | Promise<void>;
   clear(): void;
 }
 
@@ -68,6 +69,8 @@ export interface SessionController {
   sendDataByEmail(): Promise<ApiResult<void>>;
   /** Qualquer 401 vindo de outra chamada (sync, dados): expira sem apagar nada (RF-080). */
   markUnauthorized(): void;
+  /** RF-078: mudança de identidade em outra aba invalida imediatamente respostas antigas. */
+  identityChanged(): Promise<void>;
 }
 
 export interface SessionControllerDeps {
@@ -89,7 +92,7 @@ function toIdentity(data: SessionResponse): LocalIdentity {
 export function createSessionController(deps: SessionControllerDeps): SessionController {
   let state: SessionState = { status: 'verificando' };
   let mismatch: AccountMismatch | null = null;
-  // Época: cada ação que muda a sessão invalida respostas antigas de verify() ainda em voo.
+  // Cada mudança de sessão invalida todas as respostas anteriores, inclusive login/Conta.
   let epoch = 0;
   const listeners = new Set<() => void>();
 
@@ -98,20 +101,29 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
     listeners.forEach((listener) => listener());
   }
 
-  function authenticate(data: SessionResponse): void {
+  async function authenticate(data: SessionResponse, vigente: () => boolean): Promise<boolean> {
+    const mine = epoch;
+    await deps.identity.ready?.();
+    if (!vigente()) return false;
     const next = toIdentity(data);
     const stored = deps.identity.read();
-    if (stored && stored.usuarioId !== next.usuarioId) {
+    if (stored && (stored.usuarioId !== next.usuarioId || stored.fazendaId !== next.fazendaId)) {
       mismatch = { previous: stored, next };
       deps.onAccountMismatch?.(stored, next);
+      // Uma sessão válida de B não autoriza exibir o banco local que ainda pertence a A.
+      set({ status: 'anonimo' });
+      return false;
     } else {
       mismatch = null;
-      deps.identity.write(next);
+      await deps.identity.write(next);
     }
+    if (mine !== epoch) return false;
     set({ status: 'autenticado', usuario: data.usuario, fazenda: data.fazenda });
+    return true;
   }
 
   function currentIdentity(): LocalIdentity | null {
+    if (state.status === 'autenticado') return toIdentity(state);
     if (state.status === 'expirada' || state.status === 'offline-nao-verificado') {
       return state.identity;
     }
@@ -123,21 +135,52 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
     set(identity ? { status: 'expirada', identity } : { status: 'anonimo' });
   }
 
+  function contextoAtual(): () => boolean {
+    const mine = epoch;
+    const identidade = deps.identity.read();
+    return () => {
+      const atual = deps.identity.read();
+      return (
+        mine === epoch &&
+        identidade?.usuarioId === atual?.usuarioId &&
+        identidade?.fazendaId === atual?.fazendaId
+      );
+    };
+  }
+
   async function authCall(
     run: () => Promise<ApiResult<SessionResponse>>,
   ): Promise<ApiResult<SessionResponse>> {
     epoch += 1;
+    const mine = epoch;
+    try {
+      await deps.identity.ready?.();
+    } catch {
+      return { ok: false, kind: 'bloqueada' };
+    }
+    if (mine !== epoch) return { ok: false, kind: 'sessao-expirada' };
+    const vigente = contextoAtual();
     const result = await run();
-    if (result.ok) authenticate(result.data);
+    if (!vigente()) return { ok: false, kind: 'sessao-expirada' };
+    if (result.ok) {
+      try {
+        if (!(await authenticate(result.data, vigente)))
+          return { ok: false, kind: mismatch ? 'bloqueada' : 'sessao-expirada' };
+      } catch {
+        return { ok: false, kind: 'bloqueada' };
+      }
+    }
     return result;
   }
 
   /** Chamadas da Conta: 401 expira a sessão sem apagar nada (RF-080); sucesso atualiza o estado. */
   async function accountCall<T>(
-    run: () => Promise<ApiResult<T>>,
+    run: (api: ApiClient) => Promise<ApiResult<T>>,
     onOk?: (data: T) => void,
   ): Promise<ApiResult<T>> {
-    const result = await run();
+    const vigente = contextoAtual();
+    const result = await run(accountApi());
+    if (!vigente()) return { ok: false, kind: 'sessao-expirada' };
     if (result.ok) onOk?.(result.data);
     else if (result.kind === 'nao-autenticado' || result.kind === 'sessao-expirada') {
       epoch += 1;
@@ -146,10 +189,16 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
     return result;
   }
 
+  function accountApi(): ApiClient {
+    const identity = currentIdentity();
+    return identity ? (deps.api.forUser?.(identity.usuarioId) ?? deps.api) : deps.api;
+  }
+
   function applySession(data: SessionResponse): void {
     // Mesma conta: ids não mudam, então só o conteúdo exibido (nome, e-mail, fazenda) é trocado.
     epoch += 1;
     if (state.status === 'autenticado') {
+      if (data.usuario.id !== state.usuario.id || data.fazenda.id !== state.fazenda.id) return;
       set({ status: 'autenticado', usuario: data.usuario, fazenda: data.fazenda });
     }
   }
@@ -160,6 +209,31 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
     set({ ...state, usuario: { ...state.usuario, ...patch } });
   }
 
+  async function verify(): Promise<void> {
+    const mine = ++epoch;
+    try {
+      await deps.identity.ready?.();
+    } catch {
+      if (mine === epoch) set({ status: 'anonimo' });
+      return;
+    }
+    if (mine !== epoch) return;
+    const vigente = contextoAtual();
+    const result = await deps.api.getSession();
+    if (!vigente()) return;
+    if (result.ok) {
+      try {
+        await authenticate(result.data, vigente);
+      } catch {
+        if (mine === epoch) set({ status: 'anonimo' });
+      }
+      return;
+    }
+    if (result.kind === 'nao-autenticado' || result.kind === 'sessao-expirada') return expire();
+    const identity = deps.identity.read();
+    set(identity ? { status: 'offline-nao-verificado', identity } : { status: 'anonimo' });
+  }
+
   return {
     getState: () => state,
     getAccountMismatch: () => mismatch,
@@ -167,50 +241,67 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    async verify() {
+    verify,
+    async identityChanged() {
       const mine = ++epoch;
-      const result = await deps.api.getSession();
-      if (mine !== epoch) return; // resposta antiga: uma ação mais nova já decidiu o estado
-      if (result.ok) return authenticate(result.data);
-      if (result.kind === 'nao-autenticado' || result.kind === 'sessao-expirada') return expire();
-      // Sem rede (ou API fora do ar): usa a identidade local, nunca apaga nada.
+      mismatch = null;
+      set({ status: 'verificando' });
+      try {
+        await deps.identity.ready?.();
+      } catch {
+        if (mine === epoch) set({ status: 'anonimo' });
+        return;
+      }
+      if (mine !== epoch) return;
       const identity = deps.identity.read();
-      set(identity ? { status: 'offline-nao-verificado', identity } : { status: 'anonimo' });
+      if (!identity) {
+        set({ status: 'anonimo' });
+        return;
+      }
+      // Não mostrar os dados da sessão anterior enquanto o cookie compartilhado é verificado.
+      set({ status: 'verificando' });
+      await verify();
     },
     login: (body) => authCall(() => deps.api.login(body)),
     signup: (body) => authCall(() => deps.api.signup(body)),
     async logout() {
       epoch += 1;
-      const result = await deps.api.logout();
+      const vigente = contextoAtual();
+      const result = await accountApi().logout();
+      if (!vigente()) return { ok: false, kind: 'sessao-expirada' };
       if (result.ok) {
         mismatch = null;
         await deps.clearLocalData();
+        if (!vigente()) return { ok: false, kind: 'sessao-expirada' };
         deps.identity.clear();
         set({ status: 'anonimo' });
       }
       return result;
     },
-    updatePerfil: (body) => accountCall(() => deps.api.updatePerfil(body), applySession),
+    updatePerfil: (body) => accountCall((api) => api.updatePerfil(body), applySession),
     changePassword: (body) =>
       accountCall(
-        () => deps.api.changePassword(body),
+        (api) => api.changePassword(body),
         () => patchUsuario({ temSenha: true }),
       ),
     unlinkGoogle: () =>
       accountCall(
-        () => deps.api.unlinkGoogle(),
+        (api) => api.unlinkGoogle(),
         () => patchUsuario({ googleVinculado: false }),
       ),
-    updateFazenda: (body) => accountCall(() => deps.api.updateFazenda(body), applySession),
-    exportData: () => accountCall(() => deps.api.exportData()),
-    acceptTerms: (versao) => accountCall(() => deps.api.aceitarTermos(versao), applySession),
-    sendDataByEmail: () => accountCall(() => deps.api.enviarDadosPorEmail()),
+    updateFazenda: (body) => accountCall((api) => api.updateFazenda(body), applySession),
+    exportData: () => accountCall((api) => api.exportData()),
+    acceptTerms: (versao) => accountCall((api) => api.aceitarTermos(versao), applySession),
+    sendDataByEmail: () => accountCall((api) => api.enviarDadosPorEmail()),
     async deleteAccount() {
-      const result = await accountCall(() => deps.api.deleteAccount());
+      epoch += 1;
+      const vigente = contextoAtual();
+      const result = await accountCall((api) => api.deleteAccount());
+      if (result.ok && !vigente()) return { ok: false, kind: 'sessao-expirada' };
       if (result.ok) {
-        epoch += 1;
         mismatch = null;
         await deps.clearLocalData();
+        if (!vigente()) return { ok: false, kind: 'sessao-expirada' };
         deps.identity.clear();
         set({ status: 'anonimo' });
       }

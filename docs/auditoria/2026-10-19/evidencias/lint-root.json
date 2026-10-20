@@ -1,0 +1,17 @@
+{
+  "label": "lint-root",
+  "command": "node",
+  "args": [
+    "node_modules/eslint/bin/eslint.js",
+    ".",
+    "--ignore-pattern",
+    ".scratch/auditoria-2026-10-19/**",
+    "--ignore-pattern",
+    "docs/auditoria/2026-10-19/**"
+  ],
+  "started": "2026-10-20T02:21:41.796Z",
+  "finished": "2026-10-20T02:22:02.557Z",
+  "durationSeconds": 20.761,
+  "exitCode": 0,
+  "signal": null
+}

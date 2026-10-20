@@ -188,7 +188,14 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 
   const offlineMessage = isLogin ? MSG.offlineEntrar : MSG.offlineCadastrar;
   const showOffline = !online;
-  const alertText = showOffline ? offlineMessage : failure ? failureMessage(failure) : googleErro;
+  const trocaDeConta = controller.getAccountMismatch?.();
+  const alertText = showOffline
+    ? offlineMessage
+    : trocaDeConta
+      ? 'Os dados deste aparelho pertencem a outra conta. Entre com a conta original para preservá-los.'
+      : failure
+        ? failureMessage(failure)
+        : googleErro;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();

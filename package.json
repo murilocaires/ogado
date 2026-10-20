@@ -14,6 +14,7 @@
     "format": "prettier --write .",
     "test": "pnpm -r --workspace-concurrency=1 test",
     "test:parity": "node scripts/parity.mjs",
+    "performance:check": "pnpm --filter @ogado/api exec tsx ../../scripts/performance-check.ts",
     "parity:xlsx": "python references/calculo/verify.py",
     "db:generate": "pnpm --filter @ogado/db generate",
     "db:migrate": "pnpm --filter @ogado/db migrate"

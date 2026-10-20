@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { requireTestDatabaseUrl } from '../../packages/db/src/test-database';
 
 /**
  * E2E contra a API real + Postgres (docker compose up postgres). Sobe a API (tsx) e o web (Next)
@@ -7,8 +8,8 @@ import { defineConfig } from '@playwright/test';
  * Navegador: `E2E_CHANNEL` (padrão `msedge`, presente no Windows; use `chrome` ou deixe vazio
  * para o Chromium baixado por `pnpm exec playwright install chromium`).
  */
-const databaseUrl =
-  process.env['DATABASE_URL'] ?? 'postgresql://ogado:ogado_dev@localhost:5432/ogado?schema=public';
+const databaseUrl = requireTestDatabaseUrl(process.env);
+process.env['DATABASE_URL'] = databaseUrl;
 const apiPort = process.env['E2E_API_PORT'] ?? '3101';
 const webPort = process.env['E2E_WEB_PORT'] ?? '3100';
 const webOrigin = `http://localhost:${webPort}`;
@@ -46,6 +47,7 @@ export default defineConfig({
         WEB_ORIGIN: webOrigin,
         // O e2e cria várias contas do mesmo IP: sobe só o limite de cadastro (CA-16 tem teste próprio).
         RATE_LIMIT_SIGNUP_IP_PER_HOUR: '1000',
+        RATE_LIMIT_GLOBAL_PER_MIN: '10000',
       },
     },
     {

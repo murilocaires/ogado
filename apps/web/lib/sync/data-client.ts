@@ -16,6 +16,7 @@ import {
   type LotePatch,
   type RecriaEntradaDto,
   type RecriaEntradaPut,
+  syncCursorSchema,
 } from '@ogado/contracts';
 
 /** O que o cliente precisa de um schema Zod (evita depender do `zod` direto na web). */
@@ -36,8 +37,20 @@ export type DadosFalha =
   | { ok: false; kind: 'nao-encontrado' | 'nao-autenticado' | 'rede' | 'servidor' | 'contrato' };
 
 export type DadosResult<T> = { ok: true; data: T; created: boolean } | DadosFalha;
+export interface SyncCursor {
+  updatedAt: string;
+  id: string;
+}
+export interface PaginaDados<T> {
+  itens: T[];
+  proximoCursor: SyncCursor | null;
+}
 
 export interface DadosClient {
+  /** Captura a identidade da rodada, sem depender do cookie compartilhado entre abas. */
+  paraUsuario?(usuarioId: string): DadosClient;
+  paginaLotes?(cursor?: SyncCursor): Promise<DadosResult<PaginaDados<LoteDto>>>;
+  paginaCenarios?(cursor?: SyncCursor): Promise<DadosResult<PaginaDados<CenarioDto>>>;
   arquivarHistorico(body: HistoricoSyncCreate): Promise<DadosResult<HistoricoSync>>;
   listarLotes(): Promise<DadosResult<LoteDto[]>>;
   criarLote(body: LoteCreate): Promise<DadosResult<LoteDto>>;
@@ -52,7 +65,7 @@ export interface DadosClient {
 }
 
 export function criarDadosClient(
-  options: { baseUrl?: string; fetch?: typeof fetch } = {},
+  options: { baseUrl?: string; fetch?: typeof fetch; usuarioId?: string } = {},
 ): DadosClient {
   const baseUrl = options.baseUrl ?? '/api';
   const doFetch: typeof fetch = (input, init) => (options.fetch ?? fetch)(input, init);
@@ -69,7 +82,10 @@ export function criarDadosClient(
         method: metodo,
         credentials: 'include',
         cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(options.usuarioId ? { 'X-OGado-Usuario': options.usuarioId } : {}),
+        },
         ...(corpo === undefined ? {} : { body: JSON.stringify(corpo) }),
       });
     } catch {
@@ -128,7 +144,40 @@ export function criarDadosClient(
     },
   };
 
+  function pagina<T>(schema: Esquema<T[]>, campo: 'lotes' | 'cenarios'): Esquema<PaginaDados<T>> {
+    return {
+      safeParse(valor) {
+        const lista = schema.safeParse(valor);
+        if (!lista.success || typeof valor !== 'object' || valor === null)
+          return { success: false };
+        const bruto = (valor as Record<string, unknown>)['proximoCursor'];
+        if (bruto === null)
+          return { success: true, data: { itens: lista.data, proximoCursor: null } };
+        const parsed = syncCursorSchema.safeParse(bruto);
+        if (!parsed.success || !Array.isArray((valor as Record<string, unknown>)[campo]))
+          return { success: false };
+        return { success: true, data: { itens: lista.data, proximoCursor: parsed.data } };
+      },
+    };
+  }
+  const urlPagina = (caminho: string, cursor?: SyncCursor): string => {
+    const query = new URLSearchParams({
+      incremental: 'true',
+      incluirExcluidos: 'true',
+      limit: '100',
+    });
+    if (cursor) {
+      query.set('cursorUpdatedAt', cursor.updatedAt);
+      query.set('cursorId', cursor.id);
+    }
+    return `${caminho}?${query}`;
+  };
+
   return {
+    paraUsuario: (usuarioId) => criarDadosClient({ ...options, usuarioId }),
+    paginaLotes: (cursor) => pedir('GET', urlPagina('/lotes', cursor), pagina(listaLotes, 'lotes')),
+    paginaCenarios: (cursor) =>
+      pedir('GET', urlPagina('/cenarios', cursor), pagina(listaCenarios, 'cenarios')),
     arquivarHistorico: (body) => pedir('POST', '/historico-sync', historicoSyncSchema, body),
     listarLotes: () =>
       pedir('GET', '/lotes?incluirExcluidos=true', listaLotes as unknown as Esquema<LoteDto[]>),

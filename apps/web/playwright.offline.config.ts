@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { requireTestDatabaseUrl } from '../../packages/db/src/test-database';
 
 /**
  * E2E da E4 (instalável e offline): precisa do BUILD DE PRODUÇÃO (`next build` + `next start`),
@@ -8,8 +9,8 @@ import { defineConfig } from '@playwright/test';
  *
  * Navegador: `E2E_CHANNEL` (padrão `msedge`; use `chrome` ou vazio para o Chromium do Playwright).
  */
-const databaseUrl =
-  process.env['DATABASE_URL'] ?? 'postgresql://ogado:ogado_dev@localhost:5432/ogado?schema=public';
+const databaseUrl = requireTestDatabaseUrl(process.env);
+process.env['DATABASE_URL'] = databaseUrl;
 const apiPort = process.env['E2E_OFFLINE_API_PORT'] ?? '3105';
 const webPort = process.env['E2E_OFFLINE_WEB_PORT'] ?? '3104';
 const webOrigin = `http://localhost:${webPort}`;
@@ -44,6 +45,7 @@ export default defineConfig({
         API_HOST: '127.0.0.1',
         WEB_ORIGIN: webOrigin,
         RATE_LIMIT_SIGNUP_IP_PER_HOUR: '1000',
+        RATE_LIMIT_GLOBAL_PER_MIN: '10000',
       },
     },
     {

@@ -1,0 +1,86 @@
+apps/api/scripts/cleanup-test-accounts.ts 175ms (unchanged)
+apps/api/scripts/set-aceite-termos.ts 36ms (unchanged)
+apps/api/src/app.ts 210ms (unchanged)
+apps/api/src/plugins/auth.ts 55ms (unchanged)
+apps/api/src/repositories/account-repository.ts 246ms (unchanged)
+apps/api/src/repositories/cenario-repository.ts 56ms (unchanged)
+apps/api/src/repositories/lote-repository.ts 76ms (unchanged)
+apps/api/src/routes/auth.ts 62ms (unchanged)
+apps/api/src/routes/conta.ts 88ms (unchanged)
+apps/api/src/routes/dados.ts 90ms (unchanged)
+apps/api/src/session/session-service.ts 25ms (unchanged)
+apps/api/test/conta-exportar.test.ts 54ms (unchanged)
+apps/api/test/dados.test.ts 240ms (unchanged)
+apps/api/test/isolation.test.ts 147ms (unchanged)
+apps/api/test/rate-limit.test.ts 32ms (unchanged)
+apps/api/test/security.test.ts 125ms (unchanged)
+apps/api/test/support/env.ts 3ms (unchanged)
+apps/api/test/support/global-setup.ts 10ms (unchanged)
+apps/api/vitest.config.ts 11ms (unchanged)
+apps/web/components/AtencaoPainel.tsx 80ms (unchanged)
+apps/web/components/AuthScreen.tsx 128ms
+apps/web/components/CenariosScreen.tsx 155ms (unchanged)
+apps/web/components/Dialog.tsx 40ms (unchanged)
+apps/web/components/NegociosScreen.test.tsx 194ms
+apps/web/components/NegociosScreen.tsx 96ms
+apps/web/components/NomeDialog.tsx 15ms (unchanged)
+apps/web/components/RecriaScreen.tsx 131ms
+apps/web/components/SyncProvider.tsx 116ms
+apps/web/components/SyncUi.test.tsx 507ms (unchanged)
+apps/web/e2e/e1-jornadas.spec.ts 76ms
+apps/web/e2e/e1-layout.spec.ts 76ms
+apps/web/e2e/e2-cenarios.spec.ts 69ms (unchanged)
+apps/web/e2e/e4-offline.spec.ts 109ms (unchanged)
+apps/web/e2e/planilha.ts 52ms (unchanged)
+apps/web/e2e/teardown.ts 24ms
+apps/web/e2e/termos.spec.ts 75ms
+apps/web/lib/auth/api-client.test.ts 174ms
+apps/web/lib/auth/api-client.ts 57ms
+apps/web/lib/auth/session-controller.test.ts 173ms (unchanged)
+apps/web/lib/auth/session-controller.ts 69ms
+apps/web/lib/auth/session-provider.tsx 27ms
+apps/web/lib/cenarios.ts 91ms (unchanged)
+apps/web/lib/pwa/sw-policy.test.ts 62ms (unchanged)
+apps/web/lib/repo/local-repo.ts 159ms (unchanged)
+apps/web/lib/repo/repo-provider.tsx 17ms (unchanged)
+apps/web/lib/repo/types.ts 24ms (unchanged)
+apps/web/lib/sync/data-client.test.ts 16ms
+apps/web/lib/sync/data-client.ts 54ms
+apps/web/lib/sync/engine.test-support.ts 61ms (unchanged)
+apps/web/lib/sync/engine.ts 264ms
+apps/web/lib/sync/mappers.ts 28ms (unchanged)
+apps/web/lib/sync/storage.ts 22ms (unchanged)
+apps/web/next.config.ts 15ms (unchanged)
+apps/web/playwright.config.ts 15ms (unchanged)
+apps/web/playwright.offline.config.ts 10ms (unchanged)
+packages/contracts/src/dados.test.ts 27ms (unchanged)
+packages/contracts/src/dados.ts 57ms (unchanged)
+packages/contracts/src/index.ts 4ms (unchanged)
+packages/contracts/src/termos.ts 6ms (unchanged)
+packages/domain/src/compra-venda.test.ts 150ms (unchanged)
+packages/domain/src/compra-venda.ts 48ms (unchanged)
+packages/domain/src/configuracao.test.ts 53ms
+packages/domain/src/index.ts 10ms (unchanged)
+packages/domain/src/pt-br.ts 30ms (unchanged)
+packages/domain/src/recria.test.ts 61ms (unchanged)
+apps/api/src/repositories/sync-write.ts 8ms (unchanged)
+apps/api/test/credential-lifecycle.test.ts 52ms (unchanged)
+apps/api/test/dados-incremental.test.ts 77ms (unchanged)
+apps/api/test/session-context.test.ts 47ms (unchanged)
+apps/api/test/support/cenario.ts 6ms
+apps/api/test/test-database.unit.test.ts 10ms (unchanged)
+apps/web/e2e/accessibility.spec.ts 9ms (unchanged)
+apps/web/e2e/e1-multiaba.spec.ts 16ms (unchanged)
+apps/web/e2e/security-headers.spec.ts 8ms (unchanged)
+apps/web/lib/auth/durable-identity.ts 34ms
+apps/web/lib/cenarios.test.ts 12ms (unchanged)
+apps/web/lib/persistencia.ts 5ms (unchanged)
+apps/web/lib/recria.test.ts 11ms
+apps/web/lib/repo/durable-repo.ts 150ms (unchanged)
+apps/web/lib/repo/indexed-db.ts 28ms (unchanged)
+apps/web/lib/sync/engine-incremental.test.ts 103ms (unchanged)
+packages/contracts/src/cenarios.test.ts 17ms (unchanged)
+packages/contracts/src/cenarios.ts 18ms (unchanged)
+packages/db/src/test-database.ts 9ms (unchanged)
+packages/domain/src/precision.test.ts 11ms (unchanged)
+scripts/performance-check.ts 14ms (unchanged)

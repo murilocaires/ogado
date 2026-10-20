@@ -2,9 +2,9 @@
 
 > **Rascunho.** Este texto deve ser revisado por profissional jurídico antes de qualquer uso comercial.
 
-**Versão 2026-10-19**
+**Versão 2026-10-20**
 
-**Vigência:** a partir de 19 de outubro de 2026.
+**Vigência:** a partir de 20 de outubro de 2026.
 
 Estes Termos explicam as regras para usar o **O Gado**. Ao criar uma conta e marcar "Li e aceito", ou ao continuar com o Google, você concorda com eles. Para saber como tratamos seus dados pessoais, leia também a [Política de Privacidade](/privacidade).
 

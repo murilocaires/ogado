@@ -1,0 +1,47 @@
+
+Running 4 tests using 1 worker
+
+(node:12968) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 apps\web\e2e\e4-offline.spec.ts:62:1 › RNF-012 manifest instalável: pt-BR, standalone, ícones 192/512/maskable que existem (2.4s)
+  x  2 apps\web\e2e\e4-offline.spec.ts:88:1 › RF-072/RF-071 abre sem internet após a primeira visita e a Recria calcula o valor de ouro (2.0m)
+(node:17152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 3 apps\web\e2e\e4-offline.spec.ts:124:1 › RF-071 nenhuma requisição /api/* entra no cache do service worker (5.0s)
+  ok 4 apps\web\e2e\e4-offline.spec.ts:147:1 › RF-073 lançar lote offline aparece na lista e sobe quando a conexão volta (4.4s)
+
+
+  1) apps\web\e2e\e4-offline.spec.ts:88:1 › RF-072/RF-071 abre sem internet após a primeira visita e a Recria calcula o valor de ouro 
+
+    Test timeout of 120000ms exceeded.
+
+    Error: locator.fill: Test timeout of 120000ms exceeded.
+    Call log:
+      - waiting for getByLabel('Área pastável', { exact: true })
+
+
+       at planilha.ts:24
+
+      22 | export async function preencherPlanilha(page: Page): Promise<void> {
+      23 |   for (const [rotulo, valor] of Object.entries(ENTRADAS_PLANILHA)) {
+    > 24 |     await page.getByLabel(rotulo, { exact: true }).fill(valor);
+         |                                                    ^
+      25 |   }
+      26 | }
+      27 |
+        at preencherPlanilha (C:\Users\Murilo Caires\Desktop\Criando\ogado\ogado-dev-kit\ogado-dev-kit\apps\web\e2e\planilha.ts:24:52)
+        at C:\Users\Murilo Caires\Desktop\Criando\ogado\ogado-dev-kit\ogado-dev-kit\apps\web\e2e\e4-offline.spec.ts:110:9
+
+    Error Context: docs\auditoria\2026-10-19\evidencias\playwright-offline\e4-offline-RF-072-RF-071-a-d21b9-ria-calcula-o-valor-de-ouro\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs\auditoria\2026-10-19\evidencias\playwright-offline\e4-offline-RF-072-RF-071-a-d21b9-ria-calcula-o-valor-de-ouro\trace.zip
+    Usage:
+
+        npx playwright show-trace docs\auditoria\2026-10-19\evidencias\playwright-offline\e4-offline-RF-072-RF-071-a-d21b9-ria-calcula-o-valor-de-ouro\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    apps\web\e2e\e4-offline.spec.ts:88:1 › RF-072/RF-071 abre sem internet após a primeira visita e a Recria calcula o valor de ouro 
+  3 passed (3.0m)

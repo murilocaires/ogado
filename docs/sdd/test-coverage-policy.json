@@ -1,0 +1,29 @@
+{
+  "RF-003": {
+    "tipo": "adiado",
+    "motivo": "Primeiros passos opcionais pela decisão Q-D; não corresponde a funcionalidade concluída.",
+    "fonte": "docs/adr/0012-revisao-pos-prototipo.md"
+  },
+  "RF-042": {
+    "tipo": "adiado",
+    "motivo": "Importação do curso é should de v1.1; permanece pendente, sem alegação de cobertura.",
+    "fonte": "docs/negocio/02-requisitos.md"
+  },
+  "RF-060": {
+    "tipo": "fora-do-escopo",
+    "motivo": "Google Sheets está explicitamente fora da v1.",
+    "fonte": "docs/sdd/spec-v1.md"
+  },
+  "RNF-010": {
+    "tipo": "gate",
+    "motivo": "TypeScript, lint e cobertura de domínio são verificados por comandos reais de CI.",
+    "fonte": ".github/workflows/ci.yml",
+    "comandos": ["pnpm typecheck", "pnpm lint", "pnpm --filter @ogado/domain test:coverage"]
+  },
+  "RNF-002": {
+    "tipo": "gate",
+    "motivo": "Orçamento do cálculo medido em CI. Latência HTTP geral continua dependendo de carga representativa; este gate não certifica toda a API.",
+    "fonte": ".github/workflows/ci.yml",
+    "comandos": ["pnpm performance:check"]
+  }
+}

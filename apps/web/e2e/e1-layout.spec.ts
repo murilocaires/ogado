@@ -38,7 +38,7 @@ async function semRolagemHorizontal(page: Page): Promise<void> {
   expect(sw, `scrollWidth ${sw} > innerWidth ${iw}`).toBeLessThanOrEqual(iw);
 }
 
-test('RF-024/RF-040 Negócios e Painel cabem em todas as larguras e os botões são contextuais', async ({
+test('RF-024/RF-040/RNF-006 Negócios e Painel cabem em todas as larguras e os botões são contextuais', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -46,13 +46,45 @@ test('RF-024/RF-040 Negócios e Painel cabem em todas as larguras e os botões s
 
   // estado vazio: botões contextuais também aqui
   await expect(page.getByRole('heading', { name: 'Nenhum lote' })).toBeVisible();
-  await expect(page.locator('.empty-acoes').getByRole('button', { name: 'Nova compra' })).toBeVisible();
-  await expect(page.locator('.empty-acoes').getByRole('button', { name: 'Nova venda' })).toBeVisible();
+  await expect(
+    page.locator('.empty-acoes').getByRole('button', { name: 'Nova compra' }),
+  ).toBeVisible();
+  await expect(
+    page.locator('.empty-acoes').getByRole('button', { name: 'Nova venda' }),
+  ).toBeVisible();
 
-  await lancar(page, { tipo: 'Compra', categoria: 'Bezerros', qtd: '10', peso: '3000', preco: '300', data: '2026-10-01' });
-  await lancar(page, { tipo: 'Compra', categoria: 'Garrotes', qtd: '20', peso: '6400', preco: '310', data: '2026-10-02' });
-  await lancar(page, { tipo: 'Venda', categoria: 'Bois', qtd: '10', peso: '4500', preco: '320', data: '2026-10-03' });
-  await lancar(page, { tipo: 'Venda', categoria: 'Novilhas', qtd: '10', peso: '3000', preco: '300', data: '2026-10-04' });
+  await lancar(page, {
+    tipo: 'Compra',
+    categoria: 'Bezerros',
+    qtd: '10',
+    peso: '3000',
+    preco: '300',
+    data: '2026-10-01',
+  });
+  await lancar(page, {
+    tipo: 'Compra',
+    categoria: 'Garrotes',
+    qtd: '20',
+    peso: '6400',
+    preco: '310',
+    data: '2026-10-02',
+  });
+  await lancar(page, {
+    tipo: 'Venda',
+    categoria: 'Bois',
+    qtd: '10',
+    peso: '4500',
+    preco: '320',
+    data: '2026-10-03',
+  });
+  await lancar(page, {
+    tipo: 'Venda',
+    categoria: 'Novilhas',
+    qtd: '10',
+    peso: '3000',
+    preco: '300',
+    data: '2026-10-04',
+  });
 
   // Painel: 4 operações, só as 3 mais recentes aparecem
   await page.getByRole('link', { name: 'Painel' }).filter({ visible: true }).click();
@@ -106,7 +138,7 @@ test('RF-024/RF-040 Negócios e Painel cabem em todas as larguras e os botões s
   }
 
   // sem rolagem horizontal da página em larguras de celular, tablet e desktop
-  for (const largura of [360, 390, 430, 768, 1440]) {
+  for (const largura of [360, 390, 430, 768, 1440, 1920]) {
     await page.setViewportSize({ width: largura, height: 844 });
     for (const rota of ['/negocios', '/painel']) {
       await page.goto(rota);

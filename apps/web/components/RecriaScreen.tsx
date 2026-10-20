@@ -1,11 +1,12 @@
 'use client';
 
 import type { AlertaRecria, Decimal, ResultadoRecria } from '@ogado/domain';
-import { useMemo, useState, type KeyboardEvent } from 'react';
+import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { brl, dicaCampo, ehNegativo, lerCampo, num, TRACO } from '../lib/format';
 import { snapshotDaRecria } from '../lib/cenarios';
 import { CUSTO_CORES } from '../lib/custo-cores';
 import { calcularRecriaEntidade } from '../lib/recria';
+import { aguardarGravacao } from '../lib/persistencia';
 import { useRepo, useRepoState } from '../lib/repo/repo-provider';
 import type { RecriaCampo } from '../lib/repo/types';
 import { Carregando, PageHeader } from './AppShell';
@@ -137,6 +138,8 @@ const ABAS: AbaRecria[] = ['simulador', 'cenarios'];
  * (RF-032…RF-036).
  */
 export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRecria }) {
+  const cenarioPendente = useRef<string | null>(null);
+  const gravandoCenario = useRef(false);
   const dados = useRepoState();
   const repo = useRepo();
   const toast = useToast();
@@ -163,17 +166,32 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
     (c) => lerCampo(recria.form[c]).tipo !== 'ok',
   );
 
-  function salvarCenario(nome: string): void {
-    if (!recria) return;
+  async function salvarCenario(nome: string): Promise<void> {
+    if (!recria || gravandoCenario.current) return;
     const snapshot = snapshotDaRecria(recria, nome);
-    setNomeando(false);
     if (!snapshot) {
       toast('Preencha todos os campos com números válidos para salvar o cenário.');
       return;
     }
-    repo.salvarCenario(snapshot);
-    setAba('cenarios');
-    toast('Cenário salvo.');
+    gravandoCenario.current = true;
+    try {
+      const salvo = repo.salvarCenario({
+        ...snapshot,
+        ...(cenarioPendente.current ? { id: cenarioPendente.current } : {}),
+      });
+      cenarioPendente.current = salvo.id;
+      await aguardarGravacao(repo);
+      cenarioPendente.current = null;
+      setNomeando(false);
+      setAba('cenarios');
+      toast('Cenário salvo.');
+    } catch {
+      toast(
+        'Não foi possível confirmar o salvamento. Mantenha esta tela aberta e tente novamente.',
+      );
+    } finally {
+      gravandoCenario.current = false;
+    }
   }
 
   function teclaNasAbas(e: KeyboardEvent<HTMLButtonElement>): void {

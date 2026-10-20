@@ -107,17 +107,24 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AuthRoutesDeps): 
         // E-mail inexistente (ou conta só Google): gasta o mesmo tempo de uma verificação real.
         await deps.hasher.verifyDummy(senha);
       }
-      if (!usuario || !autenticado) throw invalidCredentials();
-
-      if (usuario.senhaHash && deps.hasher.needsRehash(usuario.senhaHash)) {
-        await deps.accounts.updateSenhaHash(usuario.id, await deps.hasher.hash(senha));
-      }
+      if (!usuario?.senhaHash || !autenticado) throw invalidCredentials();
+      const rehash = deps.hasher.needsRehash(usuario.senhaHash)
+        ? await deps.hasher.hash(senha)
+        : undefined;
 
       const fazenda = await deps.accounts.loadFazendaDoUsuario(usuario.id);
       if (!fazenda) throw invalidCredentials();
 
       // Sessão sempre nova; um cookie anterior enviado junto nunca é reaproveitado (sem fixação).
-      const session = await deps.sessions.create(usuario.id);
+      const session = deps.sessions.issue();
+      const created = await deps.accounts.createPasswordSession({
+        usuarioId: usuario.id,
+        expectedHash: usuario.senhaHash,
+        expectedEmail: usuario.email,
+        rehash,
+        session,
+      });
+      if (!created) throw invalidCredentials();
       setSessionCookie(reply, deps.config, session.token, session.maxAgeSeconds);
       return reply.code(200).send({
         usuario: toUsuarioDto({
@@ -145,17 +152,19 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AuthRoutesDeps): 
       if (usuario) {
         const token = randomBytes(32).toString('base64url');
         const now = deps.clock();
-        await deps.accounts.createResetToken({
+        const created = await deps.accounts.createResetToken({
           usuarioId: usuario.id,
+          email: usuario.email,
           tokenHash: sha256Hex(token),
           now,
           expiraEm: new Date(now.getTime() + RESET_TOKEN_TTL_MS),
         });
+        if (!created) return reply.code(202).send({ mensagem: ESQUECI_SENHA_MENSAGEM });
         const link = `${deps.webOrigin}/redefinir-senha?token=${token}`;
         // Sem await: o tempo de resposta não depende do provedor. Falha só é registrada (sem PII).
-        deps.email.send(passwordResetEmail(usuario.email, link)).catch((error: unknown) => {
+        deps.email.send(passwordResetEmail(usuario.email, link)).catch(() => {
           request.log.error(
-            { motivo: error instanceof Error ? error.message : 'erro desconhecido' },
+            { category: 'email_delivery_failed', operation: 'password_reset' },
             'falha ao enviar e-mail de redefinição de senha',
           );
         });

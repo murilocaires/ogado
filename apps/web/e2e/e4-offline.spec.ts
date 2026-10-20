@@ -1,5 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
-import { preencherPlanilha } from './planilha';
+import { preencherPlanilha, RESULTADO_CABECAS_INTEIRAS } from './planilha';
 
 /**
  * E4: o app abre e calcula sem internet depois da primeira visita, e o que se lança offline sobe
@@ -85,7 +85,7 @@ test('RNF-012 manifest instalável: pt-BR, standalone, ícones 192/512/maskable 
   await expect(page.locator('meta[name="theme-color"]')).toHaveCount(1);
 });
 
-test('RF-072/RF-071 abre sem internet após a primeira visita e a Recria calcula o valor de ouro', async ({
+test('RF-072/RF-071 abre sem internet e calcula a mesma variante de cabeças inteiras', async ({
   page,
   context,
 }) => {
@@ -108,7 +108,7 @@ test('RF-072/RF-071 abre sem internet após a primeira visita e a Recria calcula
   // ADR-0014: o simulador abre vazio; as entradas da planilha são digitadas sem internet.
   await expect(resultado.locator('.hero .big')).toHaveText('—');
   await preencherPlanilha(page);
-  await expect(resultado.locator('.hero .big')).toHaveText('R$ 102.408,05');
+  await expect(resultado.locator('.hero .big')).toHaveText(RESULTADO_CABECAS_INTEIRAS);
 
   await irPara(page, 'Conta');
   await expect(page).toHaveURL(/\/conta$/);
@@ -118,7 +118,7 @@ test('RF-072/RF-071 abre sem internet após a primeira visita e a Recria calcula
   await page.goto('/recria');
   await expect(
     page.getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big'),
-  ).toHaveText('R$ 102.408,05');
+  ).toHaveText(RESULTADO_CABECAS_INTEIRAS);
 });
 
 test('RF-071 nenhuma requisição /api/* entra no cache do service worker', async ({

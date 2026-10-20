@@ -1,12 +1,12 @@
 import { createPrisma } from '@ogado/db';
+import { requireTestDatabaseUrl } from '../../../packages/db/src/test-database';
 
 /**
  * Apaga as contas de teste (e-mail terminado em @teste.ogado.invalid): fazenda primeiro, depois
  * o usuário. Usado pelo teardown do e2e do web, que não importa o pacote de banco.
  */
 const DOMAIN = '@teste.ogado.invalid';
-const url =
-  process.env['DATABASE_URL'] ?? 'postgresql://ogado:ogado_dev@localhost:5432/ogado?schema=public';
+const url = requireTestDatabaseUrl(process.env);
 
 const prisma = createPrisma(url);
 try {

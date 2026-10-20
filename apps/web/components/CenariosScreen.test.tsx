@@ -93,7 +93,7 @@ describe('RF-032 salvar como cenário', () => {
       'true',
     );
     expect(screen.getByText('Safra 26/27')).toBeInTheDocument();
-    expect(screen.getByText('R$ 102.408')).toBeInTheDocument();
+    expect(screen.getByText('R$ 103.308')).toBeInTheDocument();
   });
 
   it('RF-032 não salva sem números válidos e avisa', async () => {
@@ -114,7 +114,7 @@ describe('RF-032 salvar como cenário', () => {
     renderComApp(<RecriaScreen />, novoRepo());
     await user.click(screen.getByRole('button', { name: 'Salvar como cenário' }));
     await user.keyboard('{Enter}');
-    expect(screen.getByText('R$ 102.408')).toBeInTheDocument();
+    expect(screen.getByText('R$ 103.308')).toBeInTheDocument();
 
     // volta ao simulador e muda o preço de venda
     await user.click(screen.getByRole('tab', { name: 'Simulador' }));
@@ -123,7 +123,7 @@ describe('RF-032 salvar como cenário', () => {
     await user.type(preco, '400');
 
     await user.click(screen.getByRole('tab', { name: /^Cenários/ }));
-    expect(screen.getByText('R$ 102.408')).toBeInTheDocument(); // continua o valor salvo
+    expect(screen.getByText('R$ 103.308')).toBeInTheDocument(); // continua o valor salvo
 
     // "Abrir no simulador" substitui as entradas atuais pelas do snapshot
     await user.click(screen.getByRole('button', { name: 'Abrir Cenário 1' }));
@@ -134,6 +134,57 @@ describe('RF-032 salvar como cenário', () => {
 });
 
 describe('RF-032/RF-034/RF-035/RF-036 lista de cenários', () => {
+  it('RF-073/RNF-017: falha ao gravar cópia avisa e repetir não duplica o mesmo cenário', async () => {
+    const repo = novoRepo();
+    semear(repo, 'Base');
+    Object.assign(repo, {
+      flush: vi.fn().mockRejectedValueOnce(new Error('quota')).mockResolvedValue(undefined),
+    });
+    const user = userEvent.setup();
+    renderComApp(<RecriaScreen abaInicial="cenarios" />, repo);
+    await user.click(screen.getByRole('button', { name: 'Duplicar Base' }));
+    expect(
+      await screen.findByText('Não foi possível gravar a cópia no aparelho. Tente novamente.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Cenário duplicado.')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Duplicar Base' }));
+    expect(await screen.findByText('Cenário duplicado.')).toBeInTheDocument();
+    expect(nomesNaLista().filter((nome) => nome.startsWith('Base (cópia)'))).toHaveLength(1);
+  });
+
+  it('RF-035/RN-023: abrir legado restaura as variantes e parâmetros para replay exato', async () => {
+    const repo = novoRepo();
+    const salvo = snapshotDaRecria(
+      {
+        id: 'r',
+        version: 1,
+        updatedAt: '2026-10-18T10:00:00.000Z',
+        deletedAt: null,
+        form: recriaFormPlanilha(),
+        lotacaoInicial: 'fixa80',
+        variantes: {
+          lotacaoInicial: 'fixa80',
+          faturamentoBruto: 'pesoVivo',
+          cabecasInteiras: false,
+          schemaVersao: 1,
+          calculoVersao: 'recria-1',
+        },
+        parametros: { arrobaVivoKg: '30', arrobaCarcacaKg: '15', uaKg: '500', lotacaoFixaHa: '80' },
+      },
+      'Legado',
+    )!;
+    repo.salvarCenario(salvo);
+    const user = userEvent.setup();
+    renderComApp(<RecriaScreen abaInicial="cenarios" />, repo);
+    await user.click(screen.getByRole('button', { name: 'Abrir Legado' }));
+    const estado = repo.getSnapshot();
+    expect(estado.status).toBe('pronto');
+    if (estado.status !== 'pronto') throw new Error('Repositório não carregou.');
+    expect(estado.recria.variantes?.cabecasInteiras).toBe(false);
+    expect(estado.recria.parametros?.uaKg).toBe('500');
+    expect(screen.getByText('R$ 102.408,05')).toBeInTheDocument();
+  });
+
   it('RF-034 sem cenários mostra o estado vazio com botão para o Simulador', async () => {
     const user = userEvent.setup();
     renderComApp(<RecriaScreen abaInicial="cenarios" />, novoRepo());
@@ -382,13 +433,13 @@ describe('RF-040 Painel com cenários', () => {
       '/recria?aba=cenarios',
     );
     // 350 R$/@ rende mais que a simulação atual (325): o cartão não é a simulação
-    expect(cartao).not.toHaveTextContent('R$ 102.408,05');
+    expect(cartao).not.toHaveTextContent('R$ 103.307,60');
   });
 
   it('RF-040 sem cenários o cartão segue mostrando a simulação atual', () => {
     renderComApp(<PainelScreen />, novoRepo());
     const cartao = screen.getByRole('region', { name: /Recria, simulação atual/ });
-    expect(cartao).toHaveTextContent('R$ 102.408,05');
+    expect(cartao).toHaveTextContent('R$ 103.307,60');
     expect(within(cartao).queryByRole('link', { name: /Ver cenários/ })).not.toBeInTheDocument();
   });
 });

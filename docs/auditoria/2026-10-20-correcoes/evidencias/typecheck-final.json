@@ -1,0 +1,18 @@
+{
+  "label": "typecheck-final",
+  "command": "cmd",
+  "args": [
+    "/d",
+    "/c",
+    "pnpm.cmd",
+    "--pm-on-fail=ignore",
+    "-r",
+    "typecheck"
+  ],
+  "cwd": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit",
+  "started": "2026-10-20T15:48:53.485Z",
+  "ended": "2026-10-20T15:49:33.114Z",
+  "durationSeconds": 39.629,
+  "exitCode": 0,
+  "signal": null
+}

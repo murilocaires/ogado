@@ -7,6 +7,8 @@
 O dono ainda vai estudar a planilha da recria e não quer nenhum número pressuposto pelo app. Os padrões da planilha (102 ha, 270 dias, R$ 122.534,80…) apareciam preenchidos em todo aparelho novo, e a lotação inicial usava 80 ha de referência por padrão. Separadamente, o aviso "Nova versão disponível — Atualizar" pedia uma ação que o pecuarista não precisa tomar.
 
 ## Decisão
+
+**Atualização de 20/10/2026:** o ADR-0017 substitui a exceção do item 3 para a simulação atual: ao abrir um cenário antigo, a lotação por hectare também usa a área pastável informada. O snapshot original permanece preservado; as regras financeiras não mudam.
 1. **Simulador começa em branco.** Fazenda/aparelho novo: os 14 campos da recria vazios. O resultado mostra "—" (RN-022). Todos os dados são informados pelo usuário.
 2. **Sem "Restaurar padrões".** Removidos o botão, o diálogo e `redefinirRecria('padrao')`; `recriaFormPadrao` deixa de existir na UI. Fica "Limpar campos" (`limparRecria()`).
 3. **Sem seletor de lotação inicial.** A lotação inicial é calculada sobre a **área pastável informada** (variante `areaPastavel`) em entradas novas. O campo `lotacaoInicial` do modelo, do contrato e da sincronização continua existindo (compatibilidade e retorno à planilha, se o dono decidir). **Dados já salvos não são migrados**: quem tem `fixa80` salvo mantém o cálculo; a UI só deixa de oferecer a troca. "Limpar campos" volta a variante para `areaPastavel`.

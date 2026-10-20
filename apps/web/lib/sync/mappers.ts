@@ -1,16 +1,17 @@
 // Tradução entre as entidades do aparelho (texto pt-BR digitado) e os DTOs da API (ADR-0011 §6:
 // decimais como string canônica com ponto). Só lotes precisam converter; cenários e entradas da
 // recria guardam o texto como foi digitado.
-import type {
-  CenarioCreate,
-  CenarioDto,
-  LoteCreate,
-  LoteDto,
-  RecriaEntradaDto,
-  RecriaEntradaPut,
+import {
+  normalizarCenarioSnapshot,
+  type CenarioCreate,
+  type CenarioDto,
+  type LoteCreate,
+  type LoteDto,
+  type RecriaEntradaDto,
+  type RecriaEntradaPut,
 } from '@ogado/contracts';
 import { paraCampo, valorCampo } from '../format';
-import { ehCenario, ehRecria } from '../repo/local-repo';
+import { ehRecria } from '../repo/local-repo';
 import type { CenarioEntity, LoteEntity, RecriaEntity } from '../repo/types';
 
 function canonico(texto: string, escala: number): string {
@@ -79,14 +80,21 @@ export function loteDeDto(d: LoteDto): LoteEntity {
 }
 
 export function cenarioParaCriar(c: CenarioEntity): CenarioCreate {
+  const snapshot = normalizarCenarioSnapshot({
+    form: c.form,
+    variantes: c.variantes,
+    parametros: c.parametros,
+    resultado: c.resultado,
+  });
+  if (!snapshot) throw new Error('O cenário salvo está incompleto ou inválido.');
   return {
     id: c.id,
     nome: c.nome,
     criadoEm: c.criadoEm,
-    entradas: { ...c.form },
-    variantes: { ...c.variantes },
-    parametros: { ...c.parametros },
-    resultado: { ...c.resultado, custos: c.resultado.custos.map((x) => ({ ...x })) },
+    entradas: snapshot.form,
+    variantes: snapshot.variantes,
+    parametros: snapshot.parametros,
+    resultado: snapshot.resultado,
   };
 }
 
@@ -104,7 +112,13 @@ export function cenarioDeDto(d: CenarioDto): CenarioEntity | null {
     parametros: d.parametros,
     resultado: d.resultado,
   };
-  return ehCenario(candidato) ? candidato : null;
+  const snapshot = normalizarCenarioSnapshot({
+    form: candidato.form,
+    variantes: candidato.variantes,
+    parametros: candidato.parametros,
+    resultado: candidato.resultado,
+  });
+  return snapshot ? { ...candidato, ...snapshot } : null;
 }
 
 export function recriaParaPut(r: RecriaEntity, version?: number): RecriaEntradaPut {

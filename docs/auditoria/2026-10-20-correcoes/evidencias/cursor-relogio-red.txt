@@ -1,0 +1,9 @@
+
+ RUN  v5.0.5 C:/Users/Murilo Caires/Desktop/Criando/ogado/ogado-dev-kit/ogado-dev-kit/apps/api
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 3 skipped (5)
+   Start at  12:41:32
+   Duration  65.49s (import 77%, tests 14%, transform 9%)
+

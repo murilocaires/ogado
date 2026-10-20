@@ -1,0 +1,762 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.local.config.ts",
+      "--reporter=list,json",
+      "--output",
+      "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\docs\\auditoria\\2026-10-20-correcoes\\evidencias\\playwright-e2e-local"
+    ],
+    "configFile": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\playwright.local.config.ts",
+    "rootDir": "C:/Users/Murilo Caires/Desktop/Criando/ogado/ogado-dev-kit/ogado-dev-kit/apps/web/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Murilo Caires/Desktop/Criando/ogado/ogado-dev-kit/ogado-dev-kit/docs/auditoria/2026-10-20-correcoes/evidencias/playwright-e2e-local",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/Murilo Caires/Desktop/Criando/ogado/ogado-dev-kit/ogado-dev-kit/apps/web/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/e[12]-.*\\.spec\\.ts/"
+        ],
+        "timeout": 90000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\docs\\auditoria\\2026-10-20-correcoes\\evidencias\\playwright-e2e-local",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e",
+        "snapshotDir": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e",
+        "testIgnore": [],
+        "testMatch": {},
+        "timeout": 90000,
+        "use": {
+          "baseURL": "http://localhost:3102",
+          "channel": "msedge",
+          "trace": "retain-on-failure"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": {
+      "command": "pnpm exec next build && pnpm exec next start -p 3102",
+      "url": "http://localhost:3102/painel",
+      "reuseExistingServer": true,
+      "timeout": 600000,
+      "env": {
+        "NODE_ENV": "production",
+        "NEXT_PUBLIC_ACESSO_LIVRE": "1"
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "e1-jornadas.spec.ts",
+      "file": "e1-jornadas.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "RF-053 a navegação lateral some e a barra inferior aparece em 390 px",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3166,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-20T16:03:33.296Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "53a84fbeeec46da990ca-48fcb618e82b0c9d7f6a",
+          "file": "e1-jornadas.spec.ts",
+          "line": 99,
+          "column": 1
+        },
+        {
+          "title": "RF-052 o botão \"i\" abre o balão e Esc fecha",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3088,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-20T16:03:37.629Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "53a84fbeeec46da990ca-3762d08b986d5a8d397d",
+          "file": "e1-jornadas.spec.ts",
+          "line": 111,
+          "column": 1
+        },
+        {
+          "title": "RF-025/RF-026 modal de venda: desconto automático para fêmeas e pré-visualização",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4623,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-20T16:03:40.824Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "53a84fbeeec46da990ca-856acdf9e93d3c25df53",
+          "file": "e1-jornadas.spec.ts",
+          "line": 121,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "E1 em 1440px",
+          "file": "e1-jornadas.spec.ts",
+          "line": 28,
+          "column": 8,
+          "specs": [
+            {
+              "title": "RF-024 cadastrar compra e venda leva ao saldo (1440px)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 18212,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-20T16:02:01.051Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "53a84fbeeec46da990ca-75fe926f0d9887e6cc14",
+              "file": "e1-jornadas.spec.ts",
+              "line": 31,
+              "column": 5
+            },
+            {
+              "title": "RF-030 simular recria: abre vazio e calcula a variante de cabeças inteiras (1440px)",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 27745,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big')\nExpected: \u001b[32m\"R$ \u001b[7m103.30\u001b[27m7,60\"\u001b[39m\nReceived: \u001b[31m\"R$ \u001b[7m269.014.178.98\u001b[27m7,60\"\u001b[39m\nTimeout:  15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big')\u001b[22m\n\u001b[2m    32 × locator resolved to <div class=\"big pos\" aria-live=\"polite\" aria-atomic=\"true\">R$ 269.014.178.987,60</div>\u001b[22m\n\u001b[2m       - unexpected value \"R$ 269.014.178.987,60\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big')\nExpected: \u001b[32m\"R$ \u001b[7m103.30\u001b[27m7,60\"\u001b[39m\nReceived: \u001b[31m\"R$ \u001b[7m269.014.178.98\u001b[27m7,60\"\u001b[39m\nTimeout:  15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big')\u001b[22m\n\u001b[2m    32 × locator resolved to <div class=\"big pos\" aria-live=\"polite\" aria-atomic=\"true\">R$ 269.014.178.987,60</div>\u001b[22m\n\u001b[2m       - unexpected value \"R$ 269.014.178.987,60\"\u001b[22m\n\n    at C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-jornadas.spec.ts:89:53",
+                        "location": {
+                          "file": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-jornadas.spec.ts",
+                          "column": 53,
+                          "line": 89
+                        },
+                        "snippet": "  87 |       await page.getByLabel('Investimento (compra)', { exact: true }).fill('122534,8');\n  88 |       await page.getByLabel('R$/cab (venda)', { exact: true }).fill('325');\n> 89 |       await expect(resultado.locator('.hero .big')).toHaveText(RESULTADO_CABECAS_INTEIRAS);\n     |                                                     ^\n  90 |       await page.evaluate(() => document.fonts.ready);\n  91 |       await page.screenshot({ path: `${OUT}/e1-recria-${vp.nome}.png`, fullPage: true });\n  92 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-jornadas.spec.ts",
+                            "column": 53,
+                            "line": 89
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big')\nExpected: \u001b[32m\"R$ \u001b[7m103.30\u001b[27m7,60\"\u001b[39m\nReceived: \u001b[31m\"R$ \u001b[7m269.014.178.98\u001b[27m7,60\"\u001b[39m\nTimeout:  15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big')\u001b[22m\n\u001b[2m    32 × locator resolved to <div class=\"big pos\" aria-live=\"polite\" aria-atomic=\"true\">R$ 269.014.178.987,60</div>\u001b[22m\n\u001b[2m       - unexpected value \"R$ 269.014.178.987,60\"\u001b[22m\n\n\n  87 |       await page.getByLabel('Investimento (compra)', { exact: true }).fill('122534,8');\n  88 |       await page.getByLabel('R$/cab (venda)', { exact: true }).fill('325');\n> 89 |       await expect(resultado.locator('.hero .big')).toHaveText(RESULTADO_CABECAS_INTEIRAS);\n     |                                                     ^\n  90 |       await page.evaluate(() => document.fonts.ready);\n  91 |       await page.screenshot({ path: `${OUT}/e1-recria-${vp.nome}.png`, fullPage: true });\n  92 |\n    at C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-jornadas.spec.ts:89:53"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-20T16:02:22.558Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\docs\\auditoria\\2026-10-20-correcoes\\evidencias\\playwright-e2e-local\\e1-jornadas-E1-em-1440px-R-f5c19-de-cabeças-inteiras-1440px-\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\docs\\auditoria\\2026-10-20-correcoes\\evidencias\\playwright-e2e-local\\e1-jornadas-E1-em-1440px-R-f5c19-de-cabeças-inteiras-1440px-\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-jornadas.spec.ts",
+                        "column": 53,
+                        "line": 89
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "53a84fbeeec46da990ca-dcaa9a39b65a366af7ed",
+              "file": "e1-jornadas.spec.ts",
+              "line": 65,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "E1 em 390px",
+          "file": "e1-jornadas.spec.ts",
+          "line": 28,
+          "column": 8,
+          "specs": [
+            {
+              "title": "RF-024 cadastrar compra e venda leva ao saldo (390px)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8233,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-20T16:02:57.969Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "53a84fbeeec46da990ca-2452f4684e9f52c4d62f",
+              "file": "e1-jornadas.spec.ts",
+              "line": 31,
+              "column": 5
+            },
+            {
+              "title": "RF-030 simular recria: abre vazio e calcula a variante de cabeças inteiras (390px)",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 22093,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big')\nExpected: \u001b[32m\"R$ \u001b[7m103.30\u001b[27m7,60\"\u001b[39m\nReceived: \u001b[31m\"R$ \u001b[7m269.014.178.98\u001b[27m7,60\"\u001b[39m\nTimeout:  15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big')\u001b[22m\n\u001b[2m    32 × locator resolved to <div class=\"big pos\" aria-live=\"polite\" aria-atomic=\"true\">R$ 269.014.178.987,60</div>\u001b[22m\n\u001b[2m       - unexpected value \"R$ 269.014.178.987,60\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big')\nExpected: \u001b[32m\"R$ \u001b[7m103.30\u001b[27m7,60\"\u001b[39m\nReceived: \u001b[31m\"R$ \u001b[7m269.014.178.98\u001b[27m7,60\"\u001b[39m\nTimeout:  15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big')\u001b[22m\n\u001b[2m    32 × locator resolved to <div class=\"big pos\" aria-live=\"polite\" aria-atomic=\"true\">R$ 269.014.178.987,60</div>\u001b[22m\n\u001b[2m       - unexpected value \"R$ 269.014.178.987,60\"\u001b[22m\n\n    at C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-jornadas.spec.ts:89:53",
+                        "location": {
+                          "file": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-jornadas.spec.ts",
+                          "column": 53,
+                          "line": 89
+                        },
+                        "snippet": "  87 |       await page.getByLabel('Investimento (compra)', { exact: true }).fill('122534,8');\n  88 |       await page.getByLabel('R$/cab (venda)', { exact: true }).fill('325');\n> 89 |       await expect(resultado.locator('.hero .big')).toHaveText(RESULTADO_CABECAS_INTEIRAS);\n     |                                                     ^\n  90 |       await page.evaluate(() => document.fonts.ready);\n  91 |       await page.screenshot({ path: `${OUT}/e1-recria-${vp.nome}.png`, fullPage: true });\n  92 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-jornadas.spec.ts",
+                            "column": 53,
+                            "line": 89
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big')\nExpected: \u001b[32m\"R$ \u001b[7m103.30\u001b[27m7,60\"\u001b[39m\nReceived: \u001b[31m\"R$ \u001b[7m269.014.178.98\u001b[27m7,60\"\u001b[39m\nTimeout:  15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big')\u001b[22m\n\u001b[2m    32 × locator resolved to <div class=\"big pos\" aria-live=\"polite\" aria-atomic=\"true\">R$ 269.014.178.987,60</div>\u001b[22m\n\u001b[2m       - unexpected value \"R$ 269.014.178.987,60\"\u001b[22m\n\n\n  87 |       await page.getByLabel('Investimento (compra)', { exact: true }).fill('122534,8');\n  88 |       await page.getByLabel('R$/cab (venda)', { exact: true }).fill('325');\n> 89 |       await expect(resultado.locator('.hero .big')).toHaveText(RESULTADO_CABECAS_INTEIRAS);\n     |                                                     ^\n  90 |       await page.evaluate(() => document.fonts.ready);\n  91 |       await page.screenshot({ path: `${OUT}/e1-recria-${vp.nome}.png`, fullPage: true });\n  92 |\n    at C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-jornadas.spec.ts:89:53"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-20T16:03:07.450Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\docs\\auditoria\\2026-10-20-correcoes\\evidencias\\playwright-e2e-local\\e1-jornadas-E1-em-390px-RF-20f5b--de-cabeças-inteiras-390px-\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\docs\\auditoria\\2026-10-20-correcoes\\evidencias\\playwright-e2e-local\\e1-jornadas-E1-em-390px-RF-20f5b--de-cabeças-inteiras-390px-\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-jornadas.spec.ts",
+                        "column": 53,
+                        "line": 89
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "53a84fbeeec46da990ca-e56e75148c95750c6e03",
+              "file": "e1-jornadas.spec.ts",
+              "line": 65,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "e1-layout.spec.ts",
+      "file": "e1-layout.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "RF-024/RF-040/RNF-006 Negócios e Painel cabem em todas as larguras e os botões são contextuais",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 25841,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-20T16:03:45.639Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "09eb451b1c8dd80fe63d-597e4c160efb3603e4b6",
+          "file": "e1-layout.spec.ts",
+          "line": 41,
+          "column": 1
+        },
+        {
+          "title": "RF-024 abrir o modal pelo botão contextual já vem no tipo certo",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3046,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-20T16:04:11.559Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "09eb451b1c8dd80fe63d-f9132fd195fe07cc1033",
+          "file": "e1-layout.spec.ts",
+          "line": 119,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "e1-multiaba.spec.ts",
+      "file": "e1-multiaba.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "RF-073/RNF-017 duas abas preservam lançamentos e fila após recarregar",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 24334,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('NOVILHAS', { exact: true }).first()\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('NOVILHAS', { exact: true }).first() with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByText('NOVILHAS', { exact: true }).first()\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('NOVILHAS', { exact: true }).first()\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('NOVILHAS', { exact: true }).first() with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByText('NOVILHAS', { exact: true }).first()\u001b[22m\n\n    at C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-multiaba.spec.ts:26:69",
+                    "location": {
+                      "file": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-multiaba.spec.ts",
+                      "column": 69,
+                      "line": 26
+                    },
+                    "snippet": "  24 |   await salvar(page, 'GARROTES');\n  25 |   await salvar(outra, 'NOVILHAS');\n> 26 |   await expect(page.getByText('NOVILHAS', { exact: true }).first()).toBeVisible();\n     |                                                                     ^\n  27 |   await expect(outra.getByText('GARROTES', { exact: true }).first()).toBeVisible();\n  28 |   await page.reload();\n  29 |   await outra.reload();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-multiaba.spec.ts",
+                        "column": 69,
+                        "line": 26
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('NOVILHAS', { exact: true }).first()\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('NOVILHAS', { exact: true }).first() with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByText('NOVILHAS', { exact: true }).first()\u001b[22m\n\n\n  24 |   await salvar(page, 'GARROTES');\n  25 |   await salvar(outra, 'NOVILHAS');\n> 26 |   await expect(page.getByText('NOVILHAS', { exact: true }).first()).toBeVisible();\n     |                                                                     ^\n  27 |   await expect(outra.getByText('GARROTES', { exact: true }).first()).toBeVisible();\n  28 |   await page.reload();\n  29 |   await outra.reload();\n    at C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-multiaba.spec.ts:26:69"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-20T16:04:14.720Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\docs\\auditoria\\2026-10-20-correcoes\\evidencias\\playwright-e2e-local\\e1-multiaba-RF-073-RNF-017-9affd-ntos-e-fila-após-recarregar\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\docs\\auditoria\\2026-10-20-correcoes\\evidencias\\playwright-e2e-local\\e1-multiaba-RF-073-RNF-017-9affd-ntos-e-fila-após-recarregar\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit\\apps\\web\\e2e\\e1-multiaba.spec.ts",
+                    "column": 69,
+                    "line": 26
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "8b70d3e0f79b87779f0f-8b3a121836cd693d8834",
+          "file": "e1-multiaba.spec.ts",
+          "line": 15,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "e2-cenarios.spec.ts",
+      "file": "e2-cenarios.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "RF-035 abrir no simulador substitui as entradas pelas do cenário",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5847,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-20T16:05:16.621Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6eef24de398e3151c534-a9346c6a295ae656642b",
+          "file": "e2-cenarios.spec.ts",
+          "line": 87,
+          "column": 1
+        },
+        {
+          "title": "RF-034 a lista de cenários em 390 px oculta colunas e mantém abrir e excluir",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4985,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-20T16:05:22.565Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6eef24de398e3151c534-9b99832965b5bf4b3062",
+          "file": "e2-cenarios.spec.ts",
+          "line": 100,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "E2 em 1440px",
+          "file": "e2-cenarios.spec.ts",
+          "line": 17,
+          "column": 8,
+          "specs": [
+            {
+              "title": "RF-032/RF-033 simular, salvar, salvar outro e comparar (1440px)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 16990,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-20T16:04:45.298Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6eef24de398e3151c534-b5f4fb1b4fe1164530bb",
+              "file": "e2-cenarios.spec.ts",
+              "line": 20,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "E2 em 390px",
+          "file": "e2-cenarios.spec.ts",
+          "line": 17,
+          "column": 8,
+          "specs": [
+            {
+              "title": "RF-032/RF-033 simular, salvar, salvar outro e comparar (390px)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 13132,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-20T16:05:03.380Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6eef24de398e3151c534-52c9d6a6d74cab76dc1e",
+              "file": "e2-cenarios.spec.ts",
+              "line": 20,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-20T15:57:13.696Z",
+    "duration": 496027.024,
+    "expected": 11,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

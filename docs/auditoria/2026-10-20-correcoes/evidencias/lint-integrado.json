@@ -1,0 +1,14 @@
+{
+  "label": "lint-integrado",
+  "command": "C:\\Program Files\\nodejs\\node.exe",
+  "args": [
+    "node_modules/eslint/bin/eslint.js",
+    "."
+  ],
+  "cwd": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit",
+  "started": "2026-10-20T22:46:34.895Z",
+  "ended": "2026-10-20T22:47:38.773Z",
+  "durationSeconds": 63.878,
+  "exitCode": 0,
+  "signal": null
+}

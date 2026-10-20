@@ -1,4 +1,5 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 
 /**
@@ -12,11 +13,20 @@ function uniqueEmail(prefix: string): string {
 
 /** Simula "termos atualizados": muda a versão aceita direto no banco. */
 function definirVersaoAceita(email: string, versao: string): void {
-  execSync(`pnpm --filter @ogado/api exec tsx scripts/set-aceite-termos.ts ${email} ${versao}`, {
-    cwd: '../..',
-    stdio: 'pipe',
-    env: process.env,
-  });
+  execFileSync(
+    process.execPath,
+    [
+      fileURLToPath(new URL('../../api/node_modules/tsx/dist/cli.mjs', import.meta.url)),
+      fileURLToPath(new URL('../../api/scripts/set-aceite-termos.ts', import.meta.url)),
+      email,
+      versao,
+    ],
+    {
+      cwd: fileURLToPath(new URL('../../../', import.meta.url)),
+      stdio: 'pipe',
+      env: process.env,
+    },
+  );
 }
 
 test.describe('páginas públicas', () => {

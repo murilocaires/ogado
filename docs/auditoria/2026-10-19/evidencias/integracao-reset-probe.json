@@ -1,0 +1,35 @@
+{
+  "durationMs": 1343.0034999999998,
+  "database": "isolated PostgreSQL audit DB on loopback:55439",
+  "results": [
+    {
+      "variant": "email-change",
+      "forgotStatus": 202,
+      "changeStatus": 200,
+      "oldResetTokenStatus": 204,
+      "loginWithResetPasswordStatus": 200,
+      "tokenStillUsableAfterSecurityChange": true
+    },
+    {
+      "variant": "password-change",
+      "forgotStatus": 202,
+      "changeStatus": 204,
+      "oldResetTokenStatus": 204,
+      "loginWithResetPasswordStatus": 200,
+      "tokenStillUsableAfterSecurityChange": true
+    },
+    {
+      "variant": "concurrent-reset-issuance-single-attempt",
+      "forgotStatuses": [
+        202,
+        202
+      ],
+      "emailsSent": 2,
+      "resetStatuses": [
+        204,
+        204
+      ],
+      "multipleTokensUsable": true
+    }
+  ]
+}

@@ -19,11 +19,14 @@ export type VarianteFaturamentoBruto = 'pesoVivo' | 'carcaca';
 export interface VariantesRecria {
   readonly lotacaoInicial: VarianteLotacaoInicial;
   readonly faturamentoBruto: VarianteFaturamentoBruto;
+  /** Arredonda o total de cabeças para cima (não existe fração de cabeça). Omitido = valor exato da planilha. */
+  readonly cabecasInteiras?: boolean;
 }
 
 export const VARIANTES_PADRAO: VariantesRecria = {
   lotacaoInicial: 'fixa80',
   faturamentoBruto: 'pesoVivo',
+  cabecasInteiras: false,
 };
 
 /** Constantes "embutidas" nas fórmulas da planilha, editáveis por fazenda (RN-021). */
@@ -164,7 +167,10 @@ export function calcularRecria(
 ): ResultadoRecria {
   const p: ParametrosRecria<Decimal> = {
     arrobaVivoKg: parametroEfetivo(parametros.arrobaVivoKg, PARAMETROS_PADRAO.arrobaVivoKg),
-    arrobaCarcacaKg: parametroEfetivo(parametros.arrobaCarcacaKg, PARAMETROS_PADRAO.arrobaCarcacaKg),
+    arrobaCarcacaKg: parametroEfetivo(
+      parametros.arrobaCarcacaKg,
+      PARAMETROS_PADRAO.arrobaCarcacaKg,
+    ),
     uaKg: parametroEfetivo(parametros.uaKg, PARAMETROS_PADRAO.uaKg),
     lotacaoFixaHa: parametroEfetivo(parametros.lotacaoFixaHa, PARAMETROS_PADRAO.lotacaoFixaHa),
   };
@@ -185,9 +191,12 @@ export function calcularRecria(
     frete: paraDecimal(entrada.frete),
   };
 
-  const cabecas = dividir(i.investimento, i.rsCabCompra); // B21
+  const cabecasExatas = dividir(i.investimento, i.rsCabCompra);
+  // B21: a planilha usa o valor exato; com `cabecasInteiras` (decisão do produto) arredonda para cima.
+  const cabecas = variantes.cabecasInteiras && cabecasExatas ? cabecasExatas.ceil() : cabecasExatas;
   const lotacaoTotalUA = dividir(multiplicar(cabecas, i.pesoIni), p.uaKg); // B23
-  const divisorLotacaoInicial = variantes.lotacaoInicial === 'areaPastavel' ? i.area : p.lotacaoFixaHa;
+  const divisorLotacaoInicial =
+    variantes.lotacaoInicial === 'areaPastavel' ? i.area : p.lotacaoFixaHa;
   const lotacaoHaInicial = dividir(lotacaoTotalUA, divisorLotacaoInicial); // B24
   const pesoMedio = dividir(somar(i.pesoIni, i.pesoFin), new Decimal(2)); // B26
   const lotacaoFinal = dividir(dividir(multiplicar(cabecas, pesoMedio), p.uaKg), i.area); // B27
@@ -252,7 +261,11 @@ export function calcularRecria(
     liquidoMes,
     liquidoHa,
     gmdImplicito,
-    variantes: { lotacaoInicial: variantes.lotacaoInicial, faturamentoBruto: variantes.faturamentoBruto },
+    variantes: {
+      lotacaoInicial: variantes.lotacaoInicial,
+      faturamentoBruto: variantes.faturamentoBruto,
+      cabecasInteiras: variantes.cabecasInteiras ?? false,
+    },
     parametros: p,
   };
 }

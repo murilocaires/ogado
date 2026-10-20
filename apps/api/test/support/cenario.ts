@@ -1,0 +1,60 @@
+import { randomUUID } from 'node:crypto';
+
+/** Fixture literal independente (ouro da planilha). Estes testes verificam transporte/persistência. */
+export function cenarioFixture(over: Record<string, unknown> = {}) {
+  return {
+    id: randomUUID(),
+    nome: 'Cenário 1',
+    criadoEm: '2026-10-18T12:00:00.000Z',
+    entradas: {
+      area: '102',
+      dias: '270',
+      investimento: '122534,8',
+      rsCabCompra: '2050',
+      pesoIni: '188',
+      pesoFin: '420',
+      precoVenda: '325',
+      consumoPct: '0,3',
+      precoSuplKg: '2',
+      rendCarcaca: '52',
+      imposto: '1,5',
+      sanidadeCabMes: '2,5',
+      funcionario: '9000',
+      frete: '3000',
+    },
+    variantes: {
+      lotacaoInicial: 'fixa80',
+      faturamentoBruto: 'pesoVivo',
+      cabecasInteiras: false,
+      schemaVersao: 1,
+      calculoVersao: 'recria-1',
+    },
+    parametros: { arrobaVivoKg: '30', arrobaCarcacaKg: '15', uaKg: '450', lotacaoFixaHa: '80' },
+    resultado: {
+      cabecas: '59.773073170731706',
+      lotacaoTotalUA: '24.9718616802168',
+      lotacaoHaInicial: '0.31214827100271003',
+      pesoMedio: '304',
+      lotacaoFinal: '0.39588266326584837',
+      arrobasProduzidas: '836.8230243902439',
+      consumoKgDia: '0.912',
+      arrobasCarcacaCab: '14.56',
+      vendaCab: '4732',
+      custoTotal: '47024.62995512195',
+      faturamentoBruto: '271967.48292682925',
+      faturamentoLiquido: '102408.0529717073',
+      totalEmCaixa: '224942.8529717073',
+      liquidoMes: '11378.672552411921',
+      liquidoHa: '1004.0005193304637',
+      gmdImplicito: '0.8592592592592593',
+      custos: [
+        { id: 'supl', nome: 'Suplemento', valor: '29437.04307512195' },
+        { id: 'san', nome: 'Sanidade', valor: '1344.8941463414633' },
+        { id: 'imp', nome: 'Imposto', valor: '4242.692733658537' },
+        { id: 'frete', nome: 'Transporte (frete)', valor: '3000' },
+        { id: 'func', nome: 'Funcionário', valor: '9000' },
+      ],
+    },
+    ...over,
+  };
+}

@@ -1,4 +1,5 @@
 import { createPrisma } from '@ogado/db';
+import { requireTestDatabaseUrl } from '../../../packages/db/src/test-database';
 
 /**
  * Só para os e2e do web (que não importam o banco): troca a versão dos termos aceita por uma conta
@@ -10,8 +11,7 @@ const [email, versao] = process.argv.slice(2);
 if (!email || !versao || !email.endsWith(DOMAIN)) {
   throw new Error(`Uso: set-aceite-termos <email${DOMAIN}> <versao>`);
 }
-const url =
-  process.env['DATABASE_URL'] ?? 'postgresql://ogado:ogado_dev@localhost:5432/ogado?schema=public';
+const url = requireTestDatabaseUrl(process.env);
 
 const prisma = createPrisma(url);
 try {

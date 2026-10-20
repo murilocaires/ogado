@@ -2,6 +2,8 @@
 
 > Rascunho inicial para ser **refinado** pelo `spec-architect` com `grill-with-docs`. Requisitos completos em `docs/negocio/02-requisitos.md`.
 
+> **Reconciliação de 20/10/2026:** prevalecem as decisões posteriores abaixo sobre as propostas históricas deste rascunho. RF-076 segue a [sincronização automática](../sincronizacao-automatica.md) já implementada em `d36a844`, com histórico antes da substituição; não exige diálogo de conflito. ADR-0014 define simulador em branco e lotação pela área pastável. ADR-0015 preserva a variante de cabeças inteiras já usada pela interface e o replay fracionário dos legados. ADR-0016 implementa IndexedDB nativo, outbox transacional e pull paginado. Primeiros passos continuam opcionais/adiados pela Q-D, não uma funcionalidade entregue.
+
 ## Problema
 O pecuarista calcula compra, venda e recria em planilhas frágeis. Precisa de um lugar confiável, no navegador (depois no celular), com os mesmos cálculos do curso, histórico e sem risco de quebrar fórmulas.
 
@@ -31,13 +33,13 @@ A versão web é um **PWA instalável** e **offline-first**: instala no desktop/
 - Entidades nascem com `id` UUID do cliente, `version`, `updatedAt`, `deletedAt`; mutações idempotentes (`mutationId`); pull por cursor.
 - SW só cacheia shell/estáticos; dados autenticados só no IndexedDB por usuário+fazenda; logout apaga.
 - Telas usam interface de repositório (API em T-06/T-07, local-first em T-14).
-- Histórias: (7) lançar uma venda no curral sem sinal e vê-la subir depois; (8) instalar o app no celular como se fosse um aplicativo; (9) ser avisado se duas edições conflitarem.
+- Histórias: (7) lançar uma venda no curral sem sinal e vê-la subir depois; (8) instalar o app no celular como se fosse um aplicativo; (9) preservar campos independentes de duas edições e arquivar versões concorrentes antes da resolução automática.
 
 ## Fora de escopo (v1)
 Cria completa, Metas/Fechamento da Recria, integração Google Sheets, app **nativo** móvel, equipe multiusuário, edição colaborativa em tempo real, push notifications, criptografia do banco local.
 
 ## Perguntas em aberto (levar ao grill)
-**Resolvidas no grill (2026-10-17):** offline/PWA e conflito = perguntar sempre, login exige internet (ADR-0007); 80 ha e área pastável (ADR-0004); variantes de fórmula escolhidas na fazenda (ADR-0008); bruto padrão = peso vivo; **1 fazenda por conta** (várias = v1.1). Ainda abertas: 3, 4 e 5 abaixo.
+**Histórico do grill (2026-10-17):** login exige internet (ADR-0007); 80 ha e área pastável (ADR-0004); bruto padrão = peso vivo; **1 fazenda por conta** (várias = v1.1). A escolha manual de conflitos foi substituída pela sincronização automática (`d36a844`); variantes/configuração visíveis seguem ADR-0014/0015. Ainda abertas: 3, 4 e 5 abaixo.
 1. Mais de uma fazenda por conta? (v1 propõe 1.)
 2. Opção "pela área pastável" (PA-01): padrão desligada — confirmar com o pecuarista.
 3. Provedor de hospedagem e CI.

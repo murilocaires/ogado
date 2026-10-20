@@ -1,0 +1,16 @@
+{
+  "label": "lint",
+  "command": "node",
+  "args": [
+    "node_modules/eslint/bin/eslint.js",
+    "apps",
+    "packages",
+    "scripts",
+    "eslint.config.js"
+  ],
+  "started": "2026-10-20T02:09:20.890Z",
+  "finished": "2026-10-20T02:09:59.627Z",
+  "durationSeconds": 38.737,
+  "exitCode": 0,
+  "signal": null
+}

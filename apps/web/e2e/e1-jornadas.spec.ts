@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { preencherPlanilha } from './planilha';
+import { preencherPlanilha, RESULTADO_CABECAS_INTEIRAS } from './planilha';
 
 /**
  * E1 (produto navegável): jornadas SEM API e SEM login, dados no navegador.
@@ -12,7 +12,11 @@ const viewports = [
   { nome: '390', width: 390, height: 844 },
 ];
 
-async function lancar(page: Page, tipo: 'Compra' | 'Venda', v: { qtd: string; peso: string; preco: string }) {
+async function lancar(
+  page: Page,
+  tipo: 'Compra' | 'Venda',
+  v: { qtd: string; peso: string; preco: string },
+) {
   const nome = tipo === 'Compra' ? 'Nova compra' : 'Nova venda';
   await page.getByRole('button', { name: nome }).first().click();
   const modal = page.getByRole('dialog', { name: nome });
@@ -62,13 +66,13 @@ for (const vp of viewports) {
       expect(erros).toEqual([]);
     });
 
-    test(`RF-030 simular recria: abre vazio, digita a planilha e chega ao valor de ouro (${vp.nome}px)`, async ({
+    test(`RF-030 simular recria: abre vazio e calcula a variante de cabeças inteiras (${vp.nome}px)`, async ({
       page,
     }) => {
       await page.goto('/recria');
       const resultado = page.getByRole('region', { name: 'Resultado da recria' });
       // ADR-0014: o simulador novo abre em branco, sem padrões nem seletor de lotação.
-      await expect(page.getByLabel('Investimento', { exact: true })).toHaveValue('');
+      await expect(page.getByLabel('Investimento (compra)', { exact: true })).toHaveValue('');
       await expect(resultado.locator('.hero .big')).toHaveText('—');
       await expect(page.getByRole('button', { name: 'Restaurar padrões' })).toHaveCount(0);
       await expect(page.getByRole('combobox')).toHaveCount(0);
@@ -76,22 +80,32 @@ for (const vp of viewports) {
       await page.screenshot({ path: `${OUT}/e1-recria-vazio-${vp.nome}.png`, fullPage: true });
 
       await preencherPlanilha(page);
-      await expect(resultado.locator('.hero .big')).toHaveText('R$ 102.408,05');
+      await expect(resultado.locator('.hero .big')).toHaveText(RESULTADO_CABECAS_INTEIRAS);
+      // RN-009: 60 cabeças × 188 kg / 450 = 25,0666... UA; divisor vem da área digitada.
+      await expect(page.getByText('0,25 UA/ha', { exact: true })).toBeVisible();
+      await page.getByLabel('Área Pastável', { exact: true }).focus();
+      await page.getByLabel('Área Pastável', { exact: true }).fill('51');
+      await expect(page.getByText('0,49 UA/ha', { exact: true })).toBeVisible();
+      await page.getByLabel('Área Pastável', { exact: true }).fill('102');
+      await expect(page.getByText('0,25 UA/ha', { exact: true })).toBeVisible();
 
-      await page.getByLabel('Preço de venda', { exact: true }).fill('330');
-      await expect(resultado.locator('.hero .big')).not.toHaveText('R$ 102.408,05');
+      // O foco remove zeros opcionais da máscara; aguardar essa edição antes de selecionar tudo.
+      await page.getByLabel('R$/cab (venda)', { exact: true }).focus();
+      await page.getByLabel('R$/cab (venda)', { exact: true }).fill('330');
+      await expect(resultado.locator('.hero .big')).not.toHaveText(RESULTADO_CABECAS_INTEIRAS);
 
-      await page.getByLabel('Investimento', { exact: true }).fill('');
+      await page.getByLabel('Investimento (compra)', { exact: true }).focus();
+      await page.getByLabel('Investimento (compra)', { exact: true }).fill('');
       await expect(resultado.locator('.hero .big')).toHaveText('—');
 
-      await page.getByLabel('Investimento', { exact: true }).fill('122534,8');
-      await page.getByLabel('Preço de venda', { exact: true }).fill('325');
-      await expect(resultado.locator('.hero .big')).toHaveText('R$ 102.408,05');
+      await page.getByLabel('Investimento (compra)', { exact: true }).fill('122534,8');
+      await page.getByLabel('R$/cab (venda)', { exact: true }).focus();
+      await page.getByLabel('R$/cab (venda)', { exact: true }).fill('325');
+      await expect(resultado.locator('.hero .big')).toHaveText(RESULTADO_CABECAS_INTEIRAS);
       await page.evaluate(() => document.fonts.ready);
       await page.screenshot({ path: `${OUT}/e1-recria-${vp.nome}.png`, fullPage: true });
 
-      await page.getByRole('button', { name: 'Limpar campos' }).click();
-      await page.getByRole('alertdialog').getByRole('button', { name: 'Limpar' }).click();
+      await page.getByRole('button', { name: 'Limpar Dados do lote', exact: true }).click();
       await expect(resultado.locator('.hero .big')).toHaveText('—');
     });
   });
@@ -105,7 +119,10 @@ test('RF-053 a navegação lateral some e a barra inferior aparece em 390 px', a
   const inferior = navs.last();
   await expect(lateral).toBeHidden();
   await expect(inferior).toBeVisible();
-  await expect(inferior.getByRole('link', { name: 'Painel' })).toHaveAttribute('aria-current', 'page');
+  await expect(inferior.getByRole('link', { name: 'Painel' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
   await expect(inferior.getByRole('link')).toHaveCount(4); // Painel, Negócios, Recria, Conta
 });
 

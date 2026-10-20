@@ -1,0 +1,16 @@
+{
+  "label": "dependencias-install",
+  "command": "node",
+  "args": [
+    "C:/Users/Murilo Caires/AppData/Roaming/npm/node_modules/pnpm/bin/pnpm.mjs",
+    "--pm-on-fail=ignore",
+    "install",
+    "--ignore-scripts"
+  ],
+  "cwd": "C:\\Users\\Murilo Caires\\Desktop\\Criando\\ogado\\ogado-dev-kit\\ogado-dev-kit",
+  "started": "2026-10-20T10:08:52.982Z",
+  "ended": "2026-10-20T10:10:47.885Z",
+  "durationSeconds": 114.903,
+  "exitCode": 0,
+  "signal": null
+}

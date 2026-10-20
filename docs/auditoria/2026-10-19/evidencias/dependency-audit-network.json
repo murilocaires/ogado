@@ -1,0 +1,15 @@
+{
+  "label": "dependency-audit-network",
+  "command": "node",
+  "args": [
+    "C:/Users/Murilo Caires/AppData/Roaming/npm/node_modules/pnpm/bin/pnpm.mjs",
+    "--pm-on-fail=ignore",
+    "audit",
+    "--json"
+  ],
+  "started": "2026-10-20T02:13:30.911Z",
+  "finished": "2026-10-20T02:13:38.052Z",
+  "durationSeconds": 7.142,
+  "exitCode": 1,
+  "signal": null
+}

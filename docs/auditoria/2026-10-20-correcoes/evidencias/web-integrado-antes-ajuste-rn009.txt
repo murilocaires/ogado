@@ -1,0 +1,60 @@
+
+ RUN  v5.0.5 C:/Users/Murilo Caires/Desktop/Criando/ogado/ogado-dev-kit/ogado-dev-kit/apps/web
+
+ ❯ lib/repo/local-repo.test.ts (20 tests | 2 failed) 112ms
+   ❯ RF-032 cenários no repositório (snapshot, RN-023) (5)
+     × RN-023 guarda resultado do domínio como string decimal sem arredondar (ADR-0003) 21ms
+     × RN-023 mudar a recria depois não altera o cenário salvo 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/repo/local-repo.test.ts > RF-032 cenários no repositório (snapshot, RN-023) > RN-023 guarda resultado do domínio como string decimal sem arredondar (ADR-0003)
+AssertionError: expected { Object (lotacaoInicial, faturamentoBruto, ...) } to deeply equal { lotacaoInicial: 'fixa80', …(4) }
+
+- Expected
++ Received
+
+  {
+    "cabecasInteiras": true,
+    "calculoVersao": "recria-2",
+    "faturamentoBruto": "pesoVivo",
+-   "lotacaoInicial": "fixa80",
++   "lotacaoInicial": "areaPastavel",
+    "schemaVersao": 1,
+  }
+
+ ❯ lib/repo/local-repo.test.ts:208:29
+    206|     expect(salvo.resultado.faturamentoLiquido).toMatch(/^-?\d+(\.\d+)?…
+    207|     expect(salvo.resultado.faturamentoLiquido?.startsWith('103307.6'))…
+    208|     expect(salvo.variantes).toEqual({
+       |                             ^
+    209|       lotacaoInicial: 'fixa80',
+    210|       faturamentoBruto: 'pesoVivo',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  lib/repo/local-repo.test.ts > RF-032 cenários no repositório (snapshot, RN-023) > RN-023 mudar a recria depois não altera o cenário salvo
+AssertionError: expected 'areaPastavel' to be 'fixa80' // Object.is equality
+
+Expected: "fixa80"
+Received: "areaPastavel"
+
+ ❯ lib/repo/local-repo.test.ts:231:48
+    229|     const guardado = snap.status === 'pronto' ? snap.cenarios[0] : und…
+    230|     expect(guardado?.form.precoVenda).toBe('325');
+    231|     expect(guardado?.variantes.lotacaoInicial).toBe('fixa80');
+       |                                                ^
+    232|     expect(guardado?.resultado.faturamentoLiquido).toBe(salvo.resultad…
+    233|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 33 passed (34)
+      Tests  2 failed | 440 passed (442)
+   Start at  19:47:55
+   Duration  216.01s (tests 38%, environment 22%, setup 22%, import 15%, transform 2%)
+
+    Isolate  34 workers spawned · ~1.75s startup each (spawn + environment, per file)
+             at least ~57.77s faster with isolate: false — reuses workers across files instead of one per file
+
