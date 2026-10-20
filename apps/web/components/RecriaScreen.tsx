@@ -403,34 +403,6 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
                       </td>
                       <td>{brl(recriaInvestimento(recria.form.investimento))}</td>
                     </tr>
-                    <tr className="tot">
-                      <td>
-                        Faturamento líquido
-                        <InfoPopover k="recLiq" />
-                      </td>
-                      <td>{brl(r.faturamentoLiquido)}</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        Total em caixa
-                        <InfoPopover k="caixa" />
-                      </td>
-                      <td>{brl(r.totalEmCaixa)}</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        R$/mês
-                        <InfoPopover k="mes" />
-                      </td>
-                      <td>{brl(r.liquidoMes)}</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        R$/ha
-                        <InfoPopover k="ha" />
-                      </td>
-                      <td>{brl(r.liquidoHa)}</td>
-                    </tr>
                   </tbody>
                 </table>
               </section>
