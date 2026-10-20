@@ -1,14 +1,15 @@
 // Motor de sincronização (E3, robusto na E5): o aparelho continua sendo a fonte da tela (otimista); a
 // nuvem é reconciliada por id. Uma entidade está "limpa" quando `version` local == última versão
 // sincronizada (`versoes[id]`). Limpa + nuvem mais nova => adota a nuvem. Suja => envia com a
-// versão-base. Conflito (outro aparelho mexeu) NUNCA é resolvido em silêncio (RF-076): fica
-// registrado no estado do aparelho até o usuário decidir. Item recusado por validação (RF-079) idem.
+// versao-base. Alteracoes concorrentes sao combinadas automaticamente, com historico no servidor.
+// Recusas por validacao continuam exigindo correcao dos dados.
 // Reenviar é seguro: POST é idempotente por id e, se o servidor já gravou o mesmo conteúdo (rede
 // cortada no meio do envio), a rodada seguinte reconhece e adota sem duplicar nem avisar (RNF-017).
 import {
+  historicoSyncCreateSchema,
+  type HistoricoSyncCreate,
   cenarioSchema,
   loteSchema,
-  recriaEntradaSchema,
   type CenarioDto,
   type LoteDto,
 } from '@ogado/contracts';
@@ -17,18 +18,11 @@ import type {
   DadosCompletos,
   EntityMeta,
   LoteEntity,
-  LoteSalvar,
   SyncableRepo,
 } from '../repo/types';
 import type { DadosClient, DadosFalha, DadosResult } from './data-client';
-import {
-  cenarioDeDto,
-  cenarioParaCriar,
-  loteDeDto,
-  loteParaCriar,
-  lotePatchDe,
-  recriaDeDto,
-} from './mappers';
+import { cenarioDeDto, cenarioParaCriar, loteDeDto, loteParaCriar, lotePatchDe } from './mappers';
+import { mesclarLote, mesclarCenario } from './mesclar';
 import { MOTIVO_CONTRATO, motivoDeValidacao } from './motivos';
 
 export type TipoEntidade = 'lote' | 'cenario' | 'recria';
@@ -64,6 +58,9 @@ export interface Rejeitado {
 export interface EstadoSync {
   usuarioId: string;
   versoes: Record<string, number>;
+  /** DTO da ultima versao confirmada, para comparar campo a campo. */
+  bases?: Record<string, unknown>;
+  historicoPendente?: HistoricoSyncCreate[];
   conflitos?: Conflito[];
   rejeitados?: Rejeitado[];
 }
@@ -140,6 +137,7 @@ interface Adaptador<E extends EntityMeta, D extends DtoBase> {
   /** Mesmo conteúdo e mesmo estado de exclusão (o que já está na nuvem é o que o aparelho tem). */
   igual(e: E, d: D): boolean;
   aplicar(es: E[]): void;
+  mesclar(local: E, servidor: E, base: E | null): E;
 }
 
 export interface DepsSync {
@@ -171,9 +169,14 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
   // Outra conta deixou dados neste aparelho: não mistura (RF-078); o logout limpa.
   if (lido && lido.usuarioId !== usuarioId) return 'erro';
   const versoes: Record<string, number> = { ...(lido?.versoes ?? {}) };
-  const conflitos = new Map<string, Conflito>(
-    (lido?.conflitos ?? []).filter((c) => c.tipo !== 'recria').map((c) => [c.id, c]),
-  );
+  const conflitos = new Map<string, Conflito>();
+  const bases: Record<string, unknown> = { ...(lido?.bases ?? {}) };
+  let historicoPendente = (
+    Array.isArray(lido?.historicoPendente) ? lido.historicoPendente : []
+  ).flatMap((h) => {
+    const parsed = historicoSyncCreateSchema.safeParse(h);
+    return parsed.success ? [parsed.data] : [];
+  });
   const rejeitados = new Map<string, Rejeitado>(
     (lido?.rejeitados ?? []).filter((r) => r.tipo !== 'recria').map((r) => [r.id, r]),
   );
@@ -190,13 +193,11 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
     estado.gravar({
       usuarioId,
       versoes,
+      bases,
+      historicoPendente,
       conflitos: [...conflitos.values()],
       rejeitados: [...rejeitados.values()],
     });
-  };
-
-  const registrarConflito = (c: Omit<Conflito, 'detectadoEm'>): void => {
-    conflitos.set(c.id, { ...c, detectadoEm: agora().toISOString() });
   };
 
   const rejeitar = (tipo: TipoEntidade, e: EntityMeta, falha: DadosFalha): void => {
@@ -232,32 +233,45 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
     versoes[id] = versao;
     conflitos.delete(id);
     rejeitados.delete(id);
+    historicoPendente = historicoPendente.filter((h) => h.entidadeId !== id);
   };
 
-  /**
-   * Aplica ao repositório o que veio da nuvem, sem atropelar o que o usuário editou enquanto o envio
-   * estava em curso: se a versão local mudou desde a leitura, mantém o conteúdo do aparelho e só
-   * garante que continue "sujo" (será enviado na próxima rodada).
-   */
-  function aplicarSemAtropelar<E extends EntityMeta>(
-    candidatos: { entidade: E; lida: number | null }[],
-    atuais: () => E[],
-    aplicar: (es: E[]) => void,
-  ): void {
-    if (candidatos.length === 0) return;
-    const hoje = new Map(atuais().map((e) => [e.id, e]));
-    const saida: E[] = [];
-    for (const { entidade, lida } of candidatos) {
-      const local = hoje.get(entidade.id);
-      if (!local || local.version === lida) {
-        saida.push(entidade);
-        continue;
-      }
-      const base = versoes[entidade.id];
-      const versao = local.version === base ? local.version + 1 : local.version;
-      if (versao !== local.version) saida.push({ ...local, version: versao });
+  async function arquivar<E extends EntityMeta, D extends DtoBase>(
+    a: Adaptador<E, D>,
+    local: E,
+    remoto: D,
+    resultado: E,
+    semBase: boolean,
+  ): Promise<void> {
+    const dados = {
+      entidadeId: local.id,
+      tipo: a.tipo,
+      motivo: remoto.deletedAt || local.deletedAt ? 'exclusao' : semBase ? 'sem-base' : 'mesclagem',
+      local: JSON.parse(JSON.stringify(local)),
+      servidor: JSON.parse(JSON.stringify(a.daDto(remoto))),
+      resultado: JSON.parse(JSON.stringify(resultado)),
+    };
+    const existente = historicoPendente.find(
+      (h) =>
+        JSON.stringify([h.entidadeId, h.tipo, h.motivo, h.local, h.servidor, h.resultado]) ===
+        JSON.stringify([
+          dados.entidadeId,
+          dados.tipo,
+          dados.motivo,
+          dados.local,
+          dados.servidor,
+          dados.resultado,
+        ]),
+    );
+    const evento =
+      existente ?? historicoSyncCreateSchema.parse({ id: crypto.randomUUID(), ...dados });
+    if (!existente) historicoPendente.push(evento);
+    salvarEstado();
+    const res = await api.arquivarHistorico(evento);
+    if (!res.ok) {
+      checar(res);
+      throw new Interrompe('erro');
     }
-    if (saida.length > 0) aplicar(saida);
   }
 
   async function reconciliar<E extends EntityMeta, D extends DtoBase>(
@@ -266,98 +280,125 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
     const remoto = await a.listar();
     if (!remoto.ok) return checar(remoto);
     const locais = new Map(a.locais().map((e) => [e.id, e]));
-    const candidatos: { entidade: E; lida: number | null }[] = [];
-    const adotar = (d: D, lida: number | null): void => {
+    const candidatos: { entidade: E; lida: E | null }[] = [];
+    const adotar = (d: D, lida: E | null): void => {
       const e = a.daDto(d);
-      if (!e) return;
+      if (!e) throw new Interrompe('erro');
       candidatos.push({ entidade: e, lida });
+      bases[d.id] = d;
       sincronizado(d.id, d.version);
     };
     const lidos = new Set<string>();
-
     try {
-      for (const r of remoto.data) {
-        lidos.add(r.id);
-        const l = locais.get(r.id);
-        const base = versoes[r.id];
-        if (!l) {
-          adotar(r, null);
+      for (const inicial of remoto.data) {
+        lidos.add(inicial.id);
+        const local = locais.get(inicial.id);
+        const versaoBase = versoes[inicial.id];
+        if (!local) {
+          adotar(inicial, null);
           continue;
         }
-        if (base !== undefined && l.version === base) {
-          if (r.version > base) adotar(r, l.version);
-          continue;
-        }
-        // Suja: o aparelho tem algo que a nuvem não confirmou.
-        if (a.igual(l, r)) {
-          adotar(r, l.version); // já está lá (envio anterior cortado antes da resposta)
-          continue;
-        }
-        if (conflitos.has(l.id) || aguardandoCorrecao(l)) continue;
-        const acao: AcaoLocal = l.deletedAt ? 'excluir' : 'editar';
-        if (r.deletedAt !== null) {
-          if (l.deletedAt !== null) adotar(r, l.version);
-          else {
-            registrarConflito({
-              tipo: a.tipo,
-              id: l.id,
-              motivo: 'excluido-no-servidor',
-              acao,
-              versaoLocal: l.version,
-              atual: r,
-            });
+        if (versaoBase !== undefined && local.version === versaoBase) {
+          if (inicial.version > versaoBase) adotar(inicial, local);
+          else if (inicial.version === versaoBase) {
+            // Aprende a base dos aparelhos antigos sem notificar edicao e agendar outra rodada.
+            bases[inicial.id] = inicial;
+            sincronizado(inicial.id, inicial.version);
           }
           continue;
         }
-        if (base !== undefined && r.version !== base) {
-          registrarConflito({
-            tipo: a.tipo,
-            id: l.id,
-            motivo: 'alterado',
-            acao,
-            versaoLocal: l.version,
-            atual: r,
-          });
-          continue;
-        }
-        const res = l.deletedAt
-          ? await a.excluir(l, base ?? r.version)
-          : await a.alterar(l, base ?? r.version);
-        if (res.ok) adotar(res.data, l.version);
-        else if (res.kind === 'conflito') {
-          const atual = a.dtoDe(res.atual);
-          if (atual && a.igual(l, atual)) adotar(atual, l.version);
-          else {
-            registrarConflito({
-              tipo: a.tipo,
-              id: l.id,
-              motivo: atual?.deletedAt ? 'excluido-no-servidor' : 'alterado',
-              acao,
-              versaoLocal: l.version,
-              atual: atual ?? res.atual,
-            });
+        if (aguardandoCorrecao(local)) continue;
+        const dtoBase = a.dtoDe(bases[local.id]);
+        const base = dtoBase && dtoBase.version === versaoBase ? a.daDto(dtoBase) : null;
+        let atual = inicial;
+        let concluido = false;
+        for (let tentativa = 0; tentativa < 5; tentativa++) {
+          if (a.igual(local, atual)) {
+            adotar(atual, local);
+            concluido = true;
+            break;
           }
-        } else falhaDeEscrita(a.tipo, l, res);
+          const entidadeRemota = a.daDto(atual);
+          if (!entidadeRemota) throw new Interrompe('erro');
+          // Exclusao sempre prevalece; uma edicao antiga nunca recria um registro.
+          if (atual.deletedAt !== null) {
+            await arquivar(a, local, atual, entidadeRemota, !base);
+            adotar(atual, local);
+            concluido = true;
+            break;
+          }
+          const combinada = a.mesclar(local, entidadeRemota, base);
+          if (a.igual(combinada, atual)) {
+            adotar(atual, local);
+            concluido = true;
+            break;
+          }
+          if (atual.version !== versaoBase) await arquivar(a, local, atual, combinada, !base);
+          const res = combinada.deletedAt
+            ? await a.excluir(combinada, atual.version)
+            : await a.alterar(combinada, atual.version);
+          if (res.ok) {
+            adotar(res.data, local);
+            concluido = true;
+            break;
+          }
+          if (res.kind === 'conflito') {
+            const novo = a.dtoDe(res.atual);
+            if (!novo) throw new Interrompe('erro');
+            atual = novo;
+          } else if (res.kind === 'nao-encontrado') {
+            // A exclusao pode ter ocorrido entre GET e PATCH; busca a lapide.
+            const lista = await a.listar();
+            if (!lista.ok) {
+              checar(lista);
+              throw new Interrompe('erro');
+            }
+            const novo = lista.data.find((d) => d.id === local.id);
+            if (!novo) throw new Interrompe('erro');
+            atual = novo;
+          } else {
+            falhaDeEscrita(a.tipo, local, res);
+            concluido = true;
+            break;
+          }
+        }
+        if (!concluido) throw new Interrompe('erro');
       }
-
-      for (const l of locais.values()) {
-        if (lidos.has(l.id)) continue;
-        if (l.deletedAt !== null) {
-          // Criado e excluído antes de subir: não há nada a enviar.
-          sincronizado(l.id, l.version);
+      for (const local of locais.values()) {
+        if (lidos.has(local.id)) continue;
+        if (local.deletedAt !== null) {
+          sincronizado(local.id, local.version);
           continue;
         }
-        if (aguardandoCorrecao(l)) continue;
-        const res = await a.criar(l);
-        if (res.ok) adotar(res.data, l.version);
-        else falhaDeEscrita(a.tipo, l, res);
+        if (aguardandoCorrecao(local)) continue;
+        const res = await a.criar(local);
+        if (res.ok) {
+          // POST idempotente pode devolver um registro criado por um envio anterior.
+          // Nao descartar edicoes posteriores que ocorreram antes da resposta daquele envio.
+          if (a.igual(local, res.data)) adotar(res.data, local);
+          else {
+            bases[res.data.id] ??= res.data;
+            versoes[res.data.id] = res.data.version;
+            const nova = Math.max(local.version, res.data.version) + 1;
+            a.aplicar([{ ...local, version: nova }]);
+            throw new Interrompe('erro');
+          }
+        } else falhaDeEscrita(a.tipo, local, res);
       }
     } finally {
-      aplicarSemAtropelar(
-        candidatos,
-        () => a.locais(),
-        (es) => a.aplicar(es),
-      );
+      const atuais = new Map(a.locais().map((e) => [e.id, e]));
+      const saida: E[] = [];
+      for (const { entidade, lida } of candidatos) {
+        const hoje = atuais.get(entidade.id);
+        if (!hoje || hoje.version === lida?.version) {
+          saida.push(entidade);
+          continue;
+        }
+        // Mescla tambem edicoes feitas enquanto a requisicao estava em andamento.
+        const proxima = entidade.deletedAt ? hoje : a.mesclar(hoje, entidade, lida);
+        saida.push({ ...proxima, version: Math.max(hoje.version, entidade.version) + 1 });
+      }
+      if (saida.length) a.aplicar(saida);
     }
   }
 
@@ -375,6 +416,7 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
     excluir: (l, versao) => api.excluirLote(l.id, versao),
     igual: igualLote,
     aplicar: (es) => repo.aplicar({ lotes: es }),
+    mesclar: mesclarLote,
   };
 
   const cenarios: Adaptador<CenarioEntity, CenarioDto> = {
@@ -391,9 +433,18 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
     excluir: (c, versao) => api.excluirCenario(c.id, versao),
     igual: igualCenario,
     aplicar: (es) => repo.aplicar({ cenarios: es }),
+    mesclar: mesclarCenario,
   };
 
   try {
+    // Um arquivo pendente continua necessario mesmo se os valores convergirem em outro aparelho.
+    for (const evento of historicoPendente) {
+      const res = await api.arquivarHistorico(evento);
+      if (!res.ok) {
+        checar(res);
+        throw new Interrompe('erro');
+      }
+    }
     await reconciliar(lotes);
     await reconciliar(cenarios);
     salvarEstado();
@@ -403,109 +454,4 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
     if (e instanceof Interrompe) return e.resultado;
     return 'erro';
   }
-}
-
-/* ---------- Decisão do usuário (RF-076) ---------- */
-
-export type EscolhaConflito = 'meu' | 'servidor';
-
-/**
- * Aplica a decisão do usuário sobre um conflito registrado. Não fala com a rede: "manter o meu"
- * só troca a versão-base pela do servidor (a próxima rodada reenvia por cima, já ciente); "usar o
- * do servidor" adota o `atual`. Retorna `false` se o conflito não existe mais.
- */
-export function resolverConflito(
-  deps: Pick<DepsSync, 'repo' | 'estado' | 'usuarioId'> & { id: string; escolha: EscolhaConflito },
-): boolean {
-  const { repo, estado, usuarioId, id, escolha } = deps;
-  const lido = estado.ler();
-  if (!lido || lido.usuarioId !== usuarioId) return false;
-  const conflito = (lido.conflitos ?? []).find((c) => c.id === id);
-  if (!conflito) return false;
-  const versoes = { ...lido.versoes };
-  const dados = repo.exportar();
-
-  const adotarServidor = (): void => {
-    if (conflito.tipo === 'lote') {
-      const dto = loteSchema.safeParse(conflito.atual);
-      if (!dto.success) return;
-      repo.aplicar({ lotes: [loteDeDto(dto.data)] });
-      versoes[id] = dto.data.version;
-    } else if (conflito.tipo === 'cenario') {
-      const dto = cenarioSchema.safeParse(conflito.atual);
-      const e = dto.success ? cenarioDeDto(dto.data) : null;
-      if (!dto.success || !e) return;
-      repo.aplicar({ cenarios: [e] });
-      versoes[id] = dto.data.version;
-    } else {
-      const dto = recriaEntradaSchema.safeParse(conflito.atual);
-      const e = dto.success ? recriaDeDto(dto.data) : null;
-      if (!dto.success || !e) return;
-      repo.aplicar({ recria: e });
-      versoes[dto.data.id] = dto.data.version;
-    }
-  };
-
-  if (escolha === 'servidor') {
-    adotarServidor();
-  } else if (conflito.motivo === 'excluido-no-servidor') {
-    // O servidor não revive um registro excluído: o aparelho cria uma cópia nova com o conteúdo dele.
-    if (conflito.tipo === 'lote') {
-      const l = dados.lotes.find((x) => x.id === id);
-      if (l) {
-        const conteudo: Partial<LoteEntity> = { ...l };
-        delete conteudo.id;
-        delete conteudo.version;
-        delete conteudo.updatedAt;
-        delete conteudo.deletedAt;
-        adotarServidor();
-        if (l.deletedAt === null) repo.salvarLote(conteudo as LoteSalvar);
-      }
-    } else if (conflito.tipo === 'cenario') {
-      const c = dados.cenarios.find((x) => x.id === id);
-      if (c) {
-        adotarServidor();
-        if (c.deletedAt === null) {
-          repo.salvarCenario({
-            nome: c.nome,
-            form: c.form,
-            variantes: c.variantes,
-            parametros: c.parametros,
-            resultado: c.resultado,
-          });
-        }
-      }
-    }
-  } else {
-    // Manter o meu: a base passa a ser a versão do servidor e a entidade local ganha uma versão
-    // própria, diferente dela, para continuar "suja" e subir na próxima rodada.
-    const dto = conflito.atual as { id?: unknown; version?: unknown } | null;
-    if (dto && typeof dto.version === 'number') {
-      const servidor = dto.version;
-      const proxima = (v: number): number => Math.max(v, servidor) + 1;
-      if (conflito.tipo === 'lote') {
-        const l = dados.lotes.find((x) => x.id === id);
-        if (l) repo.aplicar({ lotes: [{ ...l, version: proxima(l.version) }] });
-        versoes[id] = servidor;
-      } else if (conflito.tipo === 'cenario') {
-        const c = dados.cenarios.find((x) => x.id === id);
-        if (c) repo.aplicar({ cenarios: [{ ...c, version: proxima(c.version) }] });
-        versoes[id] = servidor;
-      } else {
-        const novoId = typeof dto.id === 'string' ? dto.id : dados.recria.id;
-        repo.aplicar({
-          recria: { ...dados.recria, id: novoId, version: proxima(dados.recria.version) },
-        });
-        versoes[novoId] = servidor;
-      }
-    }
-  }
-
-  estado.gravar({
-    usuarioId,
-    versoes,
-    conflitos: (lido.conflitos ?? []).filter((c) => c.id !== id),
-    rejeitados: lido.rejeitados ?? [],
-  });
-  return true;
 }

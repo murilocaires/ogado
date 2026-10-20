@@ -1,5 +1,8 @@
 // Cliente HTTP dos dados na nuvem (E3). Mesma origem: o Next repassa `/api/*` (ADR-0010 a.5).
 import {
+  historicoSyncSchema,
+  type HistoricoSyncCreate,
+  type HistoricoSync,
   cenarioListResponseSchema,
   errorEnvelopeSchema,
   cenarioSchema,
@@ -35,6 +38,7 @@ export type DadosFalha =
 export type DadosResult<T> = { ok: true; data: T; created: boolean } | DadosFalha;
 
 export interface DadosClient {
+  arquivarHistorico(body: HistoricoSyncCreate): Promise<DadosResult<HistoricoSync>>;
   listarLotes(): Promise<DadosResult<LoteDto[]>>;
   criarLote(body: LoteCreate): Promise<DadosResult<LoteDto>>;
   alterarLote(id: string, body: LotePatch): Promise<DadosResult<LoteDto>>;
@@ -125,6 +129,7 @@ export function criarDadosClient(
   };
 
   return {
+    arquivarHistorico: (body) => pedir('POST', '/historico-sync', historicoSyncSchema, body),
     listarLotes: () =>
       pedir('GET', '/lotes?incluirExcluidos=true', listaLotes as unknown as Esquema<LoteDto[]>),
     criarLote: (body) => pedir('POST', '/lotes', loteSchema, body),

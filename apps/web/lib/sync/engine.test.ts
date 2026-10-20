@@ -168,6 +168,20 @@ describe('sincronizar', () => {
   });
 });
 
+describe('sincronizacao sem mudancas', () => {
+  it('nao reaplica o mesmo registro nem dispara uma nova notificacao', async () => {
+    const srv = criarServidor();
+    const a = aparelho();
+    a.repo.salvarLote(COMPRA);
+    await sincronizar({ ...a, api: srv.api, usuarioId: 'u1' });
+    const aplicar = vi.spyOn(a.repo, 'aplicar');
+    a.estado.gravar({ usuarioId: 'u1', versoes: a.estado.atual!.versoes });
+    await sincronizar({ ...a, api: srv.api, usuarioId: 'u1' });
+    expect(aplicar).not.toHaveBeenCalled();
+    expect(Object.keys(a.estado.atual!.bases!)).toHaveLength(1);
+  });
+});
+
 describe('simulador sem salvamento automatico', () => {
   it('digitar e limpar nao le nem grava entradas no servidor; salvar cenario grava apenas o cenario', async () => {
     const srv = criarServidor();

@@ -18,7 +18,13 @@ export function criarServidor() {
   let recria: RecriaEntradaDto | null = null;
   const chamadas: string[] = [];
 
+  const historico = new Map<string, import('@ogado/contracts').HistoricoSync>();
   const api: DadosClient = {
+    async arquivarHistorico(body) {
+      const registro = historico.get(body.id) ?? { ...body, criadoEm: AGORA };
+      historico.set(body.id, registro);
+      return ok(registro);
+    },
     async listarLotes() {
       return ok([...lotes.values()]);
     },
@@ -120,7 +126,7 @@ export function criarServidor() {
       return ok(recria);
     },
   };
-  return { api, lotes, cenarios, chamadas, recria: () => recria };
+  return { api, lotes, cenarios, chamadas, historico, recria: () => recria };
 }
 
 export function criarEstado(): EstadoSyncStore & { atual: EstadoSync | null } {

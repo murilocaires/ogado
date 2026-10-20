@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { descreverConflito, nomeDoRejeitado } from '../lib/sync/conflitos';
-import type { Conflito, Rejeitado } from '../lib/sync/engine';
+import { nomeDoRejeitado } from '../lib/sync/conflitos';
+import type { Rejeitado } from '../lib/sync/engine';
 import { useRepo, useRepoState } from '../lib/repo/repo-provider';
 import type { DadosCompletos, SyncableRepo } from '../lib/repo/types';
 import { ConfirmDialog, Dialog } from './Dialog';
@@ -22,89 +22,7 @@ function useDadosCompletos(): DadosCompletos | null {
   return ehSincronizavel(repo) ? repo.exportar() : null;
 }
 
-/** Decisão de conflito (RF-076): os dois valores lado a lado e as duas saídas. */
-export function ConflitoDialog({
-  conflito,
-  dados,
-  onClose,
-}: {
-  conflito: Conflito;
-  dados: DadosCompletos;
-  onClose: () => void;
-}) {
-  const info = useSyncInfo();
-  const toast = useToast();
-  const d = descreverConflito(conflito, dados);
-
-  function decidir(escolha: 'meu' | 'servidor'): void {
-    info.resolver(conflito.id, escolha);
-    toast(escolha === 'meu' ? 'Mantido o seu. Enviando…' : 'Valor do servidor adotado.');
-    onClose();
-  }
-
-  return (
-    <Dialog
-      titulo={d.titulo}
-      onClose={onClose}
-      confirmacao
-      focoInicial="[data-depois]"
-      role="alertdialog"
-    >
-      <p style={{ margin: '0 0 12px', color: 'var(--tinta-2)', lineHeight: 1.5 }}>
-        <b>{d.item}</b>: o que está neste aparelho é diferente do que está no servidor. Escolha qual
-        valor vale. Nada é trocado sem a sua escolha.
-      </p>
-      {d.linhas.length > 0 && (
-        <div className="conf-wrap">
-          <table className="conf-tbl">
-            <caption className="sr-only">Comparação entre o seu valor e o do servidor</caption>
-            <thead>
-              <tr>
-                <th scope="col">Campo</th>
-                <th scope="col">O seu (neste aparelho)</th>
-                <th scope="col">No servidor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {d.linhas.map((l) => (
-                <tr key={l.rotulo} className={l.difere ? 'difere' : undefined}>
-                  <th scope="row">{l.rotulo}</th>
-                  <td>{l.meu}</td>
-                  <td>
-                    {l.servidor}
-                    {l.difere && <span className="sr-only"> (diferente)</span>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      <ul className="conf-expl">
-        <li>
-          <b>Manter o meu:</b> {d.explicaMeu}
-        </li>
-        <li>
-          <b>Usar o do servidor:</b> {d.explicaServidor}
-        </li>
-      </ul>
-      <div className="actions">
-        <button type="button" className="btn sec" data-depois onClick={onClose}>
-          Decidir depois
-        </button>
-        <button type="button" className="btn sec" onClick={() => decidir('servidor')}>
-          Usar o do servidor
-        </button>
-        <button type="button" className="btn" onClick={() => decidir('meu')}>
-          Manter o meu
-        </button>
-      </div>
-    </Dialog>
-  );
-}
-
 type Acao =
-  | { tipo: 'resolver'; conflito: Conflito }
   | { tipo: 'corrigir-lote'; id: string }
   | { tipo: 'corrigir-cenario'; id: string }
   | { tipo: 'excluir'; rejeitado: Rejeitado };
@@ -147,24 +65,6 @@ export function AtencaoLista({ onNavegar }: { onNavegar?: () => void }) {
   return (
     <>
       <ul className="atencao-lista" aria-label="Itens que precisam de atenção">
-        {info.conflitos.map((c) => {
-          const d = descreverConflito(c, dados);
-          return (
-            <li key={`c-${c.id}`} className="atencao-item">
-              <div>
-                <b>{d.titulo}</b>
-                <span className="hint">{d.item}</span>
-              </div>
-              <button
-                type="button"
-                className="btn sm"
-                onClick={() => setAcao({ tipo: 'resolver', conflito: c })}
-              >
-                Resolver
-              </button>
-            </li>
-          );
-        })}
         {info.rejeitados.map((r) => {
           const nome = nomeDoRejeitado(r, dados);
           return (
@@ -207,9 +107,6 @@ export function AtencaoLista({ onNavegar }: { onNavegar?: () => void }) {
         })}
       </ul>
 
-      {acao?.tipo === 'resolver' && (
-        <ConflitoDialog conflito={acao.conflito} dados={dados} onClose={() => setAcao(null)} />
-      )}
       {loteAcao && <LoteModal tipo={loteAcao.tipo} lote={loteAcao} onClose={() => setAcao(null)} />}
       {cenarioAcao && (
         <NomeDialog

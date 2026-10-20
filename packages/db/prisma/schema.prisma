@@ -89,6 +89,7 @@ model Fazenda {
 
   lotes         Lote[]
   cenarios      Cenario[]
+  historicoSync HistoricoSync[]
   recriaEntrada RecriaEntrada?
 
   @@index([updatedAt])
@@ -177,4 +178,21 @@ model RecriaEntrada {
   deletedAt      DateTime? @db.Timestamptz(3)
 
   fazenda Fazenda @relation(fields: [fazendaId], references: [id], onDelete: Cascade)
+}
+
+// Versoes preservadas antes da resolucao automatica; nunca dependem do armazenamento do navegador.
+model HistoricoSync {
+  id         String   @db.Uuid
+  fazendaId  String   @db.Uuid
+  entidadeId String   @db.Uuid
+  tipo       String
+  motivo     String
+  local      Json
+  servidor   Json
+  resultado  Json
+  criadoEm   DateTime @default(now()) @db.Timestamptz(3)
+  fazenda    Fazenda  @relation(fields: [fazendaId], references: [id], onDelete: Cascade)
+
+  @@id([fazendaId, id])
+  @@index([fazendaId, entidadeId, criadoEm])
 }

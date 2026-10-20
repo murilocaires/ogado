@@ -221,9 +221,8 @@ describe('RF-075 indicador global e selo por registro', () => {
   });
 });
 
-describe('RF-076 conflito entre aparelhos', () => {
-  async function prepararConflito() {
-    const user = userEvent.setup();
+describe('conflitos resolvidos automaticamente', () => {
+  it('sincroniza a ultima edicao sem mostrar janela de escolha', async () => {
     const srv = criarServidor();
     const m = montar(srv);
     await aguardarSincronizado();
@@ -233,89 +232,21 @@ describe('RF-076 conflito entre aparelhos', () => {
     });
     await sincronizarAgora();
     await waitFor(() => expect(srv.lotes.has(id)).toBe(true));
-    await aguardarSincronizado();
-
-    // O aparelho B edita o mesmo lote e sobe.
     const b = aparelho();
     await sincronizar({ ...b, api: srv.api, usuarioId: 'u1' });
     b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
     await sincronizar({ ...b, api: srv.api, usuarioId: 'u1' });
-
-    // O A edita sem saber.
     act(() => {
       m.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
     });
     await sincronizarAgora();
-    await waitFor(
-      () =>
-        expect(
-          screen.getAllByRole('button', { name: '1 item precisa de atenção' }).length,
-        ).toBeGreaterThan(0),
-      { timeout: 5000 },
-    );
-    return { user, srv, m, id };
-  }
-
-  async function abrirDecisao(user: ReturnType<typeof userEvent.setup>) {
-    await user.click(screen.getAllByRole('button', { name: '1 item precisa de atenção' })[0]!);
-    const lista = await screen.findByRole('dialog', { name: 'Precisa de atenção' });
-    await user.click(within(lista).getByRole('button', { name: 'Resolver' }));
-    return screen.findByRole('alertdialog', { name: 'Este lote foi alterado em outro aparelho' });
-  }
-
-  it('abre a decisão mostrando os dois valores; nada foi trocado em silêncio', async () => {
-    const { user, srv, id } = await prepararConflito();
-    expect(srv.lotes.get(id)?.qtd).toBe('50');
-
-    const decisao = await abrirDecisao(user);
-
-    const tabela = within(decisao).getByRole('table');
-    const linha = within(tabela).getByRole('row', { name: /Quantidade/ });
-    expect(
-      within(linha)
-        .getAllByRole('cell')
-        .map((c) => c.textContent),
-    ).toEqual(['99', '50 (diferente)']);
-    expect(within(decisao).getByRole('button', { name: 'Manter o meu' })).toBeInTheDocument();
-    expect(within(decisao).getByRole('button', { name: 'Usar o do servidor' })).toBeInTheDocument();
-    // O lote tem o selo de atenção, não o de pendente comum.
-    expect(screen.getAllByText('precisa de atenção').length).toBeGreaterThan(0);
-  });
-
-  it('"Manter o meu" envia o valor do aparelho', async () => {
-    const { user, srv, id } = await prepararConflito();
-    const decisao = await abrirDecisao(user);
-
-    await user.click(within(decisao).getByRole('button', { name: 'Manter o meu' }));
-
-    await waitFor(() => expect(srv.lotes.get(id)?.qtd).toBe('99'), { timeout: 5000 });
     await aguardarSincronizado();
-    expect(screen.queryByRole('button', { name: /precisa de atenção/ })).not.toBeInTheDocument();
-  });
-
-  it('"Usar o do servidor" adota o valor da nuvem', async () => {
-    const { user, srv, m, id } = await prepararConflito();
-    const decisao = await abrirDecisao(user);
-
-    await user.click(within(decisao).getByRole('button', { name: 'Usar o do servidor' }));
-
-    await waitFor(() => expect(m.repo.exportar().lotes.find((l) => l.id === id)?.qtd).toBe('50'), {
-      timeout: 5000,
-    });
-    expect(srv.lotes.get(id)?.qtd).toBe('50');
-    await aguardarSincronizado();
-  });
-
-  it('"Decidir depois" fecha sem mexer em nada e o aviso continua', async () => {
-    const { user, m, id } = await prepararConflito();
-    const decisao = await abrirDecisao(user);
-
-    await user.click(within(decisao).getByRole('button', { name: 'Decidir depois' }));
-
-    expect(m.repo.exportar().lotes.find((l) => l.id === id)?.qtd).toBe('99');
+    expect(srv.lotes.get(id)?.qtd).toBe('99');
     expect(
-      screen.getAllByRole('button', { name: '1 item precisa de atenção' }).length,
-    ).toBeGreaterThan(0);
+      screen.queryByRole('button', { name: /Usar o do servidor|Manter o meu|Resolver/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(srv.historico.size).toBe(1);
   });
 });
 

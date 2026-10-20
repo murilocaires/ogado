@@ -19,10 +19,8 @@ import type { OGadoRepo, SyncableRepo } from '../lib/repo/types';
 import { criarDadosClient, type DadosClient } from '../lib/sync/data-client';
 import {
   pendentes as calcularPendentes,
-  resolverConflito,
   sincronizar,
   type Conflito,
-  type EscolhaConflito,
   type EstadoSync,
   type EstadoSyncStore,
   type Rejeitado,
@@ -50,8 +48,6 @@ export interface SyncInfo {
   cotaQuaseCheia: number | null;
   /** Força uma rodada agora (RF-074). */
   sincronizarAgora: () => void;
-  /** Aplica a decisão do usuário sobre um conflito e sincroniza (RF-076). */
-  resolver: (id: string, escolha: EscolhaConflito) => void;
 }
 
 const INFO_VAZIA: SyncInfo = {
@@ -61,7 +57,6 @@ const INFO_VAZIA: SyncInfo = {
   rejeitados: [],
   cotaQuaseCheia: null,
   sincronizarAgora: () => undefined,
-  resolver: () => undefined,
 };
 
 /** Exportado para os testes das telas informarem pendências e itens de atenção. */
@@ -112,7 +107,6 @@ export function SyncProvider({
   const estavaLogado = useRef(false);
   const acoes = useRef<{
     agora: () => void;
-    resolver: (id: string, escolha: EscolhaConflito) => void;
   } | null>(null);
 
   const usuarioId = sessao.status === 'autenticado' ? sessao.usuario.id : null;
@@ -184,16 +178,6 @@ export function SyncProvider({
         if (timer) clearTimeout(timer);
         void rodar();
       },
-      resolver: (id, escolha) => {
-        void (async () => {
-          // A decisão mexe no estado de sincronização: espera qualquer rodada em curso terminar.
-          while (rodando) await atual;
-          if (!ativo) return;
-          resolverConflito({ repo, estado: armazem, usuarioId, id, escolha });
-          setLeitura({ carregado: true, estado: armazem.ler() });
-          void rodar();
-        })();
-      },
     };
 
     void pedirPersistencia(); // RNF-015: depois do login, pede para o navegador não apagar os dados
@@ -216,11 +200,6 @@ export function SyncProvider({
   }, [repo, controller, cliente, armazem, usuarioId, sessao.status]);
 
   const sincronizarAgora = useCallback(() => acoes.current?.agora(), []);
-  const resolver = useCallback(
-    (id: string, escolha: EscolhaConflito) => acoes.current?.resolver(id, escolha),
-    [],
-  );
-
   const info = useMemo<SyncInfo>(() => {
     const logado = usuarioId !== null && leitura.carregado && ehSincronizavel(repo);
     const ids = new Set<string>();
@@ -237,7 +216,7 @@ export function SyncProvider({
         ...completos.cenarios.filter((c) => c.deletedAt === null).map((c) => c.id),
       ]);
       rejeitados = (leitura.estado?.rejeitados ?? []).filter((r) => vivos.has(r.id));
-      conflitos = (leitura.estado?.conflitos ?? []).filter((c) => c.tipo !== 'recria');
+      conflitos = [];
     }
     return {
       pendentes: ids,
@@ -246,9 +225,8 @@ export function SyncProvider({
       rejeitados,
       cotaQuaseCheia: cota,
       sincronizarAgora,
-      resolver,
     };
-  }, [dados, leitura, repo, usuarioId, cota, sincronizarAgora, resolver]);
+  }, [dados, leitura, repo, usuarioId, cota, sincronizarAgora]);
 
   return (
     <SyncContext.Provider value={status}>

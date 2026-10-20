@@ -129,7 +129,7 @@ describe('RF-032 salvar como cenário', () => {
     await user.click(screen.getByRole('button', { name: 'Abrir Cenário 1' }));
     expect(screen.getByText('Cenário "Cenário 1" aberto no simulador.')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Simulador' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByLabelText('R$/cab (venda)')).toHaveValue('325');
+    expect(screen.getByLabelText('R$/cab (venda)')).toHaveValue('325,00');
   });
 });
 

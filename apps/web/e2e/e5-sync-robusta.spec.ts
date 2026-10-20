@@ -126,67 +126,61 @@ async function doisAparelhos(browser: Browser, prefixo: string) {
   return { a, b, ctxA, ctxB };
 }
 
-/** A edita sem conexão (20) enquanto B edita e sobe (30); A volta e encontra o conflito. */
-async function provocarConflito(browser: Browser, prefixo: string) {
-  const t = await doisAparelhos(browser, prefixo);
-  await t.ctxA.setOffline(true);
-  await editarQuantidade(t.a, '20');
-  await expect(t.a.getByText('Sem conexão · 1 pendente').filter({ visible: true })).toBeVisible();
-
-  await editarQuantidade(t.b, '30');
-  await expect.poll(() => qtdNaNuvem(t.b)).toBe(30);
-
-  await t.ctxA.setOffline(false);
-  await t.a
-    .getByRole('button', { name: '1 item precisa de atenção' })
-    .filter({ visible: true })
-    .click();
-  const lista = t.a.getByRole('dialog', { name: 'Precisa de atenção' });
-  await lista.getByRole('button', { name: 'Resolver' }).click();
-  const decisao = t.a.getByRole('alertdialog', {
-    name: 'Este lote foi alterado em outro aparelho',
-  });
-  await expect(decisao).toBeVisible();
-  // Os dois valores lado a lado; a nuvem ainda não foi sobrescrita.
-  const linha = decisao.getByRole('row', { name: /Quantidade/ });
-  await expect(linha.getByRole('cell').first()).toHaveText('20');
-  await expect(linha.getByRole('cell').nth(1)).toContainText('30');
-  expect(await qtdNaNuvem(t.b)).toBe(30);
-  return { ...t, decisao };
-}
-
-test('RF-076 conflito entre aparelhos: "Manter o meu" envia o valor do aparelho', async ({
+test('conflito no mesmo campo e resolvido sem perguntar e preserva historico', async ({
   browser,
 }) => {
-  const { a, b, decisao, ctxA, ctxB } = await provocarConflito(browser, 'conf-meu');
-
-  await decisao.getByRole('button', { name: 'Manter o meu' }).click();
-
-  await expect.poll(() => qtdNaNuvem(b), { timeout: 30_000 }).toBe(20);
-  await expect(a.getByRole('button', { name: /precisa de atenção/ })).toHaveCount(0);
-  await expect(sincronizado(a)).toBeAttached();
-  await ctxA.close();
-  await ctxB.close();
+  const { a, b, ctxA, ctxB } = await doisAparelhos(browser, 'auto-mesmo');
+  try {
+    await ctxA.setOffline(true);
+    await editarQuantidade(a, '20');
+    await editarQuantidade(b, '30');
+    await expect.poll(() => qtdNaNuvem(b)).toBe(30);
+    await ctxA.setOffline(false);
+    await expect.poll(() => qtdNaNuvem(a), { timeout: 30000 }).toBe(20);
+    await expect(sincronizado(a)).toBeAttached();
+    await expect(
+      a.getByRole('button', { name: /Manter o meu|Usar o do servidor|Resolver/ }),
+    ).toHaveCount(0);
+    const resposta = await a.request.get('/api/historico-sync');
+    expect(resposta.ok()).toBe(true);
+    const dados = (await resposta.json()) as {
+      registros: { local: { qtd: string }; servidor: { qtd: string } }[];
+    };
+    expect(dados.registros.some((h) => h.local.qtd === '20' && h.servidor.qtd === '30')).toBe(true);
+  } finally {
+    await ctxA.close();
+    await ctxB.close();
+  }
 });
 
-test('RF-076 conflito entre aparelhos: "Usar o do servidor" adota o valor da nuvem', async ({
-  browser,
-}) => {
-  const { a, b, decisao, ctxA, ctxB } = await provocarConflito(browser, 'conf-srv');
-
-  await decisao.getByRole('button', { name: 'Usar o do servidor' }).click();
-
-  await expect(
-    a
-      .getByRole('row', { name: /Lote 1/ })
-      .getByRole('cell')
-      .nth(1),
-  ).toHaveText('30', {
-    timeout: 30_000,
-  });
-  expect(await qtdNaNuvem(b)).toBe(30);
-  await expect(a.getByRole('button', { name: /precisa de atenção/ })).toHaveCount(0);
-  await expect(sincronizado(a)).toBeAttached();
-  await ctxA.close();
-  await ctxB.close();
+test('edicoes em campos diferentes sao combinadas automaticamente', async ({ browser }) => {
+  const { a, b, ctxA, ctxB } = await doisAparelhos(browser, 'auto-campos');
+  try {
+    await ctxA.setOffline(true);
+    await editarQuantidade(a, '20');
+    await b
+      .getByRole('button', { name: 'Editar lote 1 de compra' })
+      .filter({ visible: true })
+      .click();
+    const modal = b.getByRole('dialog', { name: /Editar lote de/ });
+    await modal.getByLabel('Preço da arroba', { exact: true }).fill('400');
+    await modal.getByRole('button', { name: 'Salvar lote' }).click();
+    await b.getByRole('alertdialog').getByRole('button', { name: 'Salvar' }).click();
+    await expect(sincronizado(b)).toBeAttached();
+    await ctxA.setOffline(false);
+    await expect
+      .poll(
+        async () => {
+          const res = await a.request.get('/api/lotes');
+          const dados = (await res.json()) as { lotes: { qtd: string; preco: string }[] };
+          return dados.lotes.map((l) => [Number(l.qtd), Number(l.preco)]);
+        },
+        { timeout: 30000 },
+      )
+      .toEqual([[20, 400]]);
+    await expect(a.getByRole('alertdialog')).toHaveCount(0);
+  } finally {
+    await ctxA.close();
+    await ctxB.close();
+  }
 });

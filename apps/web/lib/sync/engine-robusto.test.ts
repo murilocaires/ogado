@@ -1,8 +1,7 @@
 // E5-A: pendências, conflitos, itens recusados e integridade com a rede cortada (RF-074…RF-080, RNF-017).
-import type { LoteDto } from '@ogado/contracts';
 import { describe, expect, it } from 'vitest';
 import type { DadosClient, DadosResult } from './data-client';
-import { contarPendentes, pendentes, resolverConflito, sincronizar } from './engine';
+import { contarPendentes, pendentes, sincronizar } from './engine';
 import { aparelho, COMPRA, cenario, criarServidor } from './engine.test-support';
 
 type Servidor = ReturnType<typeof criarServidor>;
@@ -63,199 +62,227 @@ describe('pendentes (RF-075)', () => {
   });
 });
 
-describe('conflito entre aparelhos (RF-076)', () => {
-  it('o 409 não faz a nuvem vencer em silêncio: registra, mantém o local e segue com as demais', async () => {
+describe('resolucao automatica entre aparelhos', () => {
+  it('combina quantidade e preco alterados em aparelhos diferentes', async () => {
     const srv = criarServidor();
     const { a, b, id } = await doisAparelhosComLote(srv);
-    const outro = a.repo.salvarCenario(cenario());
-
+    b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
+    await rodar(b, srv.api);
+    a.repo.salvarLote({ ...COMPRA, id, preco: '400' });
+    expect(await rodar(a, srv.api)).toBe('ok');
+    expect(srv.lotes.get(id)).toMatchObject({ qtd: '50', preco: '400' });
+    expect(a.estado.atual?.conflitos).toEqual([]);
+    expect(pendentesDe(a)).toBe(0);
+    expect([...srv.historico.values()][0]?.servidor['qtd']).toBe('50');
+    await rodar(b, srv.api);
+    expect(b.repo.exportar().lotes[0]).toMatchObject({ qtd: '50', preco: '400' });
+  });
+  it('mesmo campo: vence o ultimo envio e preserva as duas versoes no servidor', async () => {
+    const srv = criarServidor();
+    const { a, b, id } = await doisAparelhosComLote(srv);
     b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
     await rodar(b, srv.api);
     a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
-    expect(await rodar(a, srv.api)).toBe('ok');
-
-    expect(srv.lotes.get(id)?.qtd).toBe('50');
-    expect(qtdLocal(a, id)).toBe('99'); // o aparelho A mantém o que digitou
-    expect(srv.cenarios.has(outro.id)).toBe(true); // as demais entidades seguem
-    const conflitos = a.estado.atual?.conflitos ?? [];
-    expect(conflitos).toHaveLength(1);
-    expect(conflitos[0]).toMatchObject({
-      tipo: 'lote',
-      id,
-      motivo: 'alterado',
-      acao: 'editar',
-      versaoLocal: 2,
-    });
-    expect((conflitos[0]?.atual as LoteDto).qtd).toBe('50');
-    expect(pendentesDe(a)).toBe(1);
+    await rodar(a, srv.api);
+    expect(srv.lotes.get(id)?.qtd).toBe('99');
+    expect(qtdLocal(a, id)).toBe('99');
+    const h = [...srv.historico.values()][0]!;
+    expect(h.local['qtd']).toBe('99');
+    expect(h.servidor['qtd']).toBe('50');
+    expect(h.resultado['qtd']).toBe('99');
   });
-
-  it('o 409 da API (versão mudou entre a listagem e o envio) também vira conflito', async () => {
+  it('uma corrida com 409 refaz a mesclagem com a versao atual', async () => {
     const srv = criarServidor();
-    const { a, b, id } = await doisAparelhosComLote(srv);
-    a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
+    const { a, id } = await doisAparelhosComLote(srv);
+    a.repo.salvarLote({ ...COMPRA, id, preco: '400' });
+    let corrida = true;
     const api: DadosClient = {
       ...srv.api,
       alterarLote: async (lid, body) => {
-        // o outro aparelho grava exatamente depois que a listagem foi lida
-        b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
-        await rodar(b, srv.api);
+        if (corrida) {
+          corrida = false;
+          await srv.api.alterarLote(lid, { version: 1, qtd: '50' });
+        }
         return srv.api.alterarLote(lid, body);
       },
     };
-    await rodar(a, api);
-
-    expect(a.estado.atual?.conflitos?.[0]).toMatchObject({ id, motivo: 'alterado' });
-    expect(qtdLocal(a, id)).toBe('99');
-    expect(srv.lotes.get(id)?.qtd).toBe('50');
-  });
-
-  it('enquanto a decisão não vem, não chama a API de novo para o mesmo registro', async () => {
-    const srv = criarServidor();
-    const { a, b, id } = await doisAparelhosComLote(srv);
-    b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
-    await rodar(b, srv.api);
-    a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
-    await rodar(a, srv.api);
-    srv.chamadas.length = 0;
-
-    await rodar(a, srv.api);
-
-    expect(srv.chamadas).toEqual([]);
-    expect(a.estado.atual?.conflitos).toHaveLength(1);
-  });
-
-  it('"Usar o do servidor" adota a versão da nuvem e encerra o conflito', async () => {
-    const srv = criarServidor();
-    const { a, b, id } = await doisAparelhosComLote(srv);
-    b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
-    await rodar(b, srv.api);
-    a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
-    await rodar(a, srv.api);
-
-    expect(resolverConflito({ ...a, usuarioId: 'u1', id, escolha: 'servidor' })).toBe(true);
-    await rodar(a, srv.api);
-
-    expect(qtdLocal(a, id)).toBe('50');
-    expect(srv.lotes.get(id)?.qtd).toBe('50');
+    expect(await rodar(a, api)).toBe('ok');
+    expect(srv.lotes.get(id)).toMatchObject({ qtd: '50', preco: '400' });
     expect(a.estado.atual?.conflitos).toEqual([]);
-    expect(pendentesDe(a)).toBe(0);
   });
-
-  it('"Manter o meu" reenvia com a versão do servidor como base e a nuvem passa a ter o meu', async () => {
-    const srv = criarServidor();
-    const { a, b, id } = await doisAparelhosComLote(srv);
-    b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
-    await rodar(b, srv.api);
-    a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
-    await rodar(a, srv.api);
-
-    resolverConflito({ ...a, usuarioId: 'u1', id, escolha: 'meu' });
-    await rodar(a, srv.api);
-
-    expect(srv.lotes.get(id)?.qtd).toBe('99');
-    expect(qtdLocal(a, id)).toBe('99');
-    expect(a.estado.atual?.conflitos).toEqual([]);
-    expect(pendentesDe(a)).toBe(0);
-    await rodar(b, srv.api); // o outro aparelho recebe a decisão
-    expect(qtdLocal(b, id)).toBe('99');
-  });
-
-  it('"Manter o meu" funciona mesmo quando as versões do aparelho e do servidor coincidem', async () => {
-    const srv = criarServidor();
-    const { a, b, id } = await doisAparelhosComLote(srv);
-    b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
-    await rodar(b, srv.api);
-    a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
-    await rodar(a, srv.api);
-    expect(a.repo.exportar().lotes[0]?.version).toBe(srv.lotes.get(id)?.version);
-
-    resolverConflito({ ...a, usuarioId: 'u1', id, escolha: 'meu' });
-    await rodar(a, srv.api);
-
-    expect(srv.lotes.get(id)?.qtd).toBe('99');
-  });
-
-  it('editar um registro excluído em outro aparelho pergunta; "manter o meu" recria como novo lote', async () => {
+  it('exclusao remota vence edicao e arquiva o trabalho local sem criar copia', async () => {
     const srv = criarServidor();
     const { a, b, id } = await doisAparelhosComLote(srv);
     b.repo.excluirLote(id);
     await rodar(b, srv.api);
-    a.repo.salvarLote({ ...COMPRA, id, qtd: '77' });
+    a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
     await rodar(a, srv.api);
-
-    expect(a.estado.atual?.conflitos?.[0]).toMatchObject({
-      motivo: 'excluido-no-servidor',
-      acao: 'editar',
-    });
-    expect(qtdLocal(a, id)).toBe('77');
-
-    resolverConflito({ ...a, usuarioId: 'u1', id, escolha: 'meu' });
-    await rodar(a, srv.api);
-
-    const vivos = [...srv.lotes.values()].filter((l) => l.deletedAt === null);
-    expect(vivos).toHaveLength(1);
-    expect(vivos[0]).toMatchObject({ qtd: '77' });
-    expect(vivos[0]?.id).not.toBe(id);
-    expect(a.estado.atual?.conflitos).toEqual([]);
+    expect(srv.lotes.size).toBe(1);
+    expect(a.repo.exportar().lotes[0]?.deletedAt).not.toBeNull();
+    expect([...srv.historico.values()][0]?.local['qtd']).toBe('99');
+    expect([...srv.historico.values()][0]?.motivo).toBe('exclusao');
     expect(pendentesDe(a)).toBe(0);
   });
-
-  it('editar um registro excluído em outro aparelho: "usar o do servidor" mantém a exclusão', async () => {
-    const srv = criarServidor();
-    const { a, b, id } = await doisAparelhosComLote(srv);
-    b.repo.excluirLote(id);
-    await rodar(b, srv.api);
-    a.repo.salvarLote({ ...COMPRA, id, qtd: '77' });
-    await rodar(a, srv.api);
-
-    resolverConflito({ ...a, usuarioId: 'u1', id, escolha: 'servidor' });
-    await rodar(a, srv.api);
-
-    expect(a.repo.exportar().lotes.find((l) => l.id === id)?.deletedAt).not.toBeNull();
-    expect([...srv.lotes.values()].filter((l) => l.deletedAt === null)).toHaveLength(0);
-  });
-
-  it('excluir localmente um lote editado em outro aparelho também pergunta', async () => {
+  it('exclusao local vence edicao remota e preserva a versao substituida', async () => {
     const srv = criarServidor();
     const { a, b, id } = await doisAparelhosComLote(srv);
     b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
     await rodar(b, srv.api);
     a.repo.excluirLote(id);
     await rodar(a, srv.api);
-
-    expect(a.estado.atual?.conflitos?.[0]).toMatchObject({ motivo: 'alterado', acao: 'excluir' });
-    expect(srv.lotes.get(id)?.deletedAt).toBeNull();
-
-    resolverConflito({ ...a, usuarioId: 'u1', id, escolha: 'meu' });
-    await rodar(a, srv.api);
     expect(srv.lotes.get(id)?.deletedAt).not.toBeNull();
+    expect([...srv.historico.values()][0]?.servidor['qtd']).toBe('50');
   });
-
-  it('cenário renomeado em dois aparelhos: conflito, e a decisão vale', async () => {
+  it('renomeacao de cenario tambem e automatica', async () => {
     const srv = criarServidor();
     const a = aparelho();
     const c = a.repo.salvarCenario(cenario());
     await rodar(a, srv.api);
     const b = aparelho();
     await rodar(b, srv.api);
-
-    b.repo.renomearCenario(c.id, 'Nome do B');
+    b.repo.renomearCenario(c.id, 'Nome B');
     await rodar(b, srv.api);
-    a.repo.renomearCenario(c.id, 'Nome do A');
+    a.repo.renomearCenario(c.id, 'Nome A');
     await rodar(a, srv.api);
-
-    expect(a.estado.atual?.conflitos?.[0]).toMatchObject({ tipo: 'cenario', id: c.id });
-    expect(srv.cenarios.get(c.id)?.nome).toBe('Nome do B');
-    resolverConflito({ ...a, usuarioId: 'u1', id: c.id, escolha: 'meu' });
-    await rodar(a, srv.api);
-    expect(srv.cenarios.get(c.id)?.nome).toBe('Nome do A');
+    expect(srv.cenarios.get(c.id)?.nome).toBe('Nome A');
+    expect([...srv.historico.values()][0]?.servidor['nome']).toBe('Nome B');
+    expect(a.estado.atual?.conflitos).toEqual([]);
   });
+  it('nao substitui valores se o historico nao puder ser gravado', async () => {
+    const srv = criarServidor();
+    const { a, b, id } = await doisAparelhosComLote(srv);
+    b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
+    await rodar(b, srv.api);
+    a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
+    expect(
+      await rodar(a, { ...srv.api, arquivarHistorico: async () => ({ ok: false, kind: 'rede' }) }),
+    ).toBe('rede');
+    expect(srv.lotes.get(id)?.qtd).toBe('50');
+    expect(qtdLocal(a, id)).toBe('99');
+    expect(a.estado.atual?.historicoPendente).toHaveLength(1);
+    expect(await rodar(a, srv.api)).toBe('ok');
+    expect(srv.lotes.get(id)?.qtd).toBe('99');
+  });
+  it('resposta do arquivo perdida: reenvia o mesmo evento sem duplicacao', async () => {
+    const srv = criarServidor();
+    const { a, b, id } = await doisAparelhosComLote(srv);
+    b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
+    await rodar(b, srv.api);
+    a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
+    await rodar(a, {
+      ...srv.api,
+      arquivarHistorico: async (h) => {
+        await srv.api.arquivarHistorico(h);
+        return { ok: false, kind: 'rede' };
+      },
+    });
+    expect(await rodar(a, srv.api)).toBe('ok');
+    expect(srv.historico.size).toBe(1);
+    expect(srv.lotes.get(id)?.qtd).toBe('99');
+  });
+  it('legado sem base: preserva o servidor no historico antes de aceitar o local', async () => {
+    const srv = criarServidor();
+    const { a, b, id } = await doisAparelhosComLote(srv);
+    b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
+    await rodar(b, srv.api);
+    a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
+    a.estado.gravar({
+      usuarioId: 'u1',
+      versoes: a.estado.atual!.versoes,
+      conflitos: [
+        {
+          tipo: 'lote',
+          id,
+          motivo: 'alterado',
+          acao: 'editar',
+          versaoLocal: 2,
+          atual: srv.lotes.get(id),
+          detectadoEm: '2026-10-19T12:00:00.000Z',
+        },
+      ],
+    });
+    await rodar(a, srv.api);
+    expect(srv.lotes.get(id)?.qtd).toBe('99');
+    expect([...srv.historico.values()][0]?.motivo).toBe('sem-base');
+    expect(a.estado.atual?.conflitos).toEqual([]);
+  });
+  it('edicao durante o envio conserva campos remotos sem reenvia-los como locais', async () => {
+    const srv = criarServidor();
+    const { a, b, id } = await doisAparelhosComLote(srv);
+    b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
+    await rodar(b, srv.api);
+    a.repo.salvarLote({ ...COMPRA, id, preco: '400' });
+    let editar = true;
+    const api: DadosClient = {
+      ...srv.api,
+      alterarLote: async (lid, body) => {
+        const r = await srv.api.alterarLote(lid, body);
+        if (editar) {
+          editar = false;
+          a.repo.salvarLote({ ...COMPRA, id, preco: '450' });
+        }
+        return r;
+      },
+    };
+    await rodar(a, api);
+    expect(a.repo.exportar().lotes[0]).toMatchObject({ qtd: '50', preco: '450' });
+    await rodar(a, srv.api);
+    expect(srv.lotes.get(id)).toMatchObject({ qtd: '50', preco: '450' });
+  });
+});
 
-  it('resolver um conflito que não existe devolve false', () => {
-    const a = aparelho();
-    a.estado.gravar({ usuarioId: 'u1', versoes: {} });
-    expect(resolverConflito({ ...a, usuarioId: 'u1', id: 'x', escolha: 'meu' })).toBe(false);
+describe('preservacao do arquivo pendente', () => {
+  it('arquiva a versao anterior mesmo se os dados convergirem antes da nova tentativa', async () => {
+    const srv = criarServidor();
+    const { a, b, id } = await doisAparelhosComLote(srv);
+    b.repo.salvarLote({ ...COMPRA, id, qtd: '50' });
+    await rodar(b, srv.api);
+    a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
+    await rodar(a, { ...srv.api, arquivarHistorico: async () => ({ ok: false, kind: 'rede' }) });
+    const remoto = srv.lotes.get(id)!;
+    await srv.api.alterarLote(id, { version: remoto.version, qtd: '99' });
+    expect(await rodar(a, srv.api)).toBe('ok');
+    expect([...srv.historico.values()][0]?.servidor['qtd']).toBe('50');
+    expect(a.estado.atual?.historicoPendente).toEqual([]);
+  });
+});
+
+describe('corridas durante a resolucao automatica', () => {
+  it('exclusao entre GET e PATCH e reconhecida sem recriar o lote', async () => {
+    const srv = criarServidor();
+    const { a, id } = await doisAparelhosComLote(srv);
+    a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
+    const api: DadosClient = {
+      ...srv.api,
+      alterarLote: async (lid, body) => {
+        await srv.api.excluirLote(lid, body.version);
+        return { ok: false, kind: 'nao-encontrado' };
+      },
+    };
+    expect(await rodar(a, api)).toBe('ok');
+    expect(a.repo.exportar().lotes[0]?.deletedAt).not.toBeNull();
+    expect(srv.lotes.size).toBe(1);
+    expect([...srv.historico.values()][0]?.local['qtd']).toBe('99');
+  });
+  it('concorrencia continua fica pendente e tenta novamente sem pedir uma escolha', async () => {
+    const srv = criarServidor();
+    const { a, id } = await doisAparelhosComLote(srv);
+    a.repo.salvarLote({ ...COMPRA, id, qtd: '99' });
+    let tentativas = 0;
+    const api: DadosClient = {
+      ...srv.api,
+      alterarLote: async () => {
+        tentativas++;
+        return { ok: false, kind: 'conflito', atual: srv.lotes.get(id) };
+      },
+    };
+    expect(await rodar(a, api)).toBe('erro');
+    expect(tentativas).toBe(5);
+    expect(qtdLocal(a, id)).toBe('99');
+    expect(a.estado.atual?.conflitos).toEqual([]);
+    expect(pendentesDe(a)).toBe(1);
+    expect(await rodar(a, srv.api)).toBe('ok');
+    expect(srv.lotes.get(id)?.qtd).toBe('99');
   });
 });
 

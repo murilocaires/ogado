@@ -147,6 +147,64 @@ const listaVaziaDeA = (path: '/lotes' | '/cenarios') => async (a: Farm, b: Farm)
 };
 
 const isolationCasesDados: Record<string, (a: Farm, b: Farm) => Promise<number>> = {
+  'POST /historico-sync': async (a, b) => {
+    const { lote } = await dadosDeB(b);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/historico-sync',
+      headers: { cookie: a.cookie, origin: TEST_ORIGIN, 'content-type': 'application/json' },
+      payload: JSON.stringify({
+        id: randomUUID(),
+        entidadeId: lote,
+        tipo: 'lote',
+        motivo: 'mesclagem',
+        local: { id: lote },
+        servidor: { id: lote },
+        resultado: { id: lote },
+      }),
+    });
+    expect(res.statusCode).toBe(404);
+    return 1;
+  },
+  'GET /historico-sync': async (a, b) => {
+    const { lote } = await dadosDeB(b);
+    const id = randomUUID();
+    await prisma.historicoSync.create({
+      data: {
+        id,
+        fazendaId: b.fazendaId,
+        entidadeId: lote,
+        tipo: 'lote',
+        motivo: 'mesclagem',
+        local: { id: lote },
+        servidor: { id: lote },
+        resultado: { id: lote },
+      },
+    });
+    const res = await getWithCookie(app, `/historico-sync?entidadeId=${lote}`, a.cookie);
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ registros: [] });
+    expect(res.body).not.toContain(id);
+    return 1;
+  },
+  'GET /historico-sync/:id': async (a, b) => {
+    const { lote } = await dadosDeB(b);
+    const id = randomUUID();
+    await prisma.historicoSync.create({
+      data: {
+        id,
+        fazendaId: b.fazendaId,
+        entidadeId: lote,
+        tipo: 'lote',
+        motivo: 'exclusao',
+        local: { id: lote },
+        servidor: { id: lote },
+        resultado: { id: lote },
+      },
+    });
+    await tentaComoA(a, 'GET', `/historico-sync/${id}`);
+    return 1;
+  },
   'GET /lotes': listaVaziaDeA('/lotes'),
   'GET /cenarios': listaVaziaDeA('/cenarios'),
   'GET /lotes/:id': async (a, b) => {

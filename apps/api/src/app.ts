@@ -18,6 +18,7 @@ import { rateLimitPlugin } from './plugins/rate-limit';
 import { createAccountRepository } from './repositories/account-repository';
 import { createCenarioRepository } from './repositories/cenario-repository';
 import { createFazendaRepository } from './repositories/fazenda-repository';
+import { createHistoricoSyncRepository } from './repositories/historico-sync-repository';
 import { createLoteRepository } from './repositories/lote-repository';
 import { createRecriaRepository } from './repositories/recria-repository';
 import { registerAuthRoutes } from './routes/auth';
@@ -25,6 +26,7 @@ import { registerContaRoutes } from './routes/conta';
 import { registerDadosRoutes } from './routes/dados';
 import { registerFazendaRoutes } from './routes/fazendas';
 import { registerGoogleRoutes } from './routes/google';
+import { registerHistoricoSyncRoutes } from './routes/historico-sync';
 import { registerHealthRoutes } from './routes/health';
 import { createSessionService } from './session/session-service';
 
@@ -168,6 +170,7 @@ export function buildApp(options: AppOptions): FastifyInstance {
   });
   registerFazendaRoutes(app, { fazendas });
   registerDadosRoutes(app, { lotes, cenarios, recria });
+  registerHistoricoSyncRoutes(app, createHistoricoSyncRepository(prisma));
 
   return app;
 }
