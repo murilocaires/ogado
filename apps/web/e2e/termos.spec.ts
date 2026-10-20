@@ -50,7 +50,7 @@ test.describe('páginas públicas', () => {
   });
 });
 
-test.describe('aceite no cadastro e gate', () => {
+test.describe('aceite apenas no cadastro', () => {
   test('o cadastro exige o checkbox; marcado, cria a conta e a Conta mostra a versão aceita', async ({
     page,
   }) => {
@@ -90,9 +90,7 @@ test.describe('aceite no cadastro e gate', () => {
     );
   });
 
-  test('usuário com aceite desatualizado vê o gate e libera o produto após aceitar', async ({
-    page,
-  }) => {
+  test('login nao exige repetir o aceite do cadastro', async ({ page }) => {
     const email = uniqueEmail('gate');
     await page.goto('/cadastrar');
     await page.getByLabel('E-mail', { exact: true }).fill(email);
@@ -105,22 +103,9 @@ test.describe('aceite no cadastro e gate', () => {
     definirVersaoAceita(email, '2020-01-01');
     await page.reload();
 
-    const titulo = page.getByRole('heading', {
-      name: 'Termos atualizados — aceite para continuar',
-    });
-    await expect(titulo).toBeVisible();
-    await expect(titulo).toBeFocused();
-    await expect(page.getByRole('navigation', { name: 'Principal' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Sair' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Apagar minha conta' })).toBeVisible();
-
-    await page.getByRole('button', { name: 'Li e aceito' }).click();
-    await expect(titulo).toHaveCount(0);
     await expect(page.getByRole('navigation', { name: 'Principal' }).first()).toBeVisible();
-
-    await page.reload();
-    await expect(page.getByRole('navigation', { name: 'Principal' }).first()).toBeVisible();
-    await expect(titulo).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Li e aceito' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /aceite para continuar/i })).toHaveCount(0);
   });
 });
 
