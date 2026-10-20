@@ -26,8 +26,8 @@ export function RequireSession({ children }: { children: ReactNode }) {
   if (ACESSO_LIVRE) return <>{children}</>;
   if (sessao.status === 'verificando' || bloqueada) {
     return (
-      <main className="shell">
-        <p role="status">Verificando sua sessão…</p>
+      <main className="session-loading" role="status" aria-label="Carregando">
+        <span className="spin" aria-hidden="true" />
       </main>
     );
   }

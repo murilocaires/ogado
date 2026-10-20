@@ -716,3 +716,17 @@ a {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* Espera da sessao: indicador centralizado na viewport, inclusive no celular. */
+.session-loading {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+.session-loading .spin {
+  width: 40px;
+  height: 40px;
+  border-color: var(--nevoa-200);
+  border-top-color: var(--folha-600);
+}
