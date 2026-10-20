@@ -176,9 +176,6 @@ export function PainelScreen() {
           <div className="empty" style={{ padding: '24px 0 8px' }}>
             <h3 style={{ marginTop: 0 }}>Nenhuma operação ainda</h3>
             <p>Suas compras e vendas aparecem aqui.</p>
-            <Link href="/negocios?novo=compra" className="btn">
-              Cadastrar primeiro lote
-            </Link>
           </div>
         )}
       </section>

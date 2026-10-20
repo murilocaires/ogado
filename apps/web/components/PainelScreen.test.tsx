@@ -51,10 +51,7 @@ describe('RF-040 Painel', () => {
     renderComApp(<PainelScreen />);
     expect(screen.getByRole('heading', { level: 1, name: 'Olá' })).toBeInTheDocument();
     expect(screen.getByText('Nenhuma operação ainda')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Cadastrar primeiro lote' })).toHaveAttribute(
-      'href',
-      '/negocios?novo=compra',
-    );
+    expect(screen.queryByRole('link', { name: 'Cadastrar primeiro lote' })).not.toBeInTheDocument();
     // ADR-0014: simulador novo vazio -> o cartão mostra "—" e orienta a preencher
     const cartao = screen.getByRole('region', { name: /Recria, simulação atual/ });
     expect(within(cartao).getAllByText('—').length).toBeGreaterThanOrEqual(1);
