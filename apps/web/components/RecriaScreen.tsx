@@ -42,8 +42,7 @@ const CAMPOS: Record<RecriaCampo, CampoDef> = {
 };
 
 type ItemSecao =
-  | { campo: RecriaCampo }
-  | { rotulo: string; valor: string; info?: InfoKey; pequeno?: string };
+  { campo: RecriaCampo } | { rotulo: string; valor: string; info?: InfoKey; pequeno?: string };
 
 /** Cards na mesma divisão e ordem da planilha de recria (campos brancos = entrada; cadeado = calculado). */
 function secoesRecria(r: ResultadoRecria): { titulo: string; itens: ItemSecao[] }[] {
@@ -299,6 +298,29 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
                 <div className="grid g3 keep3" style={{ marginTop: 16, gap: 10 }}>
                   <div className="mini">
                     <span className="th">
+                      Faturamento bruto
+                      <InfoPopover k="bruto" />
+                    </span>
+                    <b aria-live="polite">{brl(r.faturamentoBruto)}</b>
+                  </div>
+                  <div className="mini">
+                    <span className="th">
+                      (−) Custo operacional
+                      <InfoPopover k="custo" />
+                    </span>
+                    <b aria-live="polite">{brl(r.custoTotal)}</b>
+                  </div>
+                  <div className="mini">
+                    <span className="th">
+                      (−) Investimento
+                      <InfoPopover k="invest" />
+                    </span>
+                    <b aria-live="polite">{brl(recriaInvestimento(recria.form.investimento))}</b>
+                  </div>
+                </div>
+                <div className="grid g3 keep3" style={{ marginTop: 16, gap: 10 }}>
+                  <div className="mini">
+                    <span className="th">
                       Por mês
                       <InfoPopover k="mes" />
                     </span>
@@ -374,37 +396,6 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
                     );
                   })}
                 </div>
-              </section>
-
-              <section className="card" aria-labelledby="r-venda">
-                <h2 id="r-venda">Da venda ao líquido</h2>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>
-                        Faturamento bruto
-                        <InfoPopover k="bruto" />
-                      </td>
-                      <td>
-                        <b>{brl(r.faturamentoBruto)}</b>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        (−) Custo operacional
-                        <InfoPopover k="custo" />
-                      </td>
-                      <td>{brl(r.custoTotal)}</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        (−) Investimento
-                        <InfoPopover k="invest" />
-                      </td>
-                      <td>{brl(recriaInvestimento(recria.form.investimento))}</td>
-                    </tr>
-                  </tbody>
-                </table>
               </section>
 
               <button

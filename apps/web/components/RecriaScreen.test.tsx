@@ -35,7 +35,10 @@ describe('RF-030/RF-031 simulador de recria', () => {
     expect(within(hero()).getByText(formatarBRL(r.liquidoHa))).toBeInTheDocument();
     expect(within(hero()).getByText(formatarBRL(r.totalEmCaixa))).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Custo operacional/ })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Da venda ao líquido' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Da venda ao líquido' })).not.toBeInTheDocument();
+    expect(within(hero()).getByText('Faturamento bruto')).toBeInTheDocument();
+    expect(within(hero()).getByText(formatarBRL(r.faturamentoBruto))).toBeInTheDocument();
+    expect(within(hero()).getByText(formatarBRL(r.custoTotal))).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Dados do lote' })).toBeInTheDocument();
     // O aviso de fracao de animais nao deve aparecer na tela.
     expect(screen.queryByText(/O investimento compra/)).not.toBeInTheDocument();
