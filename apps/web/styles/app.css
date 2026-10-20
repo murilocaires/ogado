@@ -1883,4 +1883,13 @@
 }
 .app .recria-card-header .btn {
   flex-shrink: 0;
+  background: transparent;
+  color: var(--folha-600);
+  font-weight: 500;
+  padding-inline: 8px;
+}
+.app .recria-card-header .btn:hover {
+  background: transparent;
+  color: var(--folha-700);
+  text-decoration: underline;
 }
