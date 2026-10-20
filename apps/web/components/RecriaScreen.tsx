@@ -10,7 +10,6 @@ import { useRepo, useRepoState } from '../lib/repo/repo-provider';
 import type { RecriaCampo } from '../lib/repo/types';
 import { Carregando, PageHeader } from './AppShell';
 import { CenariosScreen } from './CenariosScreen';
-import { ConfirmDialog } from './Dialog';
 import { CampoCalculado, CampoNumero } from './Fields';
 import type { InfoKey } from '../lib/info';
 import { InfoPopover } from './InfoPopover';
@@ -141,7 +140,6 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
   const dados = useRepoState();
   const repo = useRepo();
   const toast = useToast();
-  const [confirmando, setConfirmando] = useState(false);
   const [aba, setAba] = useState<AbaRecria>(abaInicial);
   const [nomeando, setNomeando] = useState(false);
 
@@ -197,15 +195,6 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
             ? 'Mude os números e veja o resultado na hora.'
             : 'Seus cenários salvos. Marque até 3 para comparar.'
         }
-        acoes={
-          simulador ? (
-            <>
-              <button type="button" className="btn sec sm" onClick={() => setConfirmando(true)}>
-                Limpar campos
-              </button>
-            </>
-          ) : undefined
-        }
       />
 
       <div className="seg abas" role="tablist" aria-label="Recria">
@@ -244,7 +233,22 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
             <div className="stack">
               {secoesRecria(r).map((g, n) => (
                 <section className="card" key={g.titulo} aria-labelledby={`g-recria-${n}`}>
-                  <h2 id={`g-recria-${n}`}>{g.titulo}</h2>
+                  <div className="recria-card-header">
+                    <h2 id={`g-recria-${n}`}>{g.titulo}</h2>
+                    <button
+                      type="button"
+                      className="btn sec sm"
+                      aria-label={`Limpar ${g.titulo}`}
+                      onClick={() => {
+                        const form: Partial<Record<RecriaCampo, string>> = {};
+                        for (const item of g.itens) if ('campo' in item) form[item.campo] = '';
+                        repo.atualizarRecria({ form });
+                        toast(`${g.titulo}: campos limpos.`);
+                      }}
+                    >
+                      Limpar
+                    </button>
+                  </div>
                   <div className="row">
                     {g.itens.map((item) => {
                       if (!('campo' in item)) {
@@ -423,21 +427,6 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
           confirmar="Salvar"
           onCancel={() => setNomeando(false)}
           onConfirm={(nome) => salvarCenario(nome || `Cenário ${cenarios.length + 1}`)}
-        />
-      )}
-
-      {confirmando && (
-        <ConfirmDialog
-          titulo="Limpar todos os campos?"
-          texto='Todos os campos ficam em branco e o resultado aparece como "—" até você preencher de novo.'
-          confirmar="Limpar"
-          perigo
-          onCancel={() => setConfirmando(false)}
-          onConfirm={() => {
-            repo.limparRecria();
-            toast('Campos limpos.');
-            setConfirmando(false);
-          }}
         />
       )}
     </>

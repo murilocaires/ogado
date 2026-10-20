@@ -11,7 +11,6 @@ import {
   recriaEntradaSchema,
   type CenarioDto,
   type LoteDto,
-  type RecriaEntradaDto,
 } from '@ogado/contracts';
 import type {
   CenarioEntity,
@@ -19,7 +18,6 @@ import type {
   EntityMeta,
   LoteEntity,
   LoteSalvar,
-  RecriaEntity,
   SyncableRepo,
 } from '../repo/types';
 import type { DadosClient, DadosFalha, DadosResult } from './data-client';
@@ -30,7 +28,6 @@ import {
   loteParaCriar,
   lotePatchDe,
   recriaDeDto,
-  recriaParaPut,
 } from './mappers';
 import { MOTIVO_CONTRATO, motivoDeValidacao } from './motivos';
 
@@ -89,7 +86,7 @@ export interface ItemPendente {
 /**
  * Entidades que o aparelho tem e a nuvem ainda não recebeu: `version` local diferente da última
  * versão sincronizada, ou ausente do controle. Exclusão (tombstone) também conta. As entradas da
- * recria nunca editadas (versão 1) não são pendência: não há nada do usuário para subir.
+ * recria sao rascunhos em memoria e nunca geram pendencias.
  */
 export function pendentes(
   dados: DadosCompletos,
@@ -99,10 +96,6 @@ export function pendentes(
   const itens: ItemPendente[] = [];
   for (const l of dados.lotes) if (sujo(l)) itens.push({ tipo: 'lote', id: l.id });
   for (const c of dados.cenarios) if (sujo(c)) itens.push({ tipo: 'cenario', id: c.id });
-  const r = dados.recria;
-  if (sujo(r) && !(versoes[r.id] === undefined && r.version === 1)) {
-    itens.push({ tipo: 'recria', id: r.id });
-  }
   return itens;
 }
 
@@ -171,15 +164,6 @@ function igualCenario(c: CenarioEntity, d: CenarioDto): boolean {
   return c.deletedAt !== null || c.nome === d.nome;
 }
 
-function igualRecria(r: RecriaEntity, d: RecriaEntradaDto): boolean {
-  const outra = recriaDeDto(d);
-  if (!outra) return false;
-  return (
-    r.lotacaoInicial === outra.lotacaoInicial &&
-    JSON.stringify(r.form) === JSON.stringify(outra.form)
-  );
-}
-
 export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
   const { repo, api, estado, usuarioId } = deps;
   const agora = deps.agora ?? (() => new Date());
@@ -187,8 +171,12 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
   // Outra conta deixou dados neste aparelho: não mistura (RF-078); o logout limpa.
   if (lido && lido.usuarioId !== usuarioId) return 'erro';
   const versoes: Record<string, number> = { ...(lido?.versoes ?? {}) };
-  const conflitos = new Map<string, Conflito>((lido?.conflitos ?? []).map((c) => [c.id, c]));
-  const rejeitados = new Map<string, Rejeitado>((lido?.rejeitados ?? []).map((r) => [r.id, r]));
+  const conflitos = new Map<string, Conflito>(
+    (lido?.conflitos ?? []).filter((c) => c.tipo !== 'recria').map((c) => [c.id, c]),
+  );
+  const rejeitados = new Map<string, Rejeitado>(
+    (lido?.rejeitados ?? []).filter((r) => r.tipo !== 'recria').map((r) => [r.id, r]),
+  );
 
   const salvarEstado = (): void => {
     // Pendência de entidade que não existe mais no aparelho não tem o que mostrar.
@@ -196,7 +184,6 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
     const existentes = new Set<string>([
       ...dados.lotes.map((l) => l.id),
       ...dados.cenarios.map((c) => c.id),
-      dados.recria.id,
     ]);
     for (const id of [...conflitos.keys()]) if (!existentes.has(id)) conflitos.delete(id);
     for (const id of [...rejeitados.keys()]) if (!existentes.has(id)) rejeitados.delete(id);
@@ -406,83 +393,9 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
     aplicar: (es) => repo.aplicar({ cenarios: es }),
   };
 
-  /** As entradas da recria são um registro único por fazenda (PUT). */
-  async function sincronizarRecria(): Promise<void> {
-    const local = repo.exportar().recria;
-    const remoto = await api.lerRecria();
-    if (!remoto.ok && remoto.kind !== 'nao-encontrado') return checar(remoto);
-
-    let adotada: { entidade: RecriaEntity; lida: number } | null = null;
-    const adotar = (d: RecriaEntradaDto): void => {
-      const e = recriaDeDto(d);
-      if (!e) return;
-      adotada = { entidade: e, lida: local.version };
-      sincronizado(d.id, d.version);
-      if (local.id !== d.id) {
-        conflitos.delete(local.id);
-        rejeitados.delete(local.id);
-      }
-    };
-    const conflitar = (atual: unknown): void => {
-      registrarConflito({
-        tipo: 'recria',
-        id: local.id,
-        motivo: 'alterado',
-        acao: 'editar',
-        versaoLocal: local.version,
-        atual,
-      });
-    };
-
-    try {
-      if (!remoto.ok) {
-        if (aguardandoCorrecao(local)) return;
-        const res = await api.gravarRecria(recriaParaPut(local));
-        if (res.ok) adotar(res.data);
-        else falhaDeEscrita('recria', local, res);
-        return;
-      }
-      const r = remoto.data;
-      const base = local.id === r.id ? versoes[local.id] : undefined;
-      if (base !== undefined && local.version === base) {
-        if (r.version > base) adotar(r);
-        return;
-      }
-      if (igualRecria(local, r)) return adotar(r);
-      // Nunca editada neste aparelho: não há nada do usuário a proteger.
-      if (base === undefined && local.version === 1) return adotar(r);
-      if (conflitos.has(local.id) || aguardandoCorrecao(local)) return;
-      if (base !== undefined ? r.version !== base : local.id !== r.id && r.version > 1) {
-        return conflitar(r);
-      }
-      const res = await api.gravarRecria({ ...recriaParaPut(local, r.version), id: r.id });
-      if (res.ok) adotar(res.data);
-      else if (res.kind === 'conflito') {
-        const p = recriaEntradaSchema.safeParse(res.atual);
-        if (p.success && igualRecria(local, p.data)) adotar(p.data);
-        else conflitar(p.success ? p.data : res.atual);
-      } else falhaDeEscrita('recria', local, res);
-    } finally {
-      const a = adotada as { entidade: RecriaEntity; lida: number } | null;
-      if (a) {
-        const hoje = repo.exportar().recria;
-        if (hoje.version === a.lida) repo.aplicar({ recria: a.entidade });
-        else {
-          // Editada durante o envio: fica com o conteúdo do usuário, já na identidade da nuvem.
-          const base = versoes[a.entidade.id];
-          const versao = hoje.version === base ? hoje.version + 1 : hoje.version;
-          if (hoje.id !== a.entidade.id || versao !== hoje.version) {
-            repo.aplicar({ recria: { ...hoje, id: a.entidade.id, version: versao } });
-          }
-        }
-      }
-    }
-  }
-
   try {
     await reconciliar(lotes);
     await reconciliar(cenarios);
-    await sincronizarRecria();
     salvarEstado();
     return 'ok';
   } catch (e) {

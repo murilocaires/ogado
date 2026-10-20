@@ -86,16 +86,21 @@ describe('RF-030/RF-031 simulador de recria', () => {
     expect(within(secao).getAllByRole('group').length).toBeGreaterThanOrEqual(6);
   });
 
-  it('RF-030 Limpar campos pede confirmação e deixa o resultado em "—"', async () => {
+  it.each([0, 1, 2, 3])('limpa apenas os campos do card %s', async (indice) => {
     const user = userEvent.setup();
     renderComPlanilha();
-    await user.click(screen.getByRole('button', { name: 'Limpar campos' }));
-    const alerta = screen.getByRole('alertdialog', { name: 'Limpar todos os campos?' });
-    await user.click(within(alerta).getByRole('button', { name: 'Limpar' }));
-    expect(screen.getByLabelText('Investimento (compra)')).toHaveValue('');
-    expect(within(hero()).queryByText('R$ 102.408,05')).not.toBeInTheDocument();
-    expect(within(hero()).getAllByText('—').length).toBeGreaterThanOrEqual(1);
+    const botoes = screen.getAllByRole('button', { name: /^Limpar / });
+    const card = botoes[indice]!.closest('section')!;
+    const entradas = [...document.querySelectorAll<HTMLInputElement>('input[data-k]')];
+    const antes = entradas.map((input) => input.value);
+    await user.click(botoes[indice]!);
+    entradas.forEach((input, i) => {
+      expect(input).toHaveValue(card.contains(input) ? '' : antes[i]);
+    });
+    expect(screen.queryByRole('button', { name: 'Limpar campos' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
+
 });
 
 describe('ADR-0014 simulador sem padrões', () => {
@@ -133,7 +138,8 @@ describe('ADR-0014 simulador sem padrões', () => {
     expect(screen.queryByRole('button', { name: /Restaurar padrões/ })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Lotação inicial \(UA\/ha\) calculada sobre/)).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Limpar campos' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Limpar campos' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^Limpar / })).toHaveLength(4);
   });
 
   it('RN-009 a lotação inicial usa a área pastável informada (50 ha, não 80)', async () => {

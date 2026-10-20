@@ -52,13 +52,6 @@ describe('pendentes (RF-075)', () => {
     expect(pendentesDe(a)).toBe(0);
   });
 
-  it('a recria editada conta; intocada, não', () => {
-    const a = aparelho();
-    expect(contarPendentes(a.repo.exportar(), {})).toBe(0);
-    a.repo.atualizarRecria({ form: { area: '9' } });
-    expect(contarPendentes(a.repo.exportar(), {})).toBe(1);
-  });
-
   it('lote criado e excluído antes de subir deixa de contar depois da rodada', async () => {
     const srv = criarServidor();
     const a = aparelho();
@@ -259,56 +252,6 @@ describe('conflito entre aparelhos (RF-076)', () => {
     expect(srv.cenarios.get(c.id)?.nome).toBe('Nome do A');
   });
 
-  it('entradas da recria editadas em dois aparelhos: conflito, e a decisão vale', async () => {
-    const srv = criarServidor();
-    const a = aparelho();
-    a.repo.atualizarRecria({ form: { area: '100' } });
-    await rodar(a, srv.api);
-    const b = aparelho();
-    await rodar(b, srv.api);
-
-    b.repo.atualizarRecria({ form: { area: '200' } });
-    await rodar(b, srv.api);
-    a.repo.atualizarRecria({ form: { area: '300' } });
-    await rodar(a, srv.api);
-
-    expect(a.estado.atual?.conflitos?.[0]).toMatchObject({ tipo: 'recria' });
-    expect(srv.recria()?.entradas['area']).toBe('200');
-    expect(a.repo.exportar().recria.form.area).toBe('300');
-
-    resolverConflito({ ...a, usuarioId: 'u1', id: a.repo.exportar().recria.id, escolha: 'meu' });
-    await rodar(a, srv.api);
-    expect(srv.recria()?.entradas['area']).toBe('300');
-    expect(a.estado.atual?.conflitos).toEqual([]);
-  });
-
-  it('recria editada antes do login com a nuvem já alterada em outro aparelho: pergunta, não sobrescreve', async () => {
-    const srv = criarServidor();
-    const a = aparelho();
-    a.repo.atualizarRecria({ form: { area: '100' } });
-    await rodar(a, srv.api);
-    a.repo.atualizarRecria({ form: { area: '150' } });
-    await rodar(a, srv.api);
-
-    const novo = aparelho();
-    novo.repo.atualizarRecria({ form: { area: '999' } });
-    await rodar(novo, srv.api);
-
-    expect(srv.recria()?.entradas['area']).toBe('150');
-    expect(novo.repo.exportar().recria.form.area).toBe('999');
-    expect(novo.estado.atual?.conflitos).toHaveLength(1);
-
-    resolverConflito({
-      ...novo,
-      usuarioId: 'u1',
-      id: novo.repo.exportar().recria.id,
-      escolha: 'meu',
-    });
-    await rodar(novo, srv.api);
-    expect(srv.recria()?.entradas['area']).toBe('999');
-    expect(novo.repo.exportar().recria.id).toBe(srv.recria()?.id);
-  });
-
   it('resolver um conflito que não existe devolve false', () => {
     const a = aparelho();
     a.estado.gravar({ usuarioId: 'u1', versoes: {} });
@@ -454,16 +397,15 @@ describe('integridade com a rede cortada (RNF-017)', () => {
     };
   }
 
-  // 2 lotes + 1 cenário + recria = 4 escritas; o corte 5 nunca dispara (rodada completa).
+  // 2 lotes + 1 cenário = 3 escritas; o corte 4 nunca dispara (rodada completa). A recria é rascunho e não sincroniza.
   for (const depois of [false, true]) {
-    for (let n = 1; n <= 4; n += 1) {
+    for (let n = 1; n <= 3; n += 1) {
       it(`corte na escrita ${n} (${depois ? 'servidor gravou' : 'antes de gravar'}): a rodada seguinte não perde nem duplica`, async () => {
         const srv = criarServidor();
         const a = aparelho();
         const l1 = a.repo.salvarLote(COMPRA);
         const l2 = a.repo.salvarLote({ ...COMPRA, qtd: '20' });
         const c = a.repo.salvarCenario(cenario());
-        a.repo.atualizarRecria({ form: { area: '321' } });
 
         expect(await rodar(a, cortando(srv, n, depois))).toBe('rede');
         expect(await rodar(a, srv.api)).toBe('ok');
@@ -471,7 +413,6 @@ describe('integridade com a rede cortada (RNF-017)', () => {
 
         expect([...srv.lotes.keys()].sort()).toEqual([l1.id, l2.id].sort());
         expect([...srv.cenarios.keys()]).toEqual([c.id]);
-        expect(srv.recria()?.entradas['area']).toBe('321');
         const locais = a.repo.exportar();
         expect(locais.lotes).toHaveLength(2);
         expect(locais.lotes.map((l) => l.numero).sort()).toEqual([1, 2]);

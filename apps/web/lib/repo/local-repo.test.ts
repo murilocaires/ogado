@@ -77,13 +77,12 @@ describe('RF-020 repositório local (ADR-0007)', () => {
     expect(snap.recria.lotacaoInicial).toBe('fixa80');
   });
 
-  it('ADR-0014 entradas já salvas pelo usuário são preservadas (inclusive fixa80)', () => {
+  it('a recria é rascunho: recarregar sem salvar como cenário limpa as entradas', () => {
     const storage = criarStorageMemoria();
     const repo = criarRepoLocal({ storage: () => storage });
     repo.atualizarRecria({ form: { dias: '300' }, lotacaoInicial: 'fixa80' });
     const depois = criarRepoLocal({ storage: () => storage }).getSnapshot();
-    expect(depois.status === 'pronto' && depois.recria.form.dias).toBe('300');
-    expect(depois.status === 'pronto' && depois.recria.lotacaoInicial).toBe('fixa80');
+    expect(depois.status === 'pronto' && depois.recria.form.dias).toBe('');
   });
 
   it('RNF-001 as entradas da planilha (helper de teste) usam percentuais em %', () => {
@@ -288,7 +287,7 @@ describe('RNF-004 migração do storage da E1 para a E2', () => {
     const repo = criarRepoLocal({ storage: () => storage });
     const snap = repo.getSnapshot();
     expect(snap.status === 'pronto' && snap.lotes.map((l) => l.id)).toEqual(['l-1']);
-    expect(snap.status === 'pronto' && snap.recria.form.dias).toBe('300');
+    expect(snap.status === 'pronto' && snap.recria.form.dias).toBe('');
     expect(snap.status === 'pronto' && snap.cenarios).toEqual([]);
 
     repo.salvarCenario(snapshotPadrao());

@@ -1870,3 +1870,17 @@
     font-size: clamp(24px, 7vw, 36px);
   }
 }
+
+.app .recria-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.app .recria-card-header h2 {
+  margin: 0;
+}
+.app .recria-card-header .btn {
+  flex-shrink: 0;
+}

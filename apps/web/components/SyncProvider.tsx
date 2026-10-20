@@ -237,7 +237,7 @@ export function SyncProvider({
         ...completos.cenarios.filter((c) => c.deletedAt === null).map((c) => c.id),
       ]);
       rejeitados = (leitura.estado?.rejeitados ?? []).filter((r) => vivos.has(r.id));
-      conflitos = leitura.estado?.conflitos ?? [];
+      conflitos = (leitura.estado?.conflitos ?? []).filter((c) => c.tipo !== 'recria');
     }
     return {
       pendentes: ids,

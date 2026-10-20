@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { DadosClient } from './data-client';
-import { sincronizar } from './engine';
+import { contarPendentes, sincronizar } from './engine';
 import { loteDeDto, loteParaCriar } from './mappers';
 import { AGORA, aparelho, COMPRA, cenario, criarServidor } from './engine.test-support';
 
@@ -64,7 +64,7 @@ describe('sincronizar', () => {
 
     expect(srv.lotes.size).toBe(1);
     expect(srv.cenarios.size).toBe(1);
-    expect(srv.recria()).not.toBeNull();
+    expect(srv.recria()).toBeNull();
     expect(a.estado.atual?.usuarioId).toBe('u1');
   });
 
@@ -80,12 +80,11 @@ describe('sincronizar', () => {
     expect(srv.chamadas).toEqual([]);
   });
 
-  it('outro aparelho recebe lotes, cenários e entradas da recria', async () => {
+  it('outro aparelho recebe lotes e cenários (a recria é rascunho e não sincroniza)', async () => {
     const srv = criarServidor();
     const a = aparelho();
     a.repo.salvarLote(COMPRA);
     a.repo.salvarCenario(cenario());
-    a.repo.atualizarRecria({ form: { area: '777' } });
     await sincronizar({ ...a, api: srv.api, usuarioId: 'u1' });
 
     const b = aparelho();
@@ -95,7 +94,7 @@ describe('sincronizar', () => {
     expect(dados.lotes).toHaveLength(1);
     expect(dados.lotes[0]?.preco).toBe('300,5');
     expect(dados.cenarios[0]?.nome).toBe('Base');
-    expect(dados.recria.form.area).toBe('777');
+    expect(dados.recria.form.area).toBe('');
   });
 
   it('edição e exclusão locais sobem com a versão-base', async () => {
@@ -167,17 +166,48 @@ describe('sincronizar', () => {
     expect(await sincronizar({ ...a, api: srv.api, usuarioId: 'u2' })).toBe('erro');
     expect(srv.lotes.size).toBe(0);
   });
+});
 
-  it('entradas da recria editadas antes do login vencem uma nuvem intocada', async () => {
+describe('simulador sem salvamento automatico', () => {
+  it('digitar e limpar nao le nem grava entradas no servidor; salvar cenario grava apenas o cenario', async () => {
     const srv = criarServidor();
-    const intocado = aparelho();
-    await sincronizar({ ...intocado, api: srv.api, usuarioId: 'u1' });
-
-    const novo = aparelho();
-    novo.repo.atualizarRecria({ form: { area: '555' } });
-    await sincronizar({ ...novo, api: srv.api, usuarioId: 'u1' });
-
-    expect(srv.recria()?.entradas['area']).toBe('555');
-    expect(novo.repo.exportar().recria.id).toBe(srv.recria()?.id);
+    const a = aparelho();
+    const ler = vi.spyOn(srv.api, 'lerRecria');
+    const gravar = vi.spyOn(srv.api, 'gravarRecria');
+    a.repo.atualizarRecria({ form: { investimento: '2000', dias: '270' } });
+    expect(contarPendentes(a.repo.exportar(), {})).toBe(0);
+    expect(await sincronizar({ ...a, api: srv.api, usuarioId: 'u1' })).toBe('ok');
+    a.repo.limparRecria();
+    expect(await sincronizar({ ...a, api: srv.api, usuarioId: 'u1' })).toBe('ok');
+    expect(srv.chamadas).toEqual([]);
+    a.repo.salvarCenario(cenario());
+    expect(await sincronizar({ ...a, api: srv.api, usuarioId: 'u1' })).toBe('ok');
+    expect(srv.chamadas).toEqual(['criarCenario']);
+    expect(srv.cenarios.size).toBe(1);
+    expect(ler).not.toHaveBeenCalled();
+    expect(gravar).not.toHaveBeenCalled();
+  });
+  it('descarta conflitos antigos do rascunho sem pedir uma escolha', async () => {
+    const srv = criarServidor();
+    const a = aparelho();
+    const id = a.repo.exportar().recria.id;
+    a.estado.gravar({
+      usuarioId: 'u1',
+      versoes: {},
+      conflitos: [
+        {
+          tipo: 'recria',
+          id,
+          motivo: 'alterado',
+          acao: 'editar',
+          versaoLocal: 2,
+          atual: {},
+          detectadoEm: AGORA,
+        },
+      ],
+    });
+    await sincronizar({ ...a, api: srv.api, usuarioId: 'u1' });
+    expect(a.estado.atual?.conflitos).toEqual([]);
+    expect(srv.chamadas).toEqual([]);
   });
 });

@@ -184,6 +184,8 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
   let lotes: LoteEntity[] = []; // inclui tombstones (deletedAt)
   let cenarios: CenarioEntity[] = []; // inclui tombstones (deletedAt)
   let recria: RecriaEntity = recriaInicial();
+  // O simulador é rascunho: nunca é gravado nem sincronizado (só vira dado ao salvar como cenário).
+  const recriaBase = recria;
   let persistencia: PersistenciaStatus = 'ok';
   let snapshot: RepoSnapshot | null = null;
 
@@ -228,7 +230,6 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
       const envelope = lerEnvelope(bruto);
       if (envelope) {
         lotes = envelope.lotes;
-        recria = envelope.recria;
         cenarios = envelope.cenarios;
         return;
       }
@@ -248,7 +249,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
     try {
       const storage = obterStorage();
       if (!storage) throw new Error('sem storage');
-      const envelope: Envelope = { schema: SCHEMA, lotes, recria, cenarios };
+      const envelope: Envelope = { schema: SCHEMA, lotes, recria: recriaBase, cenarios };
       storage.setItem(STORAGE_KEY, JSON.stringify(envelope));
     } catch {
       persistencia = 'indisponivel';
@@ -282,7 +283,7 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
   return {
     exportar(): DadosCompletos {
       garantir();
-      return { lotes: [...lotes], recria, cenarios: [...cenarios] };
+      return { lotes: [...lotes], recria: recriaBase, cenarios: [...cenarios] };
     },
     aplicar(mudanca) {
       garantir();
@@ -302,7 +303,6 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
       };
       lotes = mesclar(lotes, mudanca.lotes);
       cenarios = mesclar(cenarios, mudanca.cenarios);
-      if (mudanca.recria) recria = mudanca.recria;
       notificar();
     },
     limpar() {
