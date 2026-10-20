@@ -1853,3 +1853,20 @@
   gap: 8px;
   flex: 0 0 auto;
 }
+
+/* O resumo da recria adapta as colunas ao espaco disponivel. */
+.app .rres .hero .grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+}
+.app .rres .hero .mini b {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+@media (max-width: 560px) {
+  .app .rres .hero .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app .rres .hero .big {
+    font-size: clamp(24px, 7vw, 36px);
+  }
+}
