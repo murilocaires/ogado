@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
 import type { ReactNode } from 'react';
+import userEvent from '@testing-library/user-event';
+import { TERMOS_VERSAO } from '@ogado/contracts';
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SessionController, SessionState } from '../lib/auth/session-controller';
@@ -71,7 +73,7 @@ describe('RequireSession', () => {
 });
 
 describe('acesso direto depois do login', () => {
-  it.each([true, false, null])('nao pede novo aceite: estado %s', (aceite) => {
+  it.each([true, null])('nao pede novo aceite: estado %s', (aceite) => {
     const acceptTerms = vi.fn();
     renderCom(
       {
@@ -89,5 +91,66 @@ describe('acesso direto depois do login', () => {
     expect(screen.queryByRole('button', { name: 'Li e aceito' })).not.toBeInTheDocument();
     expect(acceptTerms).not.toHaveBeenCalled();
     expect(replace).not.toHaveBeenCalled();
+  });
+});
+
+describe('dialogo de termos atualizados', () => {
+  beforeEach(() => replace.mockClear());
+  function renderAtualizacao(
+    acceptTerms = vi.fn().mockResolvedValue({ ok: true, data: sessionBody }),
+  ) {
+    renderCom(
+      {
+        status: 'autenticado',
+        usuario: { ...sessionBody.usuario, aceiteVigente: false, aceiteTermosVersao: '2020-01-01' },
+        fazenda: sessionBody.fazenda,
+      },
+      { acceptTerms },
+    );
+    return acceptTerms;
+  }
+  it('mostra apenas um dialogo pequeno com o produto ao fundo e links para leitura', () => {
+    const aceitar = renderAtualizacao();
+    expect(screen.getByRole('dialog', { name: 'Termos atualizados' })).toBeInTheDocument();
+    expect(screen.getByText('conteúdo protegido')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Termos de Uso' })).toHaveAttribute('href', '/termos');
+    expect(screen.getByRole('link', { name: 'Política de Privacidade' })).toHaveAttribute(
+      'target',
+      '_blank',
+    );
+    expect(aceitar).not.toHaveBeenCalled();
+  });
+  it('registra a versao vigente somente ao clicar em aceitar e fecha no sucesso', async () => {
+    const aceitar = renderAtualizacao();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Li e aceito' }));
+    expect(aceitar).toHaveBeenCalledExactlyOnceWith(TERMOS_VERSAO);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByText('conteúdo protegido')).toBeInTheDocument();
+  });
+  it('permite adiar sem registrar aceite e sem sair do produto', async () => {
+    const aceitar = renderAtualizacao();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Agora não' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(aceitar).not.toHaveBeenCalled();
+    expect(replace).not.toHaveBeenCalled();
+  });
+  it('Escape fecha sem aceitar', async () => {
+    const aceitar = renderAtualizacao();
+    await userEvent.setup().keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(aceitar).not.toHaveBeenCalled();
+  });
+  it('falha de rede mostra erro e permite tentar novamente', async () => {
+    const aceitar = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, kind: 'rede' })
+      .mockResolvedValueOnce({ ok: true, data: sessionBody });
+    renderAtualizacao(aceitar);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Li e aceito' }));
+    expect(screen.getByRole('alert')).toHaveTextContent(/conectar/);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Li e aceito' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

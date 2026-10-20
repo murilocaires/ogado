@@ -1893,3 +1893,15 @@
   color: var(--folha-700);
   text-decoration: underline;
 }
+
+.app.termos-update-host {
+  min-height: 0;
+}
+.app.termos-update-host .ov {
+  background: rgba(13, 51, 36, 0.22);
+}
+.app .termos-update-links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}

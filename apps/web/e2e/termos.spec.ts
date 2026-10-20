@@ -90,7 +90,7 @@ test.describe('aceite apenas no cadastro', () => {
     );
   });
 
-  test('login nao exige repetir o aceite do cadastro', async ({ page }) => {
+  test('termos atualizados pedem aceite em dialogo sem substituir o painel', async ({ page }) => {
     const email = uniqueEmail('gate');
     await page.goto('/cadastrar');
     await page.getByLabel('E-mail', { exact: true }).fill(email);
@@ -100,12 +100,16 @@ test.describe('aceite apenas no cadastro', () => {
     await page.getByRole('button', { name: 'Criar conta' }).click();
     await expect(page).toHaveURL(/\/painel$/);
 
+    await expect(page.getByRole('dialog', { name: 'Termos atualizados' })).toHaveCount(0);
     definirVersaoAceita(email, '2020-01-01');
     await page.reload();
-
+    const dialogo = page.getByRole('dialog', { name: 'Termos atualizados' });
+    await expect(dialogo).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'Principal' }).first()).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Li e aceito' })).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: /aceite para continuar/i })).toHaveCount(0);
+    await dialogo.getByRole('button', { name: 'Li e aceito' }).click();
+    await expect(dialogo).toHaveCount(0);
+    await page.reload();
+    await expect(dialogo).toHaveCount(0);
   });
 });
 

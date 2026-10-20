@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 import { useSessionState } from '../lib/auth/session-provider';
+import { TERMOS_VERSAO } from '@ogado/contracts';
+import { TermosAtualizadosDialog } from './TermosAtualizadosDialog';
 
 /** Só para os e2e locais da E1/E2, que rodam sem API (`playwright.local.config.ts`). */
 const ACESSO_LIVRE = process.env['NEXT_PUBLIC_ACESSO_LIVRE'] === '1';
@@ -29,5 +31,14 @@ export function RequireSession({ children }: { children: ReactNode }) {
       </main>
     );
   }
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {sessao.status === 'autenticado' &&
+        !sessao.usuario.aceiteVigente &&
+        sessao.usuario.aceiteTermosVersao !== null && (
+          <TermosAtualizadosDialog key={`${sessao.usuario.id}:${TERMOS_VERSAO}`} />
+        )}
+    </>
+  );
 }
