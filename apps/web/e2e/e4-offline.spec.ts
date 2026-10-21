@@ -110,12 +110,24 @@ test('RF-072/RF-071 abre sem internet e calcula a mesma variante de cabeças int
   await preencherPlanilha(page);
   await expect(resultado.locator('.hero .big')).toHaveText(RESULTADO_CABECAS_INTEIRAS);
 
+  // O rascunho é só em memória: salvar o cenário confirma a gravação local sem rede.
+  await page.getByRole('button', { name: 'Salvar como cenário' }).click();
+  const dialogo = page.getByRole('dialog', { name: 'Salvar como cenário' });
+  await dialogo.getByLabel('Nome do cenário').fill('Simulação offline');
+  await dialogo.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Cenário salvo.' })).toBeVisible();
+
   await irPara(page, 'Conta');
   await expect(page).toHaveURL(/\/conta$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Conta' })).toBeVisible();
 
   // Recarregar direto numa tela que não é a inicial também funciona.
   await page.goto('/recria');
+  await expect(
+    page.getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big'),
+  ).toHaveText('—');
+  await page.getByRole('tab', { name: /^Cenários\s*1$/ }).click();
+  await page.getByRole('button', { name: 'Abrir Simulação offline' }).click();
   await expect(
     page.getByRole('region', { name: 'Resultado da recria' }).locator('.hero .big'),
   ).toHaveText(RESULTADO_CABECAS_INTEIRAS);
