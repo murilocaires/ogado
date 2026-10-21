@@ -252,12 +252,12 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
   const aceiteError = fieldErrors.aceiteTermos;
 
   return (
-    <AuthShell mobileTitle={isLogin ? 'Bem-vindo de volta' : 'Crie sua conta'}>
+    <AuthShell mobileTitle={isLogin ? 'Entrar' : 'Crie sua conta'}>
       <form className="auth-card" onSubmit={(e) => void onSubmit(e)} noValidate>
         <div className="desktop-title">
           <h1 className="disp">{isLogin ? 'Entrar' : 'Criar conta'}</h1>
           <p className="sub">
-            {isLogin ? 'Bem-vindo de volta ao seu gado.' : 'Leva um minuto. Você já pode lançar.'}
+            {isLogin ? 'Bem-vindo de volta ao Bovaro.' : 'Leva um minuto. Você já pode lançar.'}
           </p>
         </div>
 
@@ -479,17 +479,6 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
               ou
             </p>
             <GoogleLink texto="Entrar com Google" />
-            <p className="auth-legal">
-              Ao continuar com o Google você aceita os{' '}
-              <Link href="/termos" {...LINK_NOVA_ABA}>
-                Termos de Uso
-              </Link>{' '}
-              e a{' '}
-              <Link href="/privacidade" {...LINK_NOVA_ABA}>
-                Política de Privacidade
-              </Link>
-              .
-            </p>
           </>
         )}
 

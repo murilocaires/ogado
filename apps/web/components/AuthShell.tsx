@@ -6,9 +6,6 @@ export function AuthShell({ mobileTitle, children }: { mobileTitle: string; chil
   return (
     <div className="auth-page">
       <section className="auth-hero">
-        <div className="stripes" />
-        <div className="ring ring-1" />
-        <div className="ring ring-2" />
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14 }}>
           <LogoMark />
           <Wordmark />
@@ -23,13 +20,14 @@ export function AuthShell({ mobileTitle, children }: { mobileTitle: string; chil
       </section>
 
       <div className="auth-mobile-head">
-        <LogoMark />
+        <div className="auth-mobile-brand">
+          <LogoMark />
+          <Wordmark />
+        </div>
         <div className="title disp">{mobileTitle}</div>
       </div>
 
-      <main className="auth-main">
-        {children}
-      </main>
+      <main className="auth-main">{children}</main>
     </div>
   );
 }

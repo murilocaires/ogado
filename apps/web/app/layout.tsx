@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: 'Bovaro',
   description: 'Gestão de pecuária: Compra e Venda e Recria',
   applicationName: 'Bovaro',
-  icons: { apple: '/icons/apple-touch-icon.png' },
+  icons: { icon: '/icons/icon-192.png', apple: '/icons/apple-touch-icon.png' },
   appleWebApp: { capable: true, title: 'Bovaro', statusBarStyle: 'black-translucent' },
 };
 

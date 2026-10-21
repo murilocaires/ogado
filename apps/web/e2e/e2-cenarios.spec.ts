@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { preencherPlanilha, RESULTADO_CABECAS_INTEIRAS } from './planilha';
+import { ENTRADAS_PLANILHA, preencherPlanilha, RESULTADO_CABECAS_INTEIRAS } from './planilha';
 
 /**
  * E2 (cenários da recria): jornada SEM API e SEM login, dados no navegador.
@@ -42,8 +42,13 @@ for (const vp of viewports) {
         'true',
       );
 
-      // 2) volta ao simulador, muda o preço e salva outro
+      // 2) salvar limpa o simulador; preenche novamente antes de criar outro cenário
       await page.getByRole('tab', { name: 'Simulador' }).click();
+      for (const rotulo of Object.keys(ENTRADAS_PLANILHA)) {
+        await expect(page.getByLabel(rotulo, { exact: true })).toHaveValue('');
+      }
+      await preencherPlanilha(page);
+      await expect(resultado.locator('.hero .big')).toHaveText(RESULTADO_CABECAS_INTEIRAS);
       await page.getByLabel('R$/cab (venda)', { exact: true }).fill('350');
       await page.getByRole('button', { name: 'Salvar como cenário' }).click();
       const nome2 = page.getByRole('dialog', { name: 'Salvar como cenário' });
