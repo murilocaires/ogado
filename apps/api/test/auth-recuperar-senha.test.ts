@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { Writable } from 'node:stream';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { errorEnvelopeSchema, esqueciSenhaResponseSchema } from '@ogado/contracts';
+import { errorEnvelopeSchema, esqueciSenhaResponseSchema } from '@bovaro/contracts';
 import { createMemoryEmailSender } from '../src/email/memory-sender';
 import { createResendEmailSender } from '../src/email/resend-sender';
 import type { EmailSender } from '../src/email/email-sender';
@@ -312,7 +312,7 @@ describe('adaptador Resend', () => {
     const chamadas: { url: string; init: RequestInit }[] = [];
     const sender = createResendEmailSender({
       apiKey: 're_chave_de_teste',
-      from: 'O Gado <nao-responda@ogado.example>',
+      from: 'Bovaro <nao-responda@bovaro.com.br>',
       fetch: (url, init) => {
         chamadas.push({ url: String(url), init: init ?? {} });
         return Promise.resolve(new Response('{}', { status: 200 }));
@@ -325,7 +325,7 @@ describe('adaptador Resend', () => {
     const headers = new Headers(chamadas[0]?.init.headers);
     expect(headers.get('authorization')).toBe('Bearer re_chave_de_teste');
     expect(JSON.parse(String(chamadas[0]?.init.body))).toEqual({
-      from: 'O Gado <nao-responda@ogado.example>',
+      from: 'Bovaro <nao-responda@bovaro.com.br>',
       to: ['a@b.invalid'],
       subject: 'Assunto',
       text: 'Corpo',

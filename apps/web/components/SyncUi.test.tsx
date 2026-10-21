@@ -180,7 +180,7 @@ describe('RF-050/RF-075 indicador global e selo por registro', () => {
     onLine.mockRestore();
   });
 
-  it('lançar sem conexão mostra "1 pendente" e o selo; ao voltar a rede, some', async () => {
+  it('lançar sem conexão mantém o indicador global sem selo no item; ao voltar a rede, some', async () => {
     const m = montar(criarServidor());
     await aguardarSincronizado();
 
@@ -191,7 +191,7 @@ describe('RF-050/RF-075 indicador global e selo por registro', () => {
     await sincronizarAgora();
 
     await waitFor(() => expect(pilula()).toHaveTextContent('Sem conexão · 1 pendente'));
-    expect(screen.getAllByText('pendente').length).toBeGreaterThan(0);
+    expect(screen.queryByText('pendente')).not.toBeInTheDocument();
 
     m.rede.cortada = false;
     await sincronizarAgora();

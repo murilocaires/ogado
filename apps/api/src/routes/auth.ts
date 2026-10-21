@@ -10,7 +10,7 @@ import {
   sessionResponseSchema,
   signupRequestSchema,
   TERMOS_VERSAO,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import type { AppConfig } from '../config';
 import type { EmailSender } from '../email/email-sender';
 import { passwordResetEmail } from '../email/password-reset-email';
@@ -27,7 +27,7 @@ import {
   type AccountRepository,
 } from '../repositories/account-repository';
 import type { FazendaRepository } from '../repositories/fazenda-repository';
-import { clearSessionCookie, sessionCookieName, setSessionCookie } from '../session/cookie';
+import { clearSessionCookie, readSessionToken, setSessionCookie } from '../session/cookie';
 import type { SessionService } from '../session/session-service';
 import { sha256Hex } from '../session/tokens';
 import { toUsuarioDto } from '../usuario-dto';
@@ -195,7 +195,7 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AuthRoutesDeps): 
 
   // Idempotente: apaga a sessão no servidor (se houver) e o cookie; sempre 204.
   typed.post('/auth/logout', { config: { auth: 'public' } }, async (request, reply) => {
-    const token = request.cookies[sessionCookieName(deps.config)];
+    const token = readSessionToken(request.cookies, deps.config);
     if (token) await deps.sessions.invalidate(token);
     clearSessionCookie(reply, deps.config);
     return reply.code(204).send();

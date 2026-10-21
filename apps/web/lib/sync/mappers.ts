@@ -9,7 +9,7 @@ import {
   type LoteDto,
   type RecriaEntradaDto,
   type RecriaEntradaPut,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import { paraCampo, valorCampo } from '../format';
 import { ehRecria } from '../repo/local-repo';
 import type { CenarioEntity, LoteEntity, RecriaEntity } from '../repo/types';

@@ -27,7 +27,12 @@ export function InstalarApp({ className = 'btn' }: { className?: string }) {
         Instalar o app
       </button>
       {instrucoes && (
-        <Dialog titulo="Instalar o O Gado no iPhone ou iPad" onClose={() => setInstrucoes(false)} estreito fecharNoFundo>
+        <Dialog
+          titulo="Instalar o Bovaro no iPhone ou iPad"
+          onClose={() => setInstrucoes(false)}
+          estreito
+          fecharNoFundo
+        >
           <ol style={{ margin: 0, paddingLeft: 22, lineHeight: 1.7, color: 'var(--tinta-2)' }}>
             <li>
               Abra este endereço no <b>Safari</b>.
@@ -40,7 +45,7 @@ export function InstalarApp({ className = 'btn' }: { className?: string }) {
             </li>
           </ol>
           <p style={{ margin: '12px 0 0', color: 'var(--tinta-2)', fontSize: 14, lineHeight: 1.5 }}>
-            Depois disso o O Gado abre em tela cheia e funciona mesmo sem internet.
+            Depois disso o Bovaro abre em tela cheia e funciona mesmo sem internet.
           </p>
           <div className="actions">
             <button type="button" className="btn" onClick={() => setInstrucoes(false)}>

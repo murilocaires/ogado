@@ -1,7 +1,7 @@
 {
   "$schema": "./model-routing.schema.json",
   "version": "1.0.0",
-  "description": "Roteador de modelos orientado a custo do projeto O Gado. Cada tarefa do fluxo SDD tem um tier; o tier resolve para um modelo. Comece sempre no tier mais barato que resolve a tarefa e só suba por evidência (gate falhou), nunca por intuição.",
+  "description": "Roteador de modelos orientado a custo do projeto Bovaro. Cada tarefa do fluxo SDD tem um tier; o tier resolve para um modelo. Comece sempre no tier mais barato que resolve a tarefa e só suba por evidência (gate falhou), nunca por intuição.",
   "policy": {
     "default_tier": "standard",
     "principle": "cheapest-model-that-passes-the-gate",
@@ -65,7 +65,7 @@
     "avoid": ["colar arquivos grandes na conversa", "reler arquivos já lidos", "rodar a suíte completa a cada edição"]
   },
   "overrides": {
-    "env_var": "OGADO_MODEL_TIER",
+    "env_var": "BOVARO_MODEL_TIER",
     "cli": "node scripts/route-model.mjs <task> [--tier economy|standard|premium]",
     "human_can_force": true
   }

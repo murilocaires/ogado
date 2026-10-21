@@ -1,7 +1,7 @@
-/* Service worker do O Gado (E4, ADR-0007). Escrito à mão, sem biblioteca. Regras puras em sw-policy.js. */
+/* Service worker do Bovaro (E4, ADR-0007). Escrito à mão, sem biblioteca. Regras puras em sw-policy.js. */
 importScripts('/sw-policy.js');
 
-var P = self.OGadoSwPolicy;
+var P = self.BovaroSwPolicy;
 
 // Atualização silenciosa (RF-077, ADR-0014): a versão nova instala, pré-carrega as telas e assume
 // sozinha (skipWaiting aqui + clients.claim no activate). Quem decide o momento seguro de recarregar
@@ -22,7 +22,11 @@ self.addEventListener('activate', function (event) {
         return Promise.all(
           nomes
             .filter(function (n) {
-              return n.indexOf('ogado-') === 0 && n !== P.CACHE_ESTATICO && n !== P.CACHE_PAGINAS;
+              return (
+                (n.indexOf('bovaro-') === 0 || n.indexOf('ogado-') === 0) &&
+                n !== P.CACHE_ESTATICO &&
+                n !== P.CACHE_PAGINAS
+              );
             })
             .map(function (n) {
               return caches.delete(n);

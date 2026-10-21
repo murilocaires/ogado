@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { createPrisma } from '@ogado/db';
+import { createPrisma } from '@bovaro/db';
 import { TEST_EMAIL_DOMAIN, testDatabaseUrl } from './env';
 
 /** Aplica as migrações (aditivas) no Postgres real antes da suíte; limpa as contas de teste no fim. */

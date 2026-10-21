@@ -56,7 +56,7 @@
 Em seguida: CA-12 (guardião de rotas), CA-14/15 (convenção), CA-17/18/19 (CSRF, erros, headers) e por fim a UI e o e2e (CA-20…22).
 
 ## Etapa 2 (front) entregue
-Provas: `apps/web/components/AuthScreen.test.tsx` e `PainelPlaceholder.test.tsx` (CA-06 tela, CA-20, CA-21, diálogo de saída), `apps/web/lib/auth/*.test.ts` (cliente HTTP e máquina de estados), `apps/web/e2e/auth.spec.ts` (CA-20, CA-21, CA-22 contra API real + Postgres, Edge via `E2E_CHANNEL`). Capturas 1440/390 em `.scratch/web-v1/evidence/`. Rodar e2e: `docker compose up -d postgres` e `pnpm --filter @ogado/web test:e2e`.
+Provas: `apps/web/components/AuthScreen.test.tsx` e `PainelPlaceholder.test.tsx` (CA-06 tela, CA-20, CA-21, diálogo de saída), `apps/web/lib/auth/*.test.ts` (cliente HTTP e máquina de estados), `apps/web/e2e/auth.spec.ts` (CA-20, CA-21, CA-22 contra API real + Postgres, Edge via `E2E_CHANNEL`). Capturas 1440/390 em `.scratch/web-v1/evidence/`. Rodar e2e: `docker compose up -d postgres` e `pnpm --filter @bovaro/web test:e2e`.
 Desvios do design: sem "Esqueci a senha", "Continuar com Google" e "digital/rosto" (T-16/v3); cadastro só com e-mail e senha (o nome fica no onboarding T-05); mínimo de senha vem do ADR (8 + composição), não os 6 do mock; rotas `/entrar` e `/cadastrar`.
 
 **Dívida do T-14 (troca de usuário, RF-078):** o controlador já detecta login de `usuarioId` diferente da identidade guardada (`getAccountMismatch()` e `onAccountMismatch`), sem apagar nem sobrescrever nada. Falta, no T-14: contar os lançamentos pendentes, mostrar "N lançamentos de outra conta ainda não foram enviados" e só apagar o banco local com confirmação; e decidir a identidade guardada depois da confirmação.

@@ -1,4 +1,9 @@
-import { STORAGE_KEY, STORAGE_KEY_E1 } from '../repo/local-repo';
+import {
+  LEGACY_STORAGE_KEY,
+  LEGACY_STORAGE_KEY_E1,
+  STORAGE_KEY,
+  STORAGE_KEY_E1,
+} from '../repo/local-repo';
 import type { EstadoSync, EstadoSyncStore } from './engine';
 import {
   abrirBancoLocal,
@@ -8,7 +13,7 @@ import {
   transacionar,
 } from '../repo/indexed-db';
 
-export const SYNC_KEY = 'ogado.sync.v1';
+export const SYNC_KEY = 'bovaro.sync.v1';
 
 function ehEstado(v: unknown): v is EstadoSync {
   if (typeof v !== 'object' || v === null) return false;
@@ -28,14 +33,17 @@ export function browserSyncStore(key = SYNC_KEY): EstadoSyncStore {
       const db = await abrirBancoLocal();
       const tx = db.transaction('meta', 'readonly');
       const fim = concluida(tx);
-      const valor = resultado<unknown>(tx.objectStore('meta').get(key));
+      const pAtual = resultado<unknown>(tx.objectStore('meta').get(key));
+      const legado =
+        key === SYNC_KEY ? resultado<unknown>(tx.objectStore('meta').get('ogado.sync.v1')) : null;
       const epoca = resultado<unknown>(tx.objectStore('meta').get('geracao'));
-      const [estado, novaGeracao] = await Promise.all([valor, epoca]);
+      const [valorAtual, valorLegado, novaGeracao] = await Promise.all([pAtual, legado, epoca]);
       await fim;
       // Falha de flush não autoriza conservar em memória a fila da sessão anterior.
       // Só preservar alterações não confirmadas se o banco ainda pertence à mesma geração.
       if (sujo && geracao === novaGeracao) return;
       geracao = novaGeracao;
+      const estado = valorAtual ?? valorLegado;
       atual = ehEstado(estado) ? estado : null;
       sujo = false;
     },
@@ -79,7 +87,17 @@ export function browserSyncStore(key = SYNC_KEY): EstadoSyncStore {
 export async function limparDadosDoAparelho(): Promise<void> {
   await apagarBancoLocal();
   try {
-    for (const k of [STORAGE_KEY, STORAGE_KEY_E1, SYNC_KEY]) window.localStorage.removeItem(k);
+    for (const k of [
+      STORAGE_KEY,
+      STORAGE_KEY_E1,
+      LEGACY_STORAGE_KEY,
+      LEGACY_STORAGE_KEY_E1,
+      SYNC_KEY,
+      'ogado.sync.v1',
+      'bovaro.identidade',
+      'ogado.identidade',
+    ])
+      window.localStorage.removeItem(k);
   } catch {
     /* storage indisponível: nada a apagar */
   }

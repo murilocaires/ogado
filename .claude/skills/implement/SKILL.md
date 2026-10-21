@@ -14,4 +14,4 @@ Run typechecking regularly, single test files regularly, and the full test suite
 
 Once done, call the Skill tool with "code-review" to review the work.
 
-Commit your work to the current branch.
+Follow `docs/BRANCHING.md`. Before editing, verify that the current branch is a temporary branch based on `develop` (or `main` for an explicitly requested production hotfix). Preserve existing changes; use a separate worktree when needed. Commit only the task's changes when authorized. Open work PRs against `develop`; never merge without explicit human approval.

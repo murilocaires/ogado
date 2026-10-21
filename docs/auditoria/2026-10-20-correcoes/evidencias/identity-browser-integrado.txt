@@ -1,8 +1,0 @@
-PASS RF-078: IndexedDB conserva dono A com get/set/remove falhando; login B bloqueado; B só após limpeza
-PASS RF-078: dados sem proprietário conhecido bloqueiam autenticação e não são apagados
-PASS RF-078: migração do espelho confirma dono no IndexedDB; segunda aba relê novo dono após logout
-PASS RF-078: confirmar o mesmo dono não transmite BroadcastChannel em laço
-PASS RF-078: tombstone de limpeza impede espelho atrasado de ressuscitar dono anterior
-PASS RF-078: envelope legado vazio sem dono não impede primeiro login
-PASS RF-078/RNF-014: histórico e bases sem proprietário bloqueiam nova conta mesmo sem entidades
-7/7 verificações públicas de identidade durável aprovadas com IndexedDB real (Edge).

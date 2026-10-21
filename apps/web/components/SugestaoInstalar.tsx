@@ -51,7 +51,7 @@ export function SugestaoInstalar() {
   return (
     <div className="note banner sugestao-instalar" role="region" aria-label="Instalar o app">
       <p style={{ margin: 0 }}>
-        <b>Instale o O Gado no seu aparelho.</b> Abre mais rápido, em tela cheia, e funciona mesmo
+        <b>Instale o Bovaro no seu aparelho.</b> Abre mais rápido, em tela cheia, e funciona mesmo
         sem internet.
       </p>
       <div className="sugestao-acoes">

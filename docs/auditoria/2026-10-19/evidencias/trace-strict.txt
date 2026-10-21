@@ -1,2 +1,0 @@
-Requisitos: 86 | com teste: 74 | sem teste: 12
-Sem teste: RN-005, RF-003, RF-022, RF-042, RF-050, RF-060, RNF-002, RNF-005, RNF-006, RNF-008, RNF-010, RNF-014

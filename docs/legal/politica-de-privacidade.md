@@ -2,11 +2,11 @@
 
 > **Rascunho.** Este texto deve ser revisado por profissional jurídico antes de qualquer uso comercial.
 
-**Versão 2026-10-20**
+**Versão 2026-10-21**
 
-**Vigência:** a partir de 20 de outubro de 2026.
+**Vigência:** a partir de 21 de outubro de 2026.
 
-Esta Política explica, em linguagem simples, quais dados pessoais o **O Gado** guarda, para que, com quem compartilha e quais são os seus direitos, conforme a Lei Geral de Proteção de Dados (LGPD, Lei 13.709/2018). Ela vale junto com os [Termos de Uso](/termos).
+Esta Política explica, em linguagem simples, quais dados pessoais o **Bovaro** guarda, para que, com quem compartilha e quais são os seus direitos, conforme a Lei Geral de Proteção de Dados (LGPD, Lei 13.709/2018). Ela vale junto com os [Termos de Uso](/termos).
 
 ## 1. Quem é o responsável pelos dados
 
@@ -97,13 +97,13 @@ Nenhum sistema é 100% seguro. Se houver um incidente que possa causar risco ou 
 
 ## 8. Menores de idade
 
-O O Gado é para pessoas com **18 anos ou mais**. Não coletamos intencionalmente dados de crianças e adolescentes. Se você acredita que um menor criou uma conta, fale conosco para apagarmos.
+O Bovaro é para pessoas com **18 anos ou mais**. Não coletamos intencionalmente dados de crianças e adolescentes. Se você acredita que um menor criou uma conta, fale conosco para apagarmos.
 
 ## 9. Seus direitos e como exercê-los
 
 Pelo art. 18 da LGPD, você pode, a qualquer momento:
 
-| Direito | Como fazer no O Gado |
+| Direito | Como fazer no Bovaro |
 | --- | --- |
 | Confirmar que tratamos seus dados e **acessar** uma cópia | **Conta > Meus dados > Baixar meus dados** (arquivo JSON) |
 | **Portabilidade** | O mesmo arquivo, em formato aberto. Você também pode **receber o arquivo por e-mail** (**Conta > Meus dados > Enviar meus dados por e-mail**, enviado só para o e-mail da sua conta; o envio passa pelo Resend). Há ainda exportação de lotes e cenários em CSV/XLSX |

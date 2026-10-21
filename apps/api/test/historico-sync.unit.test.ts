@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { afterEach, expect, it } from 'vitest';
-import type { PrismaClient } from '@ogado/db';
+import type { PrismaClient } from '@bovaro/db';
 import { registerHistoricoSyncRoutes } from '../src/routes/historico-sync';
 import {
   createHistoricoSyncRepository,

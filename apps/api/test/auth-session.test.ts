@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { errorEnvelopeSchema } from '@ogado/contracts';
+import { errorEnvelopeSchema } from '@bovaro/contracts';
 import { TEST_ORIGIN } from './support/env';
 import { buildTestApp, getWithCookie, postJson, prisma, signup } from './support/harness';
 

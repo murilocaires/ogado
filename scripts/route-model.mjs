@@ -12,7 +12,7 @@ const ORDER = ['economy', 'standard', 'premium', 'frontier'];
 export function route(task, { tier, failures = 0 } = {}) {
   const t = cfg.tasks[task];
   if (!t) throw new Error(`Tarefa desconhecida: ${task}. Opções: ${Object.keys(cfg.tasks).join(', ')}`);
-  let chosen = tier ?? process.env.OGADO_MODEL_TIER ?? t.tier;
+  let chosen = tier ?? process.env.BOVARO_MODEL_TIER ?? process.env.OGADO_MODEL_TIER ?? t.tier;
   let escalated = false;
   if (failures >= cfg.budgets.loop.max_same_failure && !tier) {
     const i = ORDER.indexOf(chosen);

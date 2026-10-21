@@ -29,7 +29,7 @@ describe('data-client: falhas', () => {
     const enviados: (string | null)[] = [];
     const api = criarDadosClient({
       fetch: async (_url, init) => {
-        enviados.push(new Headers(init?.headers).get('x-ogado-usuario'));
+        enviados.push(new Headers(init?.headers).get('x-bovaro-usuario'));
         return new Response(JSON.stringify({ lotes: [] }), { status: 200 });
       },
     });
@@ -113,9 +113,7 @@ describe('RF-074: compatibilidade durante atualização da API', () => {
       }).paraUsuario!('usuario-teste');
       const pagina = tipo === 'lotes' ? api.paginaLotes! : api.paginaCenarios!;
 
-      expect(
-        await pagina({ updatedAt: '2026-10-20T12:00:00.000Z', id: CORPO_LOTE.id }),
-      ).toEqual({
+      expect(await pagina({ updatedAt: '2026-10-20T12:00:00.000Z', id: CORPO_LOTE.id })).toEqual({
         ok: true,
         created: false,
         data: { itens: [], proximoCursor: null },

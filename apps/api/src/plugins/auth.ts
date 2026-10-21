@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import type { AppConfig } from '../config';
 import { sessionExpired, unauthenticated } from '../http-errors';
-import { clearSessionCookie, sessionCookieName, setSessionCookie } from '../session/cookie';
+import { clearSessionCookie, readSessionToken, setSessionCookie } from '../session/cookie';
 import type { SessionService } from '../session/session-service';
 
 export interface AuthDeps {
@@ -19,7 +19,16 @@ export const authPlugin = fp<AuthDeps>(async (app: FastifyInstance, deps) => {
   app.decorateRequest('sessionUser', null);
 
   app.addHook('onRequest', async (request, reply) => {
-    const expectedUsuarioId = request.headers['x-ogado-usuario'];
+    const usuarioBovaro = request.headers['x-bovaro-usuario'];
+    const usuarioOgado = request.headers['x-ogado-usuario'];
+    if (
+      typeof usuarioBovaro === 'string' &&
+      typeof usuarioOgado === 'string' &&
+      usuarioBovaro !== usuarioOgado
+    ) {
+      throw unauthenticated();
+    }
+    const expectedUsuarioId = usuarioBovaro ?? usuarioOgado;
     const bound = expectedUsuarioId !== undefined;
     const boundLogout = request.routeOptions.url === '/auth/logout' && bound;
     if (request.is404 || (request.routeOptions.config.auth === 'public' && !boundLogout)) return;
@@ -28,7 +37,7 @@ export const authPlugin = fp<AuthDeps>(async (app: FastifyInstance, deps) => {
       throw unauthenticated();
     }
 
-    const token = request.cookies[sessionCookieName(deps.config)];
+    const token = readSessionToken(request.cookies, deps.config);
     if (!token) throw unauthenticated();
 
     const result = await deps.sessions.validate(token, expectedUsuarioId);

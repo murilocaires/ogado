@@ -10,7 +10,7 @@ import {
   historicoSyncListQuerySchema,
   historicoSyncListSchema,
   idParamsSchema,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import { requireTenant } from '../tenant';
 import { notFound } from '../http-errors';
 

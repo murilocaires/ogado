@@ -1,7 +1,7 @@
 import { Writable } from 'node:stream';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createPrisma, type PrismaClient } from '@ogado/db';
-import { errorEnvelopeSchema } from '@ogado/contracts';
+import { createPrisma, type PrismaClient } from '@bovaro/db';
+import { errorEnvelopeSchema } from '@bovaro/contracts';
 import {
   buildTestApp,
   getWithCookie,
@@ -192,7 +192,7 @@ describe('erros inesperados', () => {
   it('RNF-003 CA-18: falha do banco no login responde 500 erro_interno com requestId, sem stack nem mensagem do ORM, e o log não tem senha, cookie nem e-mail', async () => {
     const email = uniqueEmail('log');
     const senha = 'Segredo#Unico987';
-    const cookieValor = 'ogado_session=idsecreto123.segredosecreto456';
+    const cookieValor = 'bovaro_session=idsecreto123.segredosecreto456';
     const ipCliente = '203.0.113.77';
     const logs = captureLogs();
     const quebrado = buildTestApp({
@@ -337,7 +337,7 @@ describe('headers de segurança e CORS', () => {
     });
     expect(res.statusCode).toBe(201);
     const linha = setCookieLine(res) ?? '';
-    expect(linha).toMatch(/^__Host-ogado_session=/);
+    expect(linha).toMatch(/^__Host-bovaro_session=/);
     expect(linha).toMatch(/; Secure/i);
     expect(linha).toMatch(/HttpOnly/i);
     expect(linha).toMatch(/SameSite=Lax/i);

@@ -5,11 +5,12 @@ import '../styles/tokens.css';
 import '../styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'O Gado',
+  metadataBase: new URL('https://bovaro.com.br'),
+  title: 'Bovaro',
   description: 'Gestão de pecuária: Compra e Venda e Recria',
-  applicationName: 'O Gado',
+  applicationName: 'Bovaro',
   icons: { apple: '/icons/apple-touch-icon.png' },
-  appleWebApp: { capable: true, title: 'O Gado', statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, title: 'Bovaro', statusBarStyle: 'black-translucent' },
 };
 
 export const viewport: Viewport = {

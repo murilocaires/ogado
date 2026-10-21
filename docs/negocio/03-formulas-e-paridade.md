@@ -21,7 +21,7 @@ Cenário de ouro (RN-001…006): compras = {60 cab., 11.311 kg total, R$ 325/@; 
 Caso extra (modo individual, RN-003): 3 animais de 200, 210 e 220 kg a R$ 300/@ → 630 kg, 21 @, R$ 6.300,00, R$ 2.100,00/cab.
 
 ### A2. Venda do produto (ADR-0012 base da @; ADR-0013 desconto em kg/cab.)
-A venda segue a planilha com uma variação: a base da @ é escolhida por lote (o protótipo, `docs/prototipo/ogado-prototipo.html`, função `vendaLinha`, usa desconto em %; essa parte foi **revertida** pelo ADR-0013):
+A venda segue a planilha com uma variação: a base da @ é escolhida por lote (o protótipo legado, função `vendaLinha`, usa desconto em %; essa parte foi **revertida** pelo ADR-0013):
 
 | Campo | Fórmula | Regra |
 |---|---|---|

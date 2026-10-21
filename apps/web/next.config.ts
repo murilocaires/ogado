@@ -42,7 +42,7 @@ const contentSecurityPolicy = [
 
 const config: NextConfig = {
   env: { NEXT_PUBLIC_BUILD_ID: buildId },
-  transpilePackages: ['@ogado/contracts', '@ogado/domain'],
+  transpilePackages: ['@bovaro/contracts', '@bovaro/domain'],
   agentRules: false,
   poweredByHeader: false,
   devIndicators: false,

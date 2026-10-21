@@ -6,7 +6,7 @@ import type { ApiClient, ApiResult } from '../lib/auth/api-client';
 import { sessionBody } from '../lib/auth/fixtures';
 import { createSessionController, type LocalIdentity } from '../lib/auth/session-controller';
 import { SessionProvider } from '../lib/auth/session-provider';
-import type { SessionResponse } from '@ogado/contracts';
+import type { SessionResponse } from '@bovaro/contracts';
 import { AuthScreen } from './AuthScreen';
 
 const replace = vi.fn();
@@ -208,14 +208,20 @@ describe('RF-001 tela de cadastro (CA-06, parte de tela)', () => {
     const senha = await screen.findByLabelText('Senha');
     expect(screen.getByText('Mín. 8 caracteres, com maiúscula, número e símbolo')).toBeVisible();
     expect(screen.queryByRole('list', { name: 'Requisitos da senha' })).not.toBeInTheDocument();
-    expect(senha).toHaveAccessibleDescription(/Mín\. 8 caracteres, com maiúscula, número e símbolo/);
+    expect(senha).toHaveAccessibleDescription(
+      /Mín\. 8 caracteres, com maiúscula, número e símbolo/,
+    );
   });
 
   it('RF-001 ao focar mostra os 4 requisitos como itens compactos, todos pendentes', async () => {
     const { user } = setup('cadastrar');
     await user.click(await screen.findByLabelText('Senha'));
     const list = screen.getByRole('list', { name: 'Requisitos da senha' });
-    expect(within(list).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+    expect(
+      within(list)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual([
       '8+ caracteres — pendente',
       'Maiúscula — pendente',
       'Número — pendente',
@@ -375,7 +381,10 @@ describe('RF-001 entrar com Google', () => {
   it('Entrar tem o botão como link de navegação completa para a API', async () => {
     setup('entrar');
     const link = await screen.findByRole('link', { name: 'Entrar com Google' });
-    expect(link).toHaveAttribute('href', '/api/auth/google/start');
+    expect(link).toHaveAttribute(
+      'href',
+      `/api/auth/google/start?origem=${encodeURIComponent(window.location.origin)}`,
+    );
     expect(link.querySelector('svg')).not.toBeNull();
   });
 
@@ -383,7 +392,7 @@ describe('RF-001 entrar com Google', () => {
     setup('cadastrar');
     expect(await screen.findByRole('link', { name: 'Cadastrar com Google' })).toHaveAttribute(
       'href',
-      '/api/auth/google/start',
+      `/api/auth/google/start?origem=${encodeURIComponent(window.location.origin)}`,
     );
   });
 

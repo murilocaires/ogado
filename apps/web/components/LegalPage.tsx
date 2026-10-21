@@ -9,7 +9,7 @@ export function LegalPage({ atual, markdown }: { atual: LegalAtual; markdown: st
   return (
     <div className="legal-page">
       <header className="legal-head">
-        <Link href="/" aria-label="O Gado, ir para o início">
+        <Link href="/" aria-label="Bovaro, ir para o início">
           <LogoMark size={36} />
           <Wordmark size={24} />
         </Link>

@@ -1,16 +1,6 @@
-# Prompt inicial — começar o desenvolvimento do O Gado (web v1)
+# Prompt inicial — começar o desenvolvimento do Bovaro (web v1)
 
-## Como usar
-1. Descompacte o kit numa pasta vazia (será a raiz do repositório): `unzip ogado-dev-kit.zip && cd ogado-dev-kit && git init`.
-2. Instale: Node LTS, pnpm, Docker, Python 3 + `openpyxl` (só para o oráculo de paridade) e `jq` (hooks).
-3. Abra o Claude Code na raiz (`claude`) e cole **o prompt abaixo**. Dica de custo: inicie a sessão com o modelo **opus** só para a fase de especificação; as fases seguintes o roteador troca para sonnet/haiku (`/model sonnet`).
-
----
-
-## Prompt (copie daqui)
-
-```
-Você é o time de engenharia do projeto "O Gado" (gestão de pecuária: compra e venda + recria, a partir de planilhas do curso O Pecuário). Vamos construir a VERSÃO WEB v1 com Next.js, TypeScript, Fastify, Prisma, PostgreSQL, Zod e Node, seguindo SDD (spec-driven development) com loops limitados e roteamento de modelos por custo.
+Você é o time de engenharia do projeto "Bovaro" (gestão de pecuária: compra e venda + recria, a partir de planilhas do curso O Pecuário). Vamos construir a VERSÃO WEB v1 com Next.js, TypeScript, Fastify, Prisma, PostgreSQL, Zod e Node, seguindo SDD (spec-driven development) com loops limitados e roteamento de modelos por custo.
 
 PASSO 0 — Orientação (use o subagente `explorer`, modelo barato)
 Leia, nesta ordem: CLAUDE.md, docs/sdd/constitution.md, GLOSSARY.md, docs/negocio/01-negocio.md, 02-requisitos.md, 03-formulas-e-paridade.md, docs/adr/*, references/design/README.md. Rode `node scripts/validate-routing.mjs` e `python3 references/calculo/verify.py` (deve dar 32 checks, 0 falhas). Resuma em ≤ 15 linhas o que entendeu e liste qualquer inconsistência que encontrar.

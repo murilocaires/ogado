@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { errorEnvelopeSchema, fazendaSchema, sessionResponseSchema } from '@ogado/contracts';
+import { errorEnvelopeSchema, fazendaSchema, sessionResponseSchema } from '@bovaro/contracts';
 import { createFazendaRepository } from '../src/repositories/fazenda-repository';
 import type { TenantContext } from '../src/tenant';
 import { buildTestApp, getWithCookie, prisma, signup } from './support/harness';
@@ -94,7 +94,7 @@ describe('isolamento no repositório (alterar e excluir)', () => {
       url: '/auth/signup',
       headers: { 'content-type': 'application/json', origin: 'http://localhost:3000' },
       payload: JSON.stringify({
-        email: `c-${b.ctx.fazendaId}@teste.ogado.invalid`,
+        email: `c-${b.ctx.fazendaId}@teste.bovaro.invalid`,
         senha: 'Boi#Gordo2026',
         aceiteTermos: true,
       }),

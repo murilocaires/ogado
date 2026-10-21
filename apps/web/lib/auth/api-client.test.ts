@@ -20,7 +20,7 @@ describe('RF-001 cliente HTTP: login e cadastro', () => {
     const enviados: (string | null)[] = [];
     const api = createApiClient({
       fetch: async (_url, init) => {
-        enviados.push(new Headers(init?.headers).get('x-ogado-usuario'));
+        enviados.push(new Headers(init?.headers).get('x-bovaro-usuario'));
         return new Response(null, { status: 204 });
       },
     });

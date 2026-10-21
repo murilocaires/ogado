@@ -4,7 +4,7 @@ import {
   type LinhaCalculada,
   type LoteInput,
   type ModoPeso,
-} from '@ogado/domain';
+} from '@bovaro/domain';
 import { hojeISO, lerCampo, valorCampo } from './format';
 import { pesosValidos, separarPesos } from './negocios';
 import type { BaseArroba, LoteEntity, LoteSalvar, LoteTipo } from './repo/types';

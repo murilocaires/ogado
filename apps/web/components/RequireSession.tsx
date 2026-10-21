@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 import { useSessionState } from '../lib/auth/session-provider';
-import { TERMOS_VERSAO } from '@ogado/contracts';
+import { TERMOS_VERSAO } from '@bovaro/contracts';
 import { TermosAtualizadosDialog } from './TermosAtualizadosDialog';
 
 /** Só para os e2e locais da E1/E2, que rodam sem API (`playwright.local.config.ts`). */

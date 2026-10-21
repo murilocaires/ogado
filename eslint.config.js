@@ -60,7 +60,7 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ['@ogado/db', '@ogado/db/*', '@prisma/*', '**/generated/**'],
+              group: ['@bovaro/db', '@bovaro/db/*', '@prisma/*', '**/generated/**'],
               message:
                 'Rotas e plugins não importam o Prisma: use um repositório com contexto de tenant (ADR-0010 d.2).',
             },

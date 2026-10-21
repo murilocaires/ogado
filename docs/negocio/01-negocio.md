@@ -1,4 +1,4 @@
-# O Gado — Documento de Negócio
+# Bovaro — Documento de Negócio
 
 > Fonte: 4 planilhas do curso **O Pecuário** (Compra e Venda de Gado, Cálculos Recria, CRIA, RECRIA), em `references/planilhas/`. Este documento explica o negócio para que qualquer pessoa (ou agente) entenda *por que* o sistema calcula o que calcula. Termos canônicos estão em `GLOSSARY.md`.
 
@@ -11,7 +11,7 @@ O **pecuarista de cria/recria** (pequeno e médio, fazenda de 50–500 ha) toma 
 - mistura valores digitados com calculados (células trocadas, fórmula com valor fixo "escondido");
 - decide pelo "olhômetro" a *arroba* certa para comprar e vender.
 
-**Proposta do O Gado:** manter *exatamente* os cálculos validados no curso, num produto web/app que impede erros de preenchimento, guarda o histórico e mostra o resultado em linguagem de fazenda — "Cada arroba na ponta do lápis".
+**Proposta do Bovaro:** manter *exatamente* os cálculos validados no curso, num produto web/app que impede erros de preenchimento, guarda o histórico e mostra o resultado em linguagem de fazenda — "Cada arroba na ponta do lápis".
 
 ## 2. O negócio em uma página
 
@@ -27,7 +27,7 @@ O **pecuarista de cria/recria** (pequeno e médio, fazenda de 50–500 ha) toma 
 - **Recria**: comprar bezerros após a desmama e criá-los a pasto até o peso de venda (ou de entrada na engorda). Receita = ganho de peso (arrobas produzidas) valorizado ao preço da @. O que importa: *custo por @ produzida e margem sobre o capital investido*.
 - **Compra e venda**: registro dos lotes comprados e vendidos, com o *saldo* do giro.
 
-A **v1 do O Gado cobre Compra e Venda + Cálculos de Recria** (as duas planilhas simples). Cria completa e as demais abas de Recria (planejamento, suplementação, adubação, água, lotação) vêm nas versões seguintes.
+A **v1 do Bovaro cobre Compra e Venda + Cálculos de Recria** (as duas planilhas simples). Cria completa e as demais abas de Recria (planejamento, suplementação, adubação, água, lotação) vêm nas versões seguintes.
 
 ## 3. Conceitos e unidades (resumo; detalhes no GLOSSARY)
 

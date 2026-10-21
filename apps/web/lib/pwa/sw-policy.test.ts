@@ -87,9 +87,9 @@ describe('service worker: o que entra no cache (ADR-0007 §3, RF-071, RNF-014)',
     expect(P.ativosDoHtml(html)).toEqual(['/_next/static/css/x.css', '/_next/static/chunks/a.js']);
   });
 
-  it('os caches usam o prefixo ogado- (o activate limpa por prefixo e versão)', () => {
-    expect(P.CACHE_ESTATICO.startsWith('ogado-')).toBe(true);
-    expect(P.CACHE_PAGINAS.startsWith('ogado-')).toBe(true);
+  it('os caches usam o prefixo bovaro- (o activate limpa por prefixo e versão)', () => {
+    expect(P.CACHE_ESTATICO.startsWith('bovaro-')).toBe(true);
+    expect(P.CACHE_PAGINAS.startsWith('bovaro-')).toBe(true);
   });
 });
 

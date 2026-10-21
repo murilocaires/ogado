@@ -28,7 +28,7 @@ for (const vp of viewports) {
 test('captura /entrar com erro em 390px', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/entrar');
-  await page.getByLabel('E-mail', { exact: true }).fill('ninguem@teste.ogado.invalid');
+  await page.getByLabel('E-mail', { exact: true }).fill('ninguem@teste.bovaro.invalid');
   await page.getByLabel('Senha', { exact: true }).fill('Errada#123');
   await page.getByRole('button', { name: 'Entrar' }).click();
   await page.locator('form [role="alert"]').waitFor();

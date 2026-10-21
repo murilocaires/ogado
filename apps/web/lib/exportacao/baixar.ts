@@ -25,14 +25,14 @@ export async function gerarArquivo(
     const primeira = tabelas[0];
     if (!primeira) throw new Error('Nada para exportar.');
     return {
-      nome: `ogado-${nomeBase}-${data}.csv`,
+      nome: `bovaro-${nomeBase}-${data}.csv`,
       tipo: 'text/csv;charset=utf-8',
       conteudo: tabelaParaCsv(primeira),
     };
   }
   const { tabelasParaXlsx, XLSX_MIME } = await import('./xlsx');
   return {
-    nome: `ogado-${nomeBase}-${data}.xlsx`,
+    nome: `bovaro-${nomeBase}-${data}.xlsx`,
     tipo: XLSX_MIME,
     conteudo: tabelasParaXlsx(tabelas) as BlobPart,
   };

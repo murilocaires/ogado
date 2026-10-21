@@ -7,11 +7,11 @@ export function dadosPorEmail(
 ): EmailMessage {
   return {
     to,
-    subject: 'Seus dados no O Gado',
+    subject: 'Seus dados no Bovaro',
     text: [
       'Olá!',
       '',
-      'Você pediu uma cópia dos seus dados no O Gado. Ela está no arquivo em anexo (formato JSON).',
+      'Você pediu uma cópia dos seus dados no Bovaro. Ela está no arquivo em anexo (formato JSON).',
       'O arquivo traz seu perfil, sua fazenda, seus lotes e seus cenários não excluídos.',
       '',
       'Se você não fez esse pedido, troque a sua senha em Conta e fale conosco.',

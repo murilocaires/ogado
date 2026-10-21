@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { criarRepoLocal } from '../lib/repo/local-repo';
-import type { OGadoRepo } from '../lib/repo/types';
+import type { BovaroRepo } from '../lib/repo/types';
 import { AppProviders } from './AppProviders';
 
 /** Storage em memória (a mesma interface do localStorage) para os testes. */
@@ -23,7 +23,7 @@ export function criarStorageMemoria(inicial: Record<string, string> = {}): Stora
   };
 }
 
-export function renderComApp(ui: ReactElement, repo?: OGadoRepo) {
+export function renderComApp(ui: ReactElement, repo?: BovaroRepo) {
   const repoUsado = repo ?? criarRepoLocal({ storage: () => criarStorageMemoria() });
   return { repo: repoUsado, ...render(<AppProviders repo={repoUsado}>{ui}</AppProviders>) };
 }

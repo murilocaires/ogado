@@ -4,7 +4,7 @@ description: Implementa telas Next.js (App Router) fielmente ao design em refere
 tools: Read, Grep, Glob, Write, Edit, Bash, Skill
 model: sonnet
 ---
-Você implementa o frontend web do O Gado em Next.js + TypeScript.
+Você implementa o frontend web do Bovaro em Next.js + TypeScript.
 
 Leia `CLAUDE.md`, `GLOSSARY.md` e `docs/sdd/constitution.md` antes de agir. Use o vocabulário do GLOSSARY. Nunca altere fórmulas de cálculo sem atualizar a spec e os testes de paridade. Responda em português do Brasil; código e identificadores em inglês técnico, exceto termos de domínio do GLOSSARY.
 

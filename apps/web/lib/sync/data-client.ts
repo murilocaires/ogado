@@ -17,7 +17,7 @@ import {
   type RecriaEntradaDto,
   type RecriaEntradaPut,
   syncCursorSchema,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 
 /** O que o cliente precisa de um schema Zod (evita depender do `zod` direto na web). */
 interface Esquema<T> {
@@ -85,7 +85,7 @@ export function criarDadosClient(
         cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
-          ...(options.usuarioId ? { 'X-OGado-Usuario': options.usuarioId } : {}),
+          ...(options.usuarioId ? { 'X-Bovaro-Usuario': options.usuarioId } : {}),
         },
         ...(corpo === undefined ? {} : { body: JSON.stringify(corpo) }),
       });
@@ -179,7 +179,12 @@ export function criarDadosClient(
     return `${caminho}?${query}`;
   };
 
-  function lerPagina<T>(caminho: string, campo: 'lotes' | 'cenarios', lista: Esquema<T[]>, cursor?: SyncCursor) {
+  function lerPagina<T>(
+    caminho: string,
+    campo: 'lotes' | 'cenarios',
+    lista: Esquema<T[]>,
+    cursor?: SyncCursor,
+  ) {
     return pedir('GET', urlPagina(caminho, cursor), pagina(lista, campo), undefined, async () => {
       const resposta = await pedir('GET', `${caminho}?incluirExcluidos=true`, lista);
       return resposta.ok
@@ -191,8 +196,7 @@ export function criarDadosClient(
   return {
     paraUsuario: (usuarioId) => criarDadosClient({ ...options, usuarioId }),
     paginaLotes: (cursor) => lerPagina('/lotes', 'lotes', listaLotes, cursor),
-    paginaCenarios: (cursor) =>
-      lerPagina('/cenarios', 'cenarios', listaCenarios, cursor),
+    paginaCenarios: (cursor) => lerPagina('/cenarios', 'cenarios', listaCenarios, cursor),
     arquivarHistorico: (body) => pedir('POST', '/historico-sync', historicoSyncSchema, body),
     listarLotes: () =>
       pedir('GET', '/lotes?incluirExcluidos=true', listaLotes as unknown as Esquema<LoteDto[]>),

@@ -13,7 +13,7 @@ import {
   senhaRequestSchema,
   sessionResponseSchema,
   TERMOS_VERSAO,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import type { AppConfig } from '../config';
 import { dadosPorEmail } from '../email/export-email';
 import type { EmailSender } from '../email/email-sender';
@@ -24,7 +24,7 @@ import type { CenarioRepository } from '../repositories/cenario-repository';
 import type { FazendaRepository } from '../repositories/fazenda-repository';
 import type { LoteRepository } from '../repositories/lote-repository';
 import type { RecriaRepository } from '../repositories/recria-repository';
-import { clearSessionCookie, sessionCookieName } from '../session/cookie';
+import { clearSessionCookie, readSessionToken } from '../session/cookie';
 import type { SessionService } from '../session/session-service';
 import { parseToken } from '../session/tokens';
 import { requireTenant, type TenantContext } from '../tenant';
@@ -119,7 +119,7 @@ export function registerContaRoutes(app: FastifyInstance, deps: ContaRoutesDeps)
       }
     }
 
-    const token = request.cookies[sessionCookieName(deps.config)];
+    const token = readSessionToken(request.cookies, deps.config);
     const changed = await deps.accounts.changeSenha({
       usuarioId: tenant.usuarioId,
       expectedHash: hashAtual,
@@ -193,7 +193,7 @@ export function registerContaRoutes(app: FastifyInstance, deps: ContaRoutesDeps)
   }
 
   const nomeArquivoExportacao = (agora: Date): string =>
-    `ogado-meus-dados-${agora.toISOString().slice(0, 10)}.json`;
+    `bovaro-meus-dados-${agora.toISOString().slice(0, 10)}.json`;
 
   // RNF-009: cópia dos dados do titular. Só leitura, só do tenant da sessão, sem segredos.
   typed.get(

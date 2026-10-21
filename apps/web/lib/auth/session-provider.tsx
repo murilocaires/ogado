@@ -44,7 +44,12 @@ export function SessionProvider({
     // Voltou a rede: reverifica (sai de offline-nao-verificado ou descobre que expirou).
     const onOnline = (): void => void value.verify();
     const onIdentity = (event: StorageEvent): void => {
-      if (event.key === 'ogado.identidade' || event.key === null) void value.identityChanged();
+      if (
+        event.key === 'bovaro.identidade' ||
+        event.key === 'ogado.identidade' ||
+        event.key === null
+      )
+        void value.identityChanged();
     };
     const canal = canalLocal();
     if (canal)
