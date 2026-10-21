@@ -26,7 +26,6 @@ async function lancar(page: Page, v: Lancamento) {
   await modal.getByLabel('Preço da arroba', { exact: true }).fill(v.preco);
   await modal.getByLabel('Data', { exact: true }).fill(v.data);
   await modal.getByRole('button', { name: 'Salvar lote' }).click();
-  await page.getByRole('alertdialog').getByRole('button', { name: 'Salvar' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Lote salvo.' })).toBeVisible();
 }
 

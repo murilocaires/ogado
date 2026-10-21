@@ -204,7 +204,7 @@ describe('RF-004 perfil', () => {
     expect(api.updatePerfil).not.toHaveBeenCalled();
   });
 
-  it('pede confirmação, salva com o e-mail normalizado e atualiza a tela', async () => {
+  it('salva direto com o e-mail normalizado e atualiza a tela', async () => {
     const updatePerfil = vi
       .fn()
       .mockResolvedValue(ok(sessao({ nome: 'Ana Maria', email: 'ana.maria@fazenda.com' })));
@@ -218,9 +218,7 @@ describe('RF-004 perfil', () => {
     await user.type(email, ' Ana.Maria@Fazenda.com ');
     await user.click(screen.getByRole('button', { name: 'Salvar dados' }));
 
-    await screen.findByRole('alertdialog', { name: 'Salvar alterações?' });
-    expect(updatePerfil).not.toHaveBeenCalled();
-    await confirmar(user);
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
 
     await waitFor(() =>
       expect(updatePerfil).toHaveBeenCalledWith({
@@ -234,21 +232,11 @@ describe('RF-004 perfil', () => {
     expect(within(hero).getByText('ana.maria@fazenda.com')).toBeVisible();
   });
 
-  it('cancelar a confirmação não chama a API', async () => {
-    const { user, api } = await setup();
-    await pronto();
-    await user.click(screen.getByRole('button', { name: 'Salvar dados' }));
-    await confirmar(user, 'Cancelar');
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-    expect(api.updatePerfil).not.toHaveBeenCalled();
-  });
-
   it('e-mail já em uso (409) mostra mensagem genérica no campo', async () => {
     const updatePerfil = vi.fn().mockResolvedValue({ ok: false, kind: 'conflito' });
     const { user } = await setup({ api: { updatePerfil } });
     await pronto();
     await user.click(screen.getByRole('button', { name: 'Salvar dados' }));
-    await confirmar(user);
 
     expect(await screen.findByText('Não foi possível salvar com este e-mail.')).toBeVisible();
     expect(screen.getByLabelText('E-mail')).toHaveFocus();
@@ -259,7 +247,6 @@ describe('RF-004 perfil', () => {
     const { user } = await setup({ api: { updatePerfil } });
     await pronto();
     await user.click(screen.getByRole('button', { name: 'Salvar dados' }));
-    await confirmar(user);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/Não foi possível conectar/);
     expect(screen.getByLabelText('Nome')).toHaveValue('Ana Souza');
@@ -270,7 +257,6 @@ describe('RF-004 perfil', () => {
     await pronto();
     setOnline(false);
     await user.click(screen.getByRole('button', { name: 'Salvar dados' }));
-    await confirmar(user);
     expect(await screen.findByRole('alert')).toHaveTextContent(/sem internet/);
     expect(api.updatePerfil).not.toHaveBeenCalled();
   });
@@ -308,13 +294,12 @@ describe('RF-005 senha', () => {
     expect(api.changePassword).not.toHaveBeenCalled();
   });
 
-  it('altera a senha após confirmar e limpa os campos', async () => {
+  it('altera a senha sem modal adicional e limpa os campos', async () => {
     const changePassword = vi.fn().mockResolvedValue(ok(undefined));
     const { user } = await setup({ api: { changePassword } });
     await pronto();
     await preencher(user, SENHA_ATUAL, SENHA_NOVA, SENHA_NOVA);
-    await screen.findByRole('alertdialog', { name: 'Alterar senha?' });
-    await confirmar(user, 'Confirmar');
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
 
     await waitFor(() =>
       expect(changePassword).toHaveBeenCalledWith({
@@ -332,7 +317,6 @@ describe('RF-005 senha', () => {
     const { user } = await setup({ api: { changePassword } });
     await pronto();
     await preencher(user, 'errada', SENHA_NOVA, SENHA_NOVA);
-    await confirmar(user, 'Confirmar');
 
     expect(await screen.findByText('A senha atual está incorreta.')).toBeVisible();
     expect(screen.getByLabelText('Senha atual')).toHaveFocus();
@@ -346,7 +330,6 @@ describe('RF-005 senha', () => {
     const { user } = await setup({ api: { changePassword } });
     await pronto();
     await preencher(user, SENHA_ATUAL, SENHA_NOVA, SENHA_NOVA);
-    await confirmar(user, 'Confirmar');
     expect(await screen.findByRole('alert')).toHaveTextContent(/Aguarde um pouco/);
   });
 });
@@ -366,8 +349,7 @@ describe('RF-011 fazenda', () => {
     await user.type(screen.getByLabelText('Nome da fazenda'), '  Boa Vista ');
     await user.type(screen.getByLabelText('Área pastável'), '1.234,5');
     await user.click(screen.getByRole('button', { name: 'Salvar' }));
-    await screen.findByRole('alertdialog', { name: 'Salvar alterações?' });
-    await confirmar(user);
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
 
     await waitFor(() =>
       expect(updateFazenda).toHaveBeenCalledWith({
@@ -389,7 +371,6 @@ describe('RF-011 fazenda', () => {
     await pronto();
     await user.clear(screen.getByLabelText('Área pastável'));
     await user.click(screen.getByRole('button', { name: 'Salvar' }));
-    await confirmar(user);
     await waitFor(() =>
       expect(updateFazenda).toHaveBeenCalledWith({ nome: 'Sítio', areaHa: null, version: 1 }),
     );
@@ -432,7 +413,6 @@ describe('RF-011 fazenda', () => {
     });
     await pronto();
     await user.click(screen.getByRole('button', { name: 'Salvar' }));
-    await confirmar(user);
 
     expect(await screen.findByText(/alterada em outro aparelho/)).toBeVisible();
     expect(screen.getByLabelText('Nome da fazenda')).toHaveValue('Nome do outro aparelho');
@@ -614,8 +594,7 @@ describe('RF-006 selos e conta só com Google', () => {
     await user.type(screen.getByLabelText('Nova senha'), SENHA_NOVA);
     await user.type(screen.getByLabelText('Confirmar nova senha'), SENHA_NOVA);
     await user.click(screen.getByRole('button', { name: 'Definir senha' }));
-    await screen.findByRole('alertdialog', { name: 'Definir senha?' });
-    await confirmar(user, 'Confirmar');
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
 
     await waitFor(() => expect(changePassword).toHaveBeenCalledWith({ novaSenha: SENHA_NOVA }));
     expect(await screen.findByText('Senha definida.')).toBeVisible();
@@ -653,7 +632,7 @@ describe('RF-006 Entrar com Google na Conta', () => {
     await pronto();
     expect(within(secao()).getByRole('link', { name: 'Vincular conta Google' })).toHaveAttribute(
       'href',
-      '/api/auth/google/start?modo=vincular',
+      `/api/auth/google/start?modo=vincular&origem=${encodeURIComponent(window.location.origin)}`,
     );
     expect(within(secao()).getByText('Não vinculada')).toBeVisible();
   });

@@ -1,3 +1,0 @@
-Requisitos: 86 | com teste: 81 | sem teste: 5
-Sem teste: RF-003, RF-042, RF-060, RNF-002, RNF-010
-Sem teste com tratamento documentado: RF-003, RF-042, RF-060, RNF-002, RNF-010

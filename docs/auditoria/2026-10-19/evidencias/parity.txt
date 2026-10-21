@@ -1,1 +1,0 @@
-PARIDADE OK: 181 verificações (tolerância relativa 0.000001).

@@ -169,17 +169,17 @@ export function RecriaScreen({ abaInicial = 'simulador' }: { abaInicial?: AbaRec
   async function salvarCenario(nome: string): Promise<void> {
     if (!recria || gravandoCenario.current) return;
     const snapshot = snapshotDaRecria(recria, nome);
-    if (!snapshot) {
+    if (!snapshot && !cenarioPendente.current) {
       toast('Preencha todos os campos com números válidos para salvar o cenário.');
       return;
     }
     gravandoCenario.current = true;
     try {
-      const salvo = repo.salvarCenario({
-        ...snapshot,
-        ...(cenarioPendente.current ? { id: cenarioPendente.current } : {}),
-      });
-      cenarioPendente.current = salvo.id;
+      if (!cenarioPendente.current && snapshot) {
+        cenarioPendente.current = repo.salvarCenario(snapshot).id;
+      }
+      await aguardarGravacao(repo);
+      repo.limparRecria();
       await aguardarGravacao(repo);
       cenarioPendente.current = null;
       setNomeando(false);

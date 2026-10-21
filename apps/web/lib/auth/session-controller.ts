@@ -94,6 +94,7 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
   let mismatch: AccountMismatch | null = null;
   // Cada mudança de sessão invalida todas as respostas anteriores, inclusive login/Conta.
   let epoch = 0;
+  let authenticationEpoch: number | null = null;
   const listeners = new Set<() => void>();
 
   function set(next: SessionState): void {
@@ -153,6 +154,18 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
   ): Promise<ApiResult<SessionResponse>> {
     epoch += 1;
     const mine = epoch;
+    authenticationEpoch = mine;
+    try {
+      return await performAuthCall(run, mine);
+    } finally {
+      if (authenticationEpoch === mine) authenticationEpoch = null;
+    }
+  }
+
+  async function performAuthCall(
+    run: () => Promise<ApiResult<SessionResponse>>,
+    mine: number,
+  ): Promise<ApiResult<SessionResponse>> {
     try {
       await deps.identity.ready?.();
     } catch {
@@ -210,6 +223,9 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
   }
 
   async function verify(): Promise<void> {
+    // Reconexão/montagem não cancela a entrada explícita. Logout e troca de identidade
+    // continuam incrementando epoch e invalidando a tentativa normalmente.
+    if (authenticationEpoch === epoch) return;
     const mine = ++epoch;
     try {
       await deps.identity.ready?.();

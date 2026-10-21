@@ -163,7 +163,6 @@ test('RF-073 lançar lote offline aparece na lista e sobe quando a conexão volt
   await modal.getByLabel('Peso total do lote', { exact: true }).fill('3600');
   await modal.getByLabel('Preço da arroba', { exact: true }).fill('310');
   await modal.getByRole('button', { name: 'Salvar lote' }).click();
-  await page.getByRole('alertdialog').getByRole('button', { name: 'Salvar' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Lote salvo.' })).toBeVisible();
   await expect(page.getByText('Lote 1', { exact: true })).toBeVisible();
 

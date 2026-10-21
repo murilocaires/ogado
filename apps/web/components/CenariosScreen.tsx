@@ -413,9 +413,9 @@ export function CenariosScreen({
             {selecionados.length} selecionado{selecionados.length > 1 ? 's' : ''}
             {selecionados.length < 2 ? ' · marque mais 1' : ''}
           </span>
-          {selecionados.length >= 2 && (
+          {selecionados.length >= 2 && !mostrarComparacao && (
             <button type="button" className="btn" onClick={() => setComparando(true)}>
-              {mostrarComparacao ? 'Atualizar comparação' : 'Comparar'}
+              Comparar
             </button>
           )}
           <button

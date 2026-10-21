@@ -40,7 +40,10 @@ const flowSchema = z.object({
 });
 type Flow = z.infer<typeof flowSchema>;
 
-const startQuerySchema = z.object({ modo: z.enum(['entrar', 'vincular']).default('entrar') });
+const startQuerySchema = z.object({
+  modo: z.enum(['entrar', 'vincular']).default('entrar'),
+  origem: z.url().max(2048).optional(),
+});
 const callbackQuerySchema = z.object({
   code: z.string().min(1).max(2048).optional(),
   state: z.string().min(1).max(512).optional(),
@@ -114,6 +117,22 @@ export function registerGoogleRoutes(app: FastifyInstance, deps: GoogleRoutesDep
     async (request, reply) => {
       const google = deps.google;
       if (!google) throw notFound();
+      // O cookie HttpOnly pertence à origem que respondeu ao start. O callback usa
+      // WEB_ORIGIN: entrar por um alias exige navegar para ela ANTES de criar o cookie.
+      // O destino é sempre configurado pelo servidor; a origem informada nunca vira redirect.
+      const origemInformada = request.query.origem ?? request.headers.referer;
+      let origem: string | undefined;
+      try {
+        origem = origemInformada ? new URL(origemInformada).origin : undefined;
+      } catch {
+        origem = undefined;
+      }
+      if (origem && origem !== new URL(deps.webOrigin).origin) {
+        const destino = new URL('/api/auth/google/start', deps.webOrigin);
+        destino.searchParams.set('modo', request.query.modo);
+        destino.searchParams.set('origem', new URL(deps.webOrigin).origin);
+        return reply.redirect(destino.href, 302);
+      }
       if (await limited(request)) return goEntrar(reply, 'google');
 
       const { modo } = request.query;

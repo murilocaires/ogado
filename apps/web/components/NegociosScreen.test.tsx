@@ -48,11 +48,6 @@ async function preencherELancar(
   await user.click(within(modal).getByRole('button', { name: 'Salvar lote' }));
 }
 
-async function confirmarSalvar(user: User) {
-  const confirmacao = await screen.findByRole('alertdialog');
-  await user.click(within(confirmacao).getByRole('button', { name: 'Salvar' }));
-}
-
 describe('RF-024 estado vazio', () => {
   it('RNF-017: falha no commit mantém o lançamento recuperável, sem anunciar sucesso nem duplicar no retry', async () => {
     const user = userEvent.setup();
@@ -67,14 +62,12 @@ describe('RF-024 estado vazio', () => {
     renderComApp(<NegociosScreen />, repo);
     await user.click(screen.getAllByRole('button', { name: 'Nova compra' })[0]!);
     await preencherELancar(user, { qtd: '10', peso: '3000', preco: '300' });
-    await confirmarSalvar(user);
     expect(await screen.findByText(/Não foi possível confirmar o salvamento/)).toBeVisible();
     expect(screen.queryByText('Lote salvo.')).not.toBeInTheDocument();
     expect(screen.getByRole('dialog', { name: 'Nova compra' })).toBeVisible();
     await user.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar lote' }),
     );
-    await confirmarSalvar(user);
     expect(await screen.findByText('Lote salvo.')).toBeVisible();
     expect(screen.getByText('1 lançamento · 1 compra · 0 vendas')).toBeVisible();
   });
@@ -145,7 +138,6 @@ describe('RF-024 botões de criar contextuais por aba', () => {
     renderComApp(<NegociosScreen />);
     await user.click(screen.getAllByRole('button', { name: 'Nova venda' })[0]!);
     await preencherELancar(user, { qtd: '10', peso: '3000', preco: '300', categoria: 'NOVILHAS' });
-    await confirmarSalvar(user);
     const lista = document.querySelector('.lotes-m .ops') as HTMLElement;
     expect(within(lista).getByText('Lote 1 · Novilhas')).toBeInTheDocument();
     expect(
@@ -168,12 +160,10 @@ describe('RF-020/RF-021/RF-023/RN-006 compra e venda geram o saldo do domínio',
     await user.click(screen.getAllByRole('button', { name: 'Nova compra' })[0]!);
     expect(screen.getByRole('dialog', { name: 'Nova compra' })).toBeInTheDocument();
     await preencherELancar(user, { qtd: '10', peso: '3000', preco: '300' });
-    await confirmarSalvar(user);
 
     await user.click(screen.getAllByRole('button', { name: 'Nova venda' })[0]!);
     expect(screen.getByRole('dialog', { name: 'Nova venda' })).toBeInTheDocument();
     await preencherELancar(user, { qtd: '10', peso: '4500', preco: '320' });
-    await confirmarSalvar(user);
 
     const esperado = calcularCompraVenda({
       compras: [{ modo: 'total', qtd: '10', peso: '3000', preco: '300' }],
@@ -380,7 +370,6 @@ describe('RF-041 exportar compras e vendas', () => {
     renderComApp(<NegociosScreen />);
     await user.click(screen.getAllByRole('button', { name: 'Nova compra' })[0]!);
     await preencherELancar(user, { qtd: '10', peso: '3000', preco: '300' });
-    await confirmarSalvar(user);
 
     await user.click(screen.getByRole('button', { name: 'Exportar' }));
     let dialogo = screen.getByRole('dialog', { name: 'Exportar compras e vendas' });

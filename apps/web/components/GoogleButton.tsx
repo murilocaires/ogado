@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
 /** "G" oficial do Google (cores da marca), decorativo: o nome acessível vem do texto do link. */
 export function GoogleMark({ size = 20 }: { size?: number }) {
   return (
@@ -35,7 +39,12 @@ export function GoogleLink({
   modo?: 'vincular';
   className?: string;
 }) {
-  const href = modo ? `/api/auth/google/start?modo=${modo}` : '/api/auth/google/start';
+  const [origem, setOrigem] = useState<string | null>(null);
+  useEffect(() => setOrigem(window.location.origin), []);
+  const query = new URLSearchParams();
+  if (modo) query.set('modo', modo);
+  if (origem) query.set('origem', origem);
+  const href = `/api/auth/google/start${query.size ? `?${query}` : ''}`;
   return (
     <a href={href} className={className}>
       <GoogleMark />

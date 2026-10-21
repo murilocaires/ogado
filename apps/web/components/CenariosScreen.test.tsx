@@ -67,6 +67,33 @@ function nomesNaLista(): string[] {
 }
 
 describe('RF-032 salvar como cenário', () => {
+  it.each([1, 2])(
+    'RF-032 falha na gravação %s permite repetir sem duplicar e limpa só após salvar',
+    async (falharNa) => {
+      const repo = novoRepo();
+      let chamadas = 0;
+      Object.assign(repo, {
+        flush: vi.fn(async () => {
+          if (++chamadas === falharNa) throw new Error('quota');
+        }),
+      });
+      const user = userEvent.setup();
+      renderComApp(<RecriaScreen />, repo);
+      await user.click(screen.getByRole('button', { name: 'Salvar como cenário' }));
+      await user.keyboard('{Enter}');
+      expect(await screen.findByText(/Não foi possível confirmar o salvamento/)).toBeVisible();
+      expect(screen.queryByText('Cenário salvo.')).not.toBeInTheDocument();
+      const antes = repo.getSnapshot();
+      if (antes.status !== 'pronto') throw new Error('repo indisponível');
+      if (falharNa === 1) expect(Object.values(antes.recria.form).some(Boolean)).toBe(true);
+      await user.keyboard('{Enter}');
+      expect(await screen.findByText('Cenário salvo.')).toBeVisible();
+      const depois = repo.getSnapshot();
+      if (depois.status !== 'pronto') throw new Error('repo indisponível');
+      expect(depois.cenarios).toHaveLength(1);
+      expect(Object.values(depois.recria.form).every((valor) => valor === '')).toBe(true);
+    },
+  );
   it('RF-032 abre o diálogo com "Cenário 1", Enter confirma, mostra o aviso e vai para a aba Cenários', async () => {
     const user = userEvent.setup();
     const repo = novoRepo();
@@ -94,6 +121,10 @@ describe('RF-032 salvar como cenário', () => {
     );
     expect(screen.getByText('Safra 26/27')).toBeInTheDocument();
     expect(screen.getByText('R$ 103.308')).toBeInTheDocument();
+    const salvo = repo.getSnapshot();
+    if (salvo.status !== 'pronto') throw new Error('repo indisponível');
+    expect(Object.values(salvo.recria.form).every((valor) => valor === '')).toBe(true);
+    expect(salvo.cenarios[0]?.form).not.toEqual(salvo.recria.form);
   });
 
   it('RF-032 não salva sem números válidos e avisa', async () => {
@@ -134,6 +165,19 @@ describe('RF-032 salvar como cenário', () => {
 });
 
 describe('RF-032/RF-034/RF-035/RF-036 lista de cenários', () => {
+  it('RF-033 comparação acompanha a seleção sem botão de atualizar', async () => {
+    const user = userEvent.setup();
+    const repo = novoRepo();
+    for (const nome of ['Base', 'Otimista', 'Pessimista']) semear(repo, nome);
+    renderComApp(<RecriaScreen abaInicial="cenarios" />, repo);
+    await user.click(screen.getByRole('checkbox', { name: 'Comparar Base' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Comparar Otimista' }));
+    await user.click(screen.getByRole('button', { name: 'Comparar' }));
+    expect(within(screen.getByRole('table')).getAllByRole('columnheader')).toHaveLength(3);
+    await user.click(screen.getByRole('checkbox', { name: 'Comparar Pessimista' }));
+    expect(within(screen.getByRole('table')).getAllByRole('columnheader')).toHaveLength(4);
+    expect(screen.queryByRole('button', { name: 'Atualizar comparação' })).not.toBeInTheDocument();
+  });
   it('RF-073/RNF-017: falha ao gravar cópia avisa e repetir não duplica o mesmo cenário', async () => {
     const repo = novoRepo();
     semear(repo, 'Base');
@@ -379,6 +423,7 @@ describe('RF-033 comparação de 2 a 3 cenários', () => {
       }),
     );
 
+    expect(screen.queryByRole('button', { name: 'Atualizar comparação' })).not.toBeInTheDocument();
     const tabela = screen.getByRole('table');
     expect(
       within(tabela)

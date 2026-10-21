@@ -40,7 +40,6 @@ async function lancarCompra(page: Page, v: { qtd: string; peso: string; preco: s
   await modal.getByLabel('Peso total do lote', { exact: true }).fill(v.peso);
   await modal.getByLabel('Preço da arroba', { exact: true }).fill(v.preco);
   await modal.getByRole('button', { name: 'Salvar lote' }).click();
-  await page.getByRole('alertdialog').getByRole('button', { name: 'Salvar' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Lote salvo.' })).toBeVisible();
 }
 
@@ -52,7 +51,6 @@ async function editarQuantidade(page: Page, qtd: string) {
   const modal = page.getByRole('dialog', { name: /Editar lote de/ });
   await modal.getByLabel('Quantidade', { exact: true }).fill(qtd);
   await modal.getByRole('button', { name: 'Salvar lote' }).click();
-  await page.getByRole('alertdialog').getByRole('button', { name: 'Salvar' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Alterações salvas.' })).toBeVisible();
 }
 
@@ -165,7 +163,6 @@ test('edicoes em campos diferentes sao combinadas automaticamente', async ({ bro
     const modal = b.getByRole('dialog', { name: /Editar lote de/ });
     await modal.getByLabel('Preço da arroba', { exact: true }).fill('400');
     await modal.getByRole('button', { name: 'Salvar lote' }).click();
-    await b.getByRole('alertdialog').getByRole('button', { name: 'Salvar' }).click();
     await expect(sincronizado(b)).toBeAttached();
     await ctxA.setOffline(false);
     await expect

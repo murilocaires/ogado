@@ -202,7 +202,6 @@ function PerfilSecao({ usuario }: { usuario: UsuarioDto }) {
   const [email, setEmail] = useState(usuario.email);
   const [erros, setErros] = useState<Erros<'nome' | 'email'>>({});
   const [falha, setFalha] = useState<string | null>(null);
-  const [confirmando, setConfirmando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const refNome = useRef<HTMLInputElement>(null);
   const refEmail = useRef<HTMLInputElement>(null);
@@ -223,11 +222,10 @@ function PerfilSecao({ usuario }: { usuario: UsuarioDto }) {
       return;
     }
     setErros({});
-    setConfirmando(true);
+    void salvar();
   }
 
   async function salvar(): Promise<void> {
-    setConfirmando(false);
     if (!navigator.onLine) {
       setFalha(MSG_CONTA.offline);
       return;
@@ -293,15 +291,6 @@ function PerfilSecao({ usuario }: { usuario: UsuarioDto }) {
         ocupado={salvando}
         rotuloOcupado="Salvando…"
       />
-      {confirmando && (
-        <ConfirmDialog
-          titulo="Salvar alterações?"
-          texto="Seu nome e e-mail serão atualizados."
-          confirmar="Salvar"
-          onConfirm={() => void salvar()}
-          onCancel={() => setConfirmando(false)}
-        />
-      )}
     </form>
   );
 }
@@ -320,7 +309,6 @@ function SenhaSecao({ temSenha }: { temSenha: boolean }) {
   const [confirmacao, setConfirmacao] = useState('');
   const [erros, setErros] = useState<Erros<CamposSenha>>({});
   const [falha, setFalha] = useState<string | null>(null);
-  const [confirmando, setConfirmando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const refs = {
     senhaAtual: useRef<HTMLInputElement>(null),
@@ -348,11 +336,10 @@ function SenhaSecao({ temSenha }: { temSenha: boolean }) {
       focarPrimeiro(novos);
       return;
     }
-    setConfirmando(true);
+    void salvar();
   }
 
   async function salvar(): Promise<void> {
-    setConfirmando(false);
     if (!navigator.onLine) {
       setFalha(MSG_CONTA.offline);
       return;
@@ -431,19 +418,6 @@ function SenhaSecao({ temSenha }: { temSenha: boolean }) {
         ocupado={salvando}
         rotuloOcupado="Salvando…"
       />
-      {confirmando && (
-        <ConfirmDialog
-          titulo={temSenha ? 'Alterar senha?' : 'Definir senha?'}
-          texto={
-            temSenha
-              ? 'Use a nova senha no próximo acesso.'
-              : 'Você poderá entrar também com e-mail e senha.'
-          }
-          confirmar="Confirmar"
-          onConfirm={() => void salvar()}
-          onCancel={() => setConfirmando(false)}
-        />
-      )}
     </form>
   );
 }
@@ -594,7 +568,6 @@ function FazendaSecao({ fazenda }: { fazenda: FazendaDto }) {
   const [erros, setErros] = useState<Erros<CamposFazenda>>({});
   const [falha, setFalha] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
-  const [confirmando, setConfirmando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const refNome = useRef<HTMLInputElement>(null);
   const refArea = useRef<HTMLInputElement>(null);
@@ -620,7 +593,7 @@ function FazendaSecao({ fazenda }: { fazenda: FazendaDto }) {
     if (salvando) return;
     setFalha(null);
     setAviso(null);
-    if (validar()) setConfirmando(true);
+    if (validar()) void salvar();
   }
 
   function aplicar(f: FazendaDto): void {
@@ -630,7 +603,6 @@ function FazendaSecao({ fazenda }: { fazenda: FazendaDto }) {
   }
 
   async function salvar(): Promise<void> {
-    setConfirmando(false);
     if (!navigator.onLine) {
       setFalha(MSG_CONTA.offline);
       return;
@@ -697,15 +669,6 @@ function FazendaSecao({ fazenda }: { fazenda: FazendaDto }) {
         ocupado={salvando}
         rotuloOcupado="Salvando…"
       />
-      {confirmando && (
-        <ConfirmDialog
-          titulo="Salvar alterações?"
-          texto="Os dados da fazenda serão atualizados."
-          confirmar="Salvar"
-          onConfirm={() => void salvar()}
-          onCancel={() => setConfirmando(false)}
-        />
-      )}
     </form>
   );
 }

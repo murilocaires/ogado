@@ -119,7 +119,7 @@ Nenhum CA está marcado como provado ainda (nada foi fechado de ponta a ponta pe
 - Domínio (CA-18/19/20, verde, 10 testes): `packages/domain/src/configuracao.ts` (`PARAMETROS_FAZENDA_PADRAO`, `CONFIGURACAO_PADRAO`, `traduzirConfiguracao`), teste `configuracao.test.ts`, exportado em `index.ts`. Vermelho observado: módulo inexistente; depois verde. Pendente: rodar `pnpm typecheck` do domínio já passou; falta `test:parity` e lint.
 - Banco: `schema.prisma` com `Usuario.nome`, 2 enums e 13 colunas na Fazenda; migração aditiva `packages/db/prisma/migrations/20261018120000_add_fazenda_config/migration.sql` (escrita, AINDA NÃO aplicada nem validada).
 - Contratos: `packages/contracts/src/decimal-string.ts` (validação técnica por string, regras `formato`/`faixa`/`casas_decimais`), escrito mas ainda não exportado no `index.ts`, sem teste e sem uso.
-- `apps/api/package.json`: adicionado `@ogado/domain` em devDependencies, mas o `pnpm install --offline` e o `prisma generate` não foram confirmados (um comando em segundo plano foi interrompido pela pausa; `apps/api/node_modules/@ogado/domain` não existe e `packages/db/src/generated` ainda não tem as colunas novas).
+- `apps/api/package.json`: adicionado `@bovaro/domain` em devDependencies, mas o `pnpm install --offline` e o `prisma generate` não foram confirmados (um comando em segundo plano foi interrompido pela pausa; `apps/api/node_modules/@bovaro/domain` não existe e `packages/db/src/generated` ainda não tem as colunas novas).
 
 **Falta**
 1. Rodar `prisma validate`, `prisma generate`, `pnpm install --offline`, e `migrate deploy` no Postgres de teste.

@@ -381,7 +381,10 @@ describe('RF-001 entrar com Google', () => {
   it('Entrar tem o botão como link de navegação completa para a API', async () => {
     setup('entrar');
     const link = await screen.findByRole('link', { name: 'Entrar com Google' });
-    expect(link).toHaveAttribute('href', '/api/auth/google/start');
+    expect(link).toHaveAttribute(
+      'href',
+      `/api/auth/google/start?origem=${encodeURIComponent(window.location.origin)}`,
+    );
     expect(link.querySelector('svg')).not.toBeNull();
   });
 
@@ -389,7 +392,7 @@ describe('RF-001 entrar com Google', () => {
     setup('cadastrar');
     expect(await screen.findByRole('link', { name: 'Cadastrar com Google' })).toHaveAttribute(
       'href',
-      '/api/auth/google/start',
+      `/api/auth/google/start?origem=${encodeURIComponent(window.location.origin)}`,
     );
   });
 

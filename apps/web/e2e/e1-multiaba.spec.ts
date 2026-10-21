@@ -8,7 +8,6 @@ async function salvar(page: Page, categoria: string) {
   await modal.getByLabel('Peso total do lote', { exact: true }).fill('3000');
   await modal.getByLabel('Preço da arroba', { exact: true }).fill('300');
   await modal.getByRole('button', { name: 'Salvar lote' }).click();
-  await page.getByRole('alertdialog').getByRole('button', { name: 'Salvar', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Nova compra' })).toHaveCount(0);
 }
 

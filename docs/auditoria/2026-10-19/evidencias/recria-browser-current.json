@@ -1,6 +1,0 @@
-{
-  "source": "Entradas de tests/fixtures/golden.json; preenchimento com rótulos atuais",
-  "expectedDefaultSpreadsheet": "R$ 102.408,05",
-  "actual": "R$ 103.307,60",
-  "agreesWithSpreadsheet": false
-}

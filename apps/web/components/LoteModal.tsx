@@ -2,7 +2,7 @@
 
 import { calcularCompra, calcularVenda, type ModoPeso } from '@bovaro/domain';
 import { useId, useMemo, useState } from 'react';
-import { brl, capitalizar, num, numCompacto } from '../lib/format';
+import { brl, num, numCompacto } from '../lib/format';
 import {
   CATEGORIAS_SUGERIDAS,
   errosDoRascunho,
@@ -21,7 +21,7 @@ import { pesosValidos, proximoNumero, separarPesos } from '../lib/negocios';
 import { useRepo, useRepoState } from '../lib/repo/repo-provider';
 import { aguardarGravacao } from '../lib/persistencia';
 import type { LoteEntity, LoteTipo } from '../lib/repo/types';
-import { ConfirmDialog, Dialog } from './Dialog';
+import { Dialog } from './Dialog';
 import { CampoCalculado, CampoNumero } from './Fields';
 import { useToast } from './Toast';
 
@@ -38,7 +38,7 @@ const MODOS: { modo: ModoPeso; rotulo: string }[] = [
   { modo: 'individual', rotulo: 'Peso a peso' },
 ];
 
-/** Modal de lote (RF-025, RF-026, RF-022, RN-027): novo ou edição, com confirmação ao salvar. */
+/** Modal de lote (RF-025, RF-026, RF-022, RN-027): novo ou edição, salvo em uma ação. */
 export function LoteModal({ tipo, lote, onClose }: Props) {
   const repo = useRepo();
   const dados = useRepoState();
@@ -49,7 +49,6 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
   const [d, setD] = useState<LoteDraft>(() =>
     lote ? rascunhoDeLote(lote) : novoRascunho(tipo, proximoNumero(lotes, tipo)),
   );
-  const [confirmando, setConfirmando] = useState(false);
   const [erroSalvar, setErroSalvar] = useState('');
   const [salvando, setSalvando] = useState(false);
   const listaId = useId();
@@ -73,21 +72,10 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
     setD((atual) => ({ ...atual, ...parcial }));
   }
 
-  function pedirConfirmacao(): void {
-    const r = validarRascunho(d);
-    if (!r.ok) {
-      setErroSalvar(r.mensagem);
-      return;
-    }
-    setErroSalvar('');
-    setConfirmando(true);
-  }
-
   async function salvar(): Promise<void> {
     if (salvando) return;
     const r = validarRascunho(d);
     if (!r.ok) {
-      setConfirmando(false);
       setErroSalvar(r.mensagem);
       return;
     }
@@ -98,10 +86,8 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
       setD((atual) => ({ ...atual, id: salvo.id }));
       await aguardarGravacao(repo);
       toast(novo ? 'Lote salvo.' : 'Alterações salvas.');
-      setConfirmando(false);
       onClose();
     } catch {
-      setConfirmando(false);
       setErroSalvar(
         'Não foi possível confirmar o salvamento. Mantenha esta tela aberta e tente novamente.',
       );
@@ -110,8 +96,6 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
     }
   }
 
-  const qtdConfirmacao = num(linha.qtd, 0);
-  const descricaoLote = `${d.numero} de ${capitalizar(d.categoria.trim().toUpperCase() || 'SEM CATEGORIA')} (${qtdConfirmacao} cab.)`;
   const rotuloPeso = d.modo === 'medio' ? 'Peso médio por cabeça' : 'Peso total do lote';
   const infoPeso = venda ? 'arrV' : 'arrC';
 
@@ -363,25 +347,12 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
             <button type="button" className="btn sec" onClick={onClose}>
               Cancelar
             </button>
-            <button type="button" className="btn" onClick={pedirConfirmacao}>
-              Salvar lote
+            <button type="button" className="btn" disabled={salvando} onClick={() => void salvar()}>
+              {salvando ? 'Salvando…' : 'Salvar lote'}
             </button>
           </div>
         </div>
       </Dialog>
-      {confirmando && (
-        <ConfirmDialog
-          titulo={novo ? 'Salvar novo lote?' : 'Salvar alterações?'}
-          texto={
-            novo
-              ? `O lote ${descricaoLote} será adicionado às ${d.tipo === 'compra' ? 'compras' : 'vendas'}.`
-              : `As alterações do lote ${descricaoLote} serão aplicadas e os totais recalculados.`
-          }
-          confirmar="Salvar"
-          onConfirm={salvar}
-          onCancel={() => setConfirmando(false)}
-        />
-      )}
     </>
   );
 }

@@ -1,7 +1,7 @@
 Status: aguardando-aprovacao-humana (revisão pós-protótipo ADR-0012 pendente)
 Label: ready-for-agent (aplicar somente após aprovação)
 
-# Spec — O Gado Web v1 (instalável, offline-first)
+# Spec — Bovaro Web v1 (instalável, offline-first)
 
 IDs de requisitos: `docs/negocio/02-requisitos.md` (RN/RF/RNF). Decisões: ADR-0002…0008.
 
