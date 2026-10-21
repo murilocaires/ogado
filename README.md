@@ -1,64 +1,29 @@
-# Bovaro ‚Äî kit de desenvolvimento (SDD + agentes + skills)
+# Bovaro
 
-Kit para come√ßar a construir a **vers√£o web v1** do Bovaro com Claude Code.
+**Bovaro** È uma aplicaÁ„o web para gest„o de recria, compra e venda de gado, com foco em c·lculo preciso e tomada de decis„o baseada em dados.
 
-| Pasta / arquivo | O que √© |
-|---|---|
-| `PROMPT_INICIAL.md` | **Comece aqui.** Passo a passo e o prompt para colar no Claude Code. |
-| `CLAUDE.md` | Instru√ß√µes permanentes dos agentes. |
-| `.claude/agents/` | 8 subagentes (spec-architect, backend/frontend/test engineer, code-reviewer, debugger, docs-keeper, explorer), cada um com seu modelo-base. |
-| `.claude/skills/` | 21 skills de [mattpocock/skills](https://github.com/mattpocock/skills) (MIT) + 7 do projeto (`sdd-workflow`, `cost-routing`, `spreadsheet-parity`, `zod-contracts`, `prisma-migrations`, `design-to-code`, `traceability`). |
-| `.claude/config/model-routing.json` | **JSON de altern√¢ncia entre modelos** por tarefa, com or√ßamentos e escalonamento. |
-| `.claude/hooks/` + `settings.json` | Bloqueio de git perigoso e prote√ß√£o de `references/`. |
-| `docs/negocio/` | Neg√≥cio, requisitos (RF/RN/RNF) e f√≥rmulas com paridade. |
-| `docs/sdd/` | Constitui√ß√£o, spec v1, plano, tickets, rastreabilidade. |
-| `docs/adr/` | Decis√µes (loop vs graph engineering, stack, decimal, 80 ha, roteamento, skills). |
-| `references/` | Design (pranchas `.dc.html`, tokens), planilhas originais, or√°culo de c√°lculo (`calc.js`, `verify.py`), imagens de refer√™ncia. |
-| `tests/fixtures/golden.json` | Casos de ouro para os testes de paridade. |
-| `scripts/` | `route-model.mjs`, `validate-routing.mjs`, `trace-check.mjs`. |
+## Sobre o produto
 
+O Bovaro ajuda pecuaristas a simular e acompanhar operaÁıes de recria e comercializaÁ„o, calculando resultados com base em planilhas consolidadas e regras de negÛcio validadas. A aplicaÁ„o foi pensada para uso no campo e na gest„o, com interface simples e c·lculos confi·veis.
 
-## Como subir tudo (T-01)
-Pr√©-requisitos: Node 22, pnpm 11, Docker.
-```bash
-cp .env.example .env          # valores de dev; .env √© ignorado pelo git
-docker compose up -d          # Postgres (volume ogado_pgdata, healthcheck, porta POSTGRES_PORT)
-pnpm install
-pnpm db:generate              # gera o Prisma Client (packages/db)
-pnpm dev                      # API em :3001 e web em :3000
-```
-Abra http://localhost:3000: a p√°gina mostra o resultado de `GET http://localhost:3001/health` (`{"status":"ok","db":"ok"}`). A URL da API vem de `NEXT_PUBLIC_API_URL`; o CORS da API usa `WEB_ORIGIN`.
+## Funcionalidades
 
-### Gates
-```bash
-pnpm typecheck
-pnpm lint
-pnpm test          # API exige PostgreSQL exclusivo + TEST_DATABASE_URL (instru√ß√µes abaixo)
-pnpm test:parity   # script Node: or√°culo references/calculo/calc.js vs tests/fixtures/golden.json (tol. 1e-6)
-pnpm build
-node scripts/trace-check.mjs --strict
-pnpm performance:check
-pnpm audit --audit-level moderate
-node scripts/validate-routing.mjs
-```
-Os testes de API e os E2E integrados recusam banco n√£o identificado como teste. Suba o servi√ßo descart√°vel com `docker compose --profile test up -d postgres-test` e configure **ambas** as vari√°veis `TEST_DATABASE_URL` e `DATABASE_URL` com `postgresql://ogado_test:ogado_test_local@127.0.0.1:55441/ogado_test?schema=public`. N√£o use a URL do desenvolvimento. A su√≠te aplica as migra√ß√µes e limpa os dados desse banco. Ao terminar, remova apenas esse servi√ßo com `docker compose --profile test rm -s -f postgres-test`; o volume de desenvolvimento permanece separado.
+- **Painel** ó Vis„o geral das operaÁıes e indicadores principais
+- **Compra e Venda** ó Cadastro e acompanhamento de lotes com c·lculos de valor, peso e margem
+- **Recria** ó SimulaÁ„o e acompanhamento da recria com divis„o por custos, receita e resultado
+- **Cen·rios** ó CriaÁ„o, comparaÁ„o e an·lise de diferentes cen·rios para apoiar decisıes
+- **SincronizaÁ„o** ó SincronizaÁ„o entre dispositivos com suporte offline
+- **AutenticaÁ„o e conta** ó Acesso seguro com gerenciamento de conta
+- **PWA instal·vel** ó Pode ser instalado como aplicativo no celular ou desktop
 
-E2E: `pnpm --filter @bovaro/web test:e2e:local` (sem banco), `test:e2e` (API real) e `test:e2e:offline` (build PWA). Use `E2E_LOCAL_BUILD=1` para a jornada local em produ√ß√£o e `E2E_CHANNEL` vazio para o Chromium instalado via Playwright. `performance:check` mede c√°lculo puro e sele√ß√£o de cen√°rios; n√£o certifica lat√™ncia HTTP. A pol√≠tica de rastreabilidade distingue testes, gates e itens adiados em `docs/sdd/test-coverage-policy.json`.
+## Tecnologias
 
-`pnpm parity:xlsx` roda o `verify.py` (compara com as planilhas .xlsx; exige Python + `pip install openpyxl`). √â opcional e pensado para Linux/CI: no Windows o `verify.py` quebra por causa das barras invertidas no caminho passado ao node.
+- **Frontend:** Next.js (React) + TypeScript
+- **Backend:** Fastify + TypeScript
+- **Banco de dados:** PostgreSQL + Prisma
+- **Monorepo:** pnpm workspaces
 
-Estrutura: `apps/web` (Next), `apps/api` (Fastify), `packages/domain`, `packages/contracts`, `packages/db`. Vers√µes e ferramentas: `docs/adr/0009-versoes-e-ferramentas.md`.
+## Links
 
-## Verifica√ß√£o r√°pida
-```bash
-node scripts/validate-routing.mjs     # coer√™ncia agentes/skills/JSON
-node scripts/route-model.mjs api_endpoint
-node scripts/trace-check.mjs          # cobertura de requisitos por teste
-pnpm test:parity                      # or√°culo vs golden.json (Node, sem Python)
-pnpm parity:xlsx                      # opcional: verify.py vs planilhas (Linux/CI; pip install openpyxl)
-```
+- **AplicaÁ„o:** [bovaro.com.br](https://bovaro.com.br)
 
-## M√©todo: loop engineering
-Ver `docs/adr/0001-loop-engineering-com-rastreabilidade-leve.md`.
-
-Skills de terceiros: ¬© Matt Pocock, licen√ßa MIT (`.claude/skills/LICENSE-mattpocock-skills.txt`).
