@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
-import { newPasswordSchema } from '@ogado/contracts';
+import { newPasswordSchema } from '@bovaro/contracts';
 import { createApiClient, type ApiClient, type ApiFailure } from '../lib/auth/api-client';
 import { MSG_RECUPERACAO, mensagemFalhaRecuperacao } from '../lib/auth/recuperacao-senha';
 import { useOnline } from '../lib/auth/session-provider';

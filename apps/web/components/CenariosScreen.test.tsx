@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { snapshotDaRecria } from '../lib/cenarios';
 import { BOM } from '../lib/exportacao/csv';
-import type { OGadoRepo, RecriaEntity, RecriaForm } from '../lib/repo/types';
+import type { BovaroRepo, RecriaEntity, RecriaForm } from '../lib/repo/types';
 import { PainelScreen } from './PainelScreen';
 import { RecriaScreen } from './RecriaScreen';
 import { criarStorageMemoria, renderComApp } from './test-utils';
@@ -41,12 +41,12 @@ vi.mock('../lib/exportacao/baixar', async (importOriginal) => ({
 }));
 
 /** Repositório com as entradas da planilha preenchidas (o simulador novo abre vazio, ADR-0014). */
-function novoRepo(): OGadoRepo {
+function novoRepo(): BovaroRepo {
   return criarRepoComPlanilha(() => criarStorageMemoria());
 }
 
 /** Guarda um cenário direto no repositório, com as entradas padrão alteradas por `form`. */
-function semear(repo: OGadoRepo, nome: string, form: Partial<RecriaForm> = {}): void {
+function semear(repo: BovaroRepo, nome: string, form: Partial<RecriaForm> = {}): void {
   const recria: RecriaEntity = {
     id: 'r',
     version: 1,
@@ -309,7 +309,7 @@ describe('RF-041 exportar cenários', () => {
     await user.click(screen.getByRole('button', { name: 'Exportar' }));
     let dialogo = screen.getByRole('dialog', { name: 'Exportar cenários' });
     await user.click(within(dialogo).getByRole('button', { name: 'Exportar' }));
-    await screen.findByText(/^Arquivo ogado-cenarios-\d{4}-\d{2}-\d{2}\.csv baixado\.$/);
+    await screen.findByText(/^Arquivo bovaro-cenarios-\d{4}-\d{2}-\d{2}\.csv baixado\.$/);
     const csv = String(baixados[0]!.conteudo);
     expect(csv.startsWith(`${BOM}Cenário;Criado em;Faturamento líquido;`)).toBe(true);
     expect(csv).toContain('Safra 26/27;');
@@ -320,13 +320,13 @@ describe('RF-041 exportar cenários', () => {
     dialogo = screen.getByRole('dialog', { name: 'Exportar cenários' });
     await user.click(within(dialogo).getByRole('button', { name: 'XLSX' }));
     await user.click(within(dialogo).getByRole('button', { name: 'Exportar' }));
-    await screen.findByText(/^Arquivo ogado-cenarios-\d{4}-\d{2}-\d{2}\.xlsx baixado\.$/);
+    await screen.findByText(/^Arquivo bovaro-cenarios-\d{4}-\d{2}-\d{2}\.xlsx baixado\.$/);
     expect(baixados[1]!.nome).toMatch(/\.xlsx$/);
   });
 });
 
 describe('RF-033 comparação de 2 a 3 cenários', () => {
-  function tresCenarios(): OGadoRepo {
+  function tresCenarios(): BovaroRepo {
     const repo = novoRepo();
     semear(repo, 'Base');
     semear(repo, 'Otimista', { precoVenda: '350' });

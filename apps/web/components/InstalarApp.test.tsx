@@ -86,7 +86,7 @@ describe('InstalarApp (RF-070, RNF-016: Chrome/Edge e iOS)', () => {
       expect(botao).toHaveFocus();
       await user.keyboard('{Enter}');
 
-      const dialogo = screen.getByRole('dialog', { name: /Instalar o O Gado no iPhone/ });
+      const dialogo = screen.getByRole('dialog', { name: /Instalar o Bovaro no iPhone/ });
       expect(dialogo).toHaveTextContent('Adicionar à Tela de Início');
       expect(dialogo).toHaveTextContent('Compartilhar');
       const entendi = screen.getByRole('button', { name: 'Entendi' });

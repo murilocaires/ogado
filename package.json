@@ -1,5 +1,5 @@
 {
-  "name": "ogado",
+  "name": "bovaro",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,17 +7,17 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "pnpm -r --parallel --filter @ogado/api --filter @ogado/web dev",
+    "dev": "pnpm -r --parallel --filter @bovaro/api --filter @bovaro/web dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "pnpm -r --workspace-concurrency=1 test",
     "test:parity": "node scripts/parity.mjs",
-    "performance:check": "pnpm --filter @ogado/api exec tsx ../../scripts/performance-check.ts",
+    "performance:check": "pnpm --filter @bovaro/api exec tsx ../../scripts/performance-check.ts",
     "parity:xlsx": "python references/calculo/verify.py",
-    "db:generate": "pnpm --filter @ogado/db generate",
-    "db:migrate": "pnpm --filter @ogado/db migrate"
+    "db:generate": "pnpm --filter @bovaro/db generate",
+    "db:migrate": "pnpm --filter @bovaro/db migrate"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

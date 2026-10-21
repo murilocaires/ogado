@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
-import { createPrisma, type PrismaClient } from '@ogado/db';
+import { createPrisma, type PrismaClient } from '@bovaro/db';
 import { buildApp, type AppOptions } from '../../src/app';
 import { TEST_EMAIL_DOMAIN, TEST_ORIGIN, testDatabaseUrl } from './env';
 
@@ -85,7 +85,7 @@ export function getWithCookie(
 export function setCookieLine(res: LightMyRequestResponse): string | undefined {
   const raw = res.headers['set-cookie'];
   const lines = Array.isArray(raw) ? raw : raw ? [raw] : [];
-  return lines.find((l) => /ogado_session=/.test(l));
+  return lines.find((l) => /bovaro_session=/.test(l));
 }
 
 /** `nome=valor` pronto para o header Cookie. */

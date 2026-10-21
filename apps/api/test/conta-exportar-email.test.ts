@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { exportacaoDadosSchema, EXPORTACAO_ENVIO_MENSAGEM } from '@ogado/contracts';
+import { exportacaoDadosSchema, EXPORTACAO_ENVIO_MENSAGEM } from '@bovaro/contracts';
 import { createMemoryEmailSender } from '../src/email/memory-sender';
 import type { EmailSender } from '../src/email/email-sender';
 import { buildTestApp, postJson, prisma, signup } from './support/harness';
@@ -42,7 +42,7 @@ describe('POST /conta/exportar/enviar (RNF-009)', () => {
     const msg = email.last();
     expect(msg?.to).toBe(c.email);
     const anexo = msg?.attachments?.[0];
-    expect(anexo?.filename).toMatch(/^ogado-meus-dados-\d{4}-\d{2}-\d{2}\.json$/);
+    expect(anexo?.filename).toMatch(/^bovaro-meus-dados-\d{4}-\d{2}-\d{2}\.json$/);
     const json = exportacaoDadosSchema.parse(
       JSON.parse(Buffer.from(anexo?.content ?? '', 'base64').toString('utf8')),
     );

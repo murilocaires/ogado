@@ -16,7 +16,7 @@ Versões resolvidas na instalação do T-01 (travadas em `pnpm-lock.yaml`; faixa
 | PostgreSQL | imagem `postgres:17-alpine` (Compose e CI) | 17 |
 | Testes | Vitest | 5.0.5 |
 | Lint / formato | ESLint (flat config) + typescript-eslint, Prettier | 10.13, 8.71.2, 3.9.10 |
-| Execução / build da API | tsx (dev), tsup (bundle ESM, empacota `@ogado/*`) | 4.23.15, 9.0.0 |
+| Execução / build da API | tsx (dev), tsup (bundle ESM, empacota `@bovaro/*`) | 4.23.15, 9.0.0 |
 
 Decisões e notas:
 - **TypeScript 6.0, não 7.x:** `typescript-eslint` 8.71 declara peer `typescript <6.1`; o 7.x (latest) geraria peer não atendido. Subir para 7 quando o typescript-eslint suportar.

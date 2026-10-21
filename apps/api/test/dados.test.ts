@@ -11,7 +11,7 @@ import {
   loteSchema,
   recriaEntradaConflictSchema,
   recriaEntradaSchema,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import { TEST_ORIGIN } from './support/env';
 import { buildTestApp, prisma, signup } from './support/harness';
 import { cenarioFixture as novoCenario } from './support/cenario';

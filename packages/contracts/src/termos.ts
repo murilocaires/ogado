@@ -5,7 +5,7 @@ import { z } from 'zod';
  * AAAA-MM-DD (a mesma "Versão" do cabeçalho dos dois arquivos). Mudou o texto ou o tratamento de
  * dados pessoais? Suba esta versão, atualize `TERMOS_MANIFESTO` e peça novo aceite (RNF-009).
  */
-export const TERMOS_VERSAO = '2026-10-20';
+export const TERMOS_VERSAO = '2026-10-21';
 
 /**
  * SHA-256 (hex) dos arquivos `docs/legal/*.md` (fim de linha normalizado para LF) na versão acima.
@@ -14,9 +14,9 @@ export const TERMOS_VERSAO = '2026-10-20';
 export const TERMOS_MANIFESTO = {
   versao: TERMOS_VERSAO,
   arquivos: {
-    'termos-de-uso.md': '60ac53267ca9303ee2f0f2b03bdeb008c087da67293f2f1f08e5b45627b7905c',
+    'termos-de-uso.md': 'fd6730725f3b21ab519f52c5a429ace019bd70b08323388bca6e7a8df59d6ffe',
     'politica-de-privacidade.md':
-      'a31181c5430d6ebb7e21e9101abc1113c70a1903256c0f1c48326303d5f1cd2d',
+      '633c8f84efb056b5518ed4c9f5de7250f502c71d9158c6424f4256ab01c5e750',
   },
 } as const;
 

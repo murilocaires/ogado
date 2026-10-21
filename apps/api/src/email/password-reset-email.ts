@@ -4,11 +4,11 @@ import type { EmailMessage } from './email-sender';
 export function passwordResetEmail(to: string, link: string): EmailMessage {
   return {
     to,
-    subject: 'Redefinir sua senha no O Gado',
+    subject: 'Redefinir sua senha no Bovaro',
     text: [
       'Olá!',
       '',
-      'Recebemos um pedido para redefinir a senha da sua conta no O Gado.',
+      'Recebemos um pedido para redefinir a senha da sua conta no Bovaro.',
       'Para escolher uma nova senha, abra o link abaixo (vale por 1 hora e só pode ser usado uma vez):',
       '',
       link,

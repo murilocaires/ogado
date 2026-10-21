@@ -1,4 +1,4 @@
-import type { CenarioDto, LoteCreate, LoteDto, RecriaEntradaDto } from '@ogado/contracts';
+import type { CenarioDto, LoteCreate, LoteDto, RecriaEntradaDto } from '@bovaro/contracts';
 import { criarStorageMemoria } from '../../components/test-utils';
 import { criarRepoLocal } from '../repo/local-repo';
 import type { CenarioSalvar, LoteSalvar } from '../repo/types';
@@ -18,7 +18,7 @@ export function criarServidor() {
   let recria: RecriaEntradaDto | null = null;
   const chamadas: string[] = [];
 
-  const historico = new Map<string, import('@ogado/contracts').HistoricoSync>();
+  const historico = new Map<string, import('@bovaro/contracts').HistoricoSync>();
   const api: DadosClient = {
     async arquivarHistorico(body) {
       const registro = historico.get(body.id) ?? { ...body, criadoEm: AGORA };

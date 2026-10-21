@@ -1,4 +1,4 @@
-# Constituição do projeto O Gado
+# Constituição do projeto Bovaro
 
 Princípios inegociáveis. Mudar qualquer um exige ADR aprovado por humano.
 

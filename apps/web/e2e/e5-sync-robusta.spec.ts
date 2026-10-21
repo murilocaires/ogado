@@ -7,7 +7,7 @@ import { expect, test, type Browser, type BrowserContext, type Page } from '@pla
 const SENHA = 'Segredo#2026';
 
 function uniqueEmail(prefix: string): string {
-  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@teste.ogado.invalid`;
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@teste.bovaro.invalid`;
 }
 
 async function cadastrar(page: Page, email: string): Promise<void> {

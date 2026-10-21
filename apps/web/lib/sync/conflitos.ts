@@ -1,6 +1,6 @@
 // Descrição dos dois lados de um conflito (RF-076) para a tela de decisão: o valor do aparelho e o
 // do servidor, lado a lado. Puro e sem React.
-import { cenarioSchema, loteSchema, recriaEntradaSchema } from '@ogado/contracts';
+import { cenarioSchema, loteSchema, recriaEntradaSchema } from '@bovaro/contracts';
 import { dataBR } from '../format';
 import { RECRIA_CAMPOS, type DadosCompletos, type LoteEntity } from '../repo/types';
 import type { Conflito, Rejeitado } from './engine';

@@ -1,6 +1,6 @@
 // Monta as tabelas exportadas (RF-041) a partir do que a tela já calcula pelo domínio
 // (`resumirNegocios`, snapshot dos cenários). Nenhuma fórmula nova; só rótulos e escrita final.
-import { Decimal } from '@ogado/domain';
+import { Decimal } from '@bovaro/domain';
 import { LINHAS_COMPARACAO } from '../cenarios';
 import { capitalizar, valorCampo } from '../format';
 import { ordenarPorData, resumirNegocios, type ItemNegocio } from '../negocios';

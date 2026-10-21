@@ -1,6 +1,6 @@
 'use client';
 
-import { calcularCompra, calcularVenda, type ModoPeso } from '@ogado/domain';
+import { calcularCompra, calcularVenda, type ModoPeso } from '@bovaro/domain';
 import { useId, useMemo, useState } from 'react';
 import { brl, capitalizar, num, numCompacto } from '../lib/format';
 import {
@@ -102,7 +102,9 @@ export function LoteModal({ tipo, lote, onClose }: Props) {
       onClose();
     } catch {
       setConfirmando(false);
-      setErroSalvar('Não foi possível confirmar o salvamento. Mantenha esta tela aberta e tente novamente.');
+      setErroSalvar(
+        'Não foi possível confirmar o salvamento. Mantenha esta tela aberta e tente novamente.',
+      );
     } finally {
       setSalvando(false);
     }

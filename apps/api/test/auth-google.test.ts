@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Writable } from 'node:stream';
 import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { errorEnvelopeSchema, sessionResponseSchema } from '@ogado/contracts';
+import { errorEnvelopeSchema, sessionResponseSchema } from '@bovaro/contracts';
 import type { GoogleIdClaims } from '../src/google/google-client';
 import { TEST_EMAIL_DOMAIN, TEST_ORIGIN } from './support/env';
 import { createFakeGoogleClient } from './support/fake-google';
@@ -42,7 +42,7 @@ afterAll(async () => {
 function googleCookieLine(res: LightMyRequestResponse): string | undefined {
   const raw = res.headers['set-cookie'];
   const lines = Array.isArray(raw) ? raw : raw ? [raw] : [];
-  return lines.find((l) => /ogado_google=/.test(l));
+  return lines.find((l) => /bovaro_google=/.test(l));
 }
 
 interface Flow {
@@ -74,7 +74,7 @@ function newClaims(overrides: Partial<GoogleIdClaims> = {}): GoogleIdClaims {
     email: uniqueEmail('g'),
     emailVerified: true,
     nonce: '',
-    name: 'Ana do Gado',
+    name: 'Ana Bovaro',
     ...overrides,
   };
 }
@@ -151,7 +151,7 @@ describe('GET /auth/google/start (RF-001)', () => {
     const res = await getWithCookie(prod, '/auth/google/start');
     await prod.close();
     const line = googleCookieLine(res) ?? '';
-    expect(line).toMatch(/^__Host-ogado_google=/);
+    expect(line).toMatch(/^__Host-bovaro_google=/);
     expect(line).toMatch(/Secure/i);
   });
 
@@ -194,11 +194,11 @@ describe('GET /auth/google/callback: entrar (RF-001)', () => {
     expect(location(res)).toBe(`${TEST_ORIGIN}/painel`);
     expect(setCookieLine(res)).toMatch(/HttpOnly/i);
     // o cookie do fluxo é descartado
-    expect(googleCookieLine(res)).toMatch(/ogado_google=;/);
+    expect(googleCookieLine(res)).toMatch(/bovaro_google=;/);
 
     const sessao = await sessaoDe(cookieFrom(res));
     expect(sessao.usuario.email).toBe(claims.email);
-    expect(sessao.usuario.nome).toBe('Ana do Gado');
+    expect(sessao.usuario.nome).toBe('Ana Bovaro');
     expect(sessao.usuario.temSenha).toBe(false);
     expect(sessao.usuario.googleVinculado).toBe(true);
     // RNF-009: conta nova pelo Google nasce sem aceite; a web pede o aceite antes de liberar o produto
@@ -465,7 +465,7 @@ describe('logs', () => {
     expect(todo).not.toContain(claims.email);
     expect(todo).not.toContain(claims.sub);
     expect(todo).not.toContain(TEST_EMAIL_DOMAIN);
-    expect(todo).not.toContain('ogado_google');
+    expect(todo).not.toContain('bovaro_google');
   });
 });
 

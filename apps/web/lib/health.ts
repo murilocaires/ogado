@@ -1,4 +1,4 @@
-import { healthResponseSchema, type HealthResponse } from '@ogado/contracts';
+import { healthResponseSchema, type HealthResponse } from '@bovaro/contracts';
 
 export type HealthResult = { ok: true; data: HealthResponse } | { ok: false; reason: string };
 

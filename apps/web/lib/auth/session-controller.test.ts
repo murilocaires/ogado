@@ -6,7 +6,7 @@ import {
   type LocalIdentity,
 } from './session-controller';
 import { sessionBody } from './fixtures';
-import type { SessionResponse } from '@ogado/contracts';
+import type { SessionResponse } from '@bovaro/contracts';
 
 const identity: LocalIdentity = {
   usuarioId: sessionBody.usuario.id,

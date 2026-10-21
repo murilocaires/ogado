@@ -1,5 +1,5 @@
-import type { UsuarioDto } from '@ogado/contracts';
-import type { PrismaClient } from '@ogado/db';
+import type { UsuarioDto } from '@bovaro/contracts';
+import type { PrismaClient } from '@bovaro/db';
 import type { AppConfig } from '../config';
 import type { TenantContext } from '../tenant';
 import { toUsuarioDto, usuarioDtoSelect } from '../usuario-dto';

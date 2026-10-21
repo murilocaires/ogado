@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { healthResponseSchema } from '@ogado/contracts';
-import { createPrisma } from '@ogado/db';
+import { healthResponseSchema } from '@bovaro/contracts';
+import { createPrisma } from '@bovaro/db';
 import { buildApp } from '../src/app.js';
 
 // Integração com Postgres real (docker compose up -d postgres ou service do CI).

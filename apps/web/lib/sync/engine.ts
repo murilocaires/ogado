@@ -12,7 +12,7 @@ import {
   loteSchema,
   type CenarioDto,
   type LoteDto,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import type {
   CenarioEntity,
   DadosCompletos,
@@ -209,7 +209,7 @@ export async function sincronizar(deps: DepsSync): Promise<ResultadoSync> {
   };
   // Uma única rodada por origem entre abas: versões/checkpoints nunca se atropelam.
   if (typeof navigator !== 'undefined' && navigator.locks) {
-    return navigator.locks.request('ogado.sync', rodar).catch(() => 'erro' as ResultadoSync);
+    return navigator.locks.request('bovaro.sync', rodar).catch(() => 'erro' as ResultadoSync);
   }
   return rodar();
 }

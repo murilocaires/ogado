@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { exportacaoDadosSchema, sessionResponseSchema } from '@ogado/contracts';
+import { exportacaoDadosSchema, sessionResponseSchema } from '@bovaro/contracts';
 import { TEST_ORIGIN } from './support/env';
 import { cenarioFixture } from './support/cenario';
 import { buildTestApp, getWithCookie, prisma, signup } from './support/harness';
@@ -64,7 +64,7 @@ describe('GET /conta/exportar (RNF-009)', () => {
     expect(res.statusCode).toBe(200);
     expect(res.headers['content-type']).toContain('application/json');
     expect(res.headers['content-disposition']).toMatch(
-      /^attachment; filename="ogado-meus-dados-\d{4}-\d{2}-\d{2}\.json"$/,
+      /^attachment; filename="bovaro-meus-dados-\d{4}-\d{2}-\d{2}\.json"$/,
     );
     expect(res.headers['cache-control']).toContain('no-store');
 

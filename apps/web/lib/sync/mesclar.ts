@@ -1,6 +1,6 @@
 import type { CenarioEntity, LoteEntity } from '../repo/types';
 import { loteDeDto, lotePatchDe, loteParaCriar } from './mappers';
-import type { LoteDto } from '@ogado/contracts';
+import type { LoteDto } from '@bovaro/contracts';
 
 /** Campos de pesagem e desconto dependem uns dos outros e mudam como um grupo. */
 export function mesclarLote(

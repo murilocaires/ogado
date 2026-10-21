@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Carregando } from '../../../components/AppShell';
 import { RecriaRoute } from '../../../components/RecriaRoute';
 
-export const metadata = { title: 'Recria · O Gado' };
+export const metadata = { title: 'Recria · Bovaro' };
 
 export default function RecriaPage() {
   return (

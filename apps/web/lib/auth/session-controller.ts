@@ -8,7 +8,7 @@ import type {
   SessionResponse,
   SignupRequest,
   UsuarioDto,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import type { ApiClient, ApiResult } from './api-client';
 
 /** Identidade local: ids que não são segredo (ADR-0010 f). Nunca token, senha nem cookie. */
@@ -315,7 +315,7 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
 }
 
 /** Armazém real da identidade (só ids; nunca segredo). Falhas de storage não derrubam o app. */
-export function browserIdentityStore(key = 'ogado.identidade'): IdentityStore {
+export function browserIdentityStore(key = 'bovaro.identidade'): IdentityStore {
   return {
     read() {
       try {

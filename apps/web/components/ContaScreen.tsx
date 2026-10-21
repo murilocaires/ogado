@@ -18,7 +18,7 @@ import {
   type FazendaDto,
   type FieldError,
   type UsuarioDto,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import type { ApiFailure } from '../lib/auth/api-client';
 import { MSG_CONTA, mensagemFalha } from '../lib/auth/falhas';
 import { useSessionController, useSessionState } from '../lib/auth/session-provider';
@@ -737,7 +737,7 @@ function MeusDadosSecao({ email }: { email: string }) {
       return;
     }
     const arquivo = {
-      nome: `ogado-meus-dados-${dataParaArquivo()}.json`,
+      nome: `bovaro-meus-dados-${dataParaArquivo()}.json`,
       tipo: 'application/json;charset=utf-8',
       conteudo: JSON.stringify(res.data, null, 2),
     };
@@ -1035,7 +1035,7 @@ function InstalarSecao() {
     <Secao
       icone="home"
       titulo="Instalar o app"
-      descricao="Abra o O Gado como um aplicativo, até sem internet."
+      descricao="Abra o Bovaro como um aplicativo, até sem internet."
     >
       <div className="panel">
         <div className="bd">

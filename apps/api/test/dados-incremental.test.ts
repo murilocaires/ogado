@@ -4,7 +4,7 @@ import {
   cenarioListResponseSchema,
   loteListResponseSchema,
   sessionResponseSchema,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import { buildTestApp, getWithCookie, postJson, prisma, signup } from './support/harness';
 import { TEST_ORIGIN } from './support/env';
 import { cenarioFixture } from './support/cenario';

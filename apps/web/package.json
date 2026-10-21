@@ -1,5 +1,5 @@
 {
-  "name": "@ogado/web",
+  "name": "@bovaro/web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,11 +11,12 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:local": "playwright test -c playwright.local.config.ts",
-    "test:e2e:offline": "playwright test -c playwright.offline.config.ts"
+    "test:e2e:offline": "playwright test -c playwright.offline.config.ts",
+    "test:e2e:rebrand": "playwright test -c playwright.rebrand.config.ts"
   },
   "dependencies": {
-    "@ogado/contracts": "workspace:*",
-    "@ogado/domain": "workspace:*",
+    "@bovaro/contracts": "workspace:*",
+    "@bovaro/domain": "workspace:*",
     "fflate": "^0.8.3",
     "next": "^16.4.2",
     "react": "^19.3.1",

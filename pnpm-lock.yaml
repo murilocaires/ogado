@@ -38,6 +38,12 @@ importers:
 
   apps/api:
     dependencies:
+      '@bovaro/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@bovaro/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@fastify/cookie':
         specifier: ^11.1.3
         version: 11.1.3
@@ -53,12 +59,6 @@ importers:
       '@node-rs/argon2':
         specifier: ^2.2.2
         version: 2.2.2
-      '@ogado/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
-      '@ogado/db':
-        specifier: workspace:*
-        version: link:../../packages/db
       fastify:
         specifier: ^5.12.7
         version: 5.12.7
@@ -75,7 +75,7 @@ importers:
         specifier: ^4.6.7
         version: 4.6.7
     devDependencies:
-      '@ogado/domain':
+      '@bovaro/domain':
         specifier: workspace:*
         version: link:../../packages/domain
       tsup:
@@ -87,10 +87,10 @@ importers:
 
   apps/web:
     dependencies:
-      '@ogado/contracts':
+      '@bovaro/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@ogado/domain':
+      '@bovaro/domain':
         specifier: workspace:*
         version: link:../../packages/domain
       fflate:

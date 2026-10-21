@@ -18,7 +18,7 @@ test('RF-041 e RNF-009: lança um lote, baixa o CSV e o XLSX e baixa os dados da
 }) => {
   const erros: string[] = [];
   page.on('pageerror', (e) => erros.push(e.message));
-  const email = `export-${Date.now()}-${Math.floor(Math.random() * 1e6)}@teste.ogado.invalid`;
+  const email = `export-${Date.now()}-${Math.floor(Math.random() * 1e6)}@teste.bovaro.invalid`;
 
   await page.goto('/cadastrar');
   await page.getByLabel('E-mail', { exact: true }).fill(email);
@@ -47,7 +47,7 @@ test('RF-041 e RNF-009: lança um lote, baixa o CSV e o XLSX e baixa os dados da
     page.waitForEvent('download'),
     dialogo.getByRole('button', { name: 'Exportar', exact: true }).click(),
   ]);
-  expect(csv.suggestedFilename()).toMatch(new RegExp(`^ogado-compras-${HOJE.source}\\.csv$`));
+  expect(csv.suggestedFilename()).toMatch(new RegExp(`^bovaro-compras-${HOJE.source}\\.csv$`));
   const bytes = await conteudo(csv);
   expect([...bytes.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]); // BOM UTF-8
   const texto = bytes.toString('utf8').slice(1);
@@ -59,7 +59,7 @@ test('RF-041 e RNF-009: lança um lote, baixa o CSV e o XLSX e baixa os dados da
   expect(linhas[1]).toMatch(/^Compra;1;[^;]*;"Bezerros; ""nelore""";Peso total;10;3000,00;;;;/);
   expect(linhas[1]).toMatch(/;300,00;\d+,\d{2};\d+,\d{2}$/);
   await expect(
-    page.getByRole('status').filter({ hasText: /Arquivo ogado-compras-.*\.csv baixado\./ }),
+    page.getByRole('status').filter({ hasText: /Arquivo bovaro-compras-.*\.csv baixado\./ }),
   ).toBeVisible();
 
   // XLSX de compras e vendas (duas abas)
@@ -70,7 +70,7 @@ test('RF-041 e RNF-009: lança um lote, baixa o CSV e o XLSX e baixa os dados da
     page.waitForEvent('download'),
     dialogo2.getByRole('button', { name: 'Exportar', exact: true }).click(),
   ]);
-  expect(xlsx.suggestedFilename()).toMatch(new RegExp(`^ogado-negocios-${HOJE.source}\\.xlsx$`));
+  expect(xlsx.suggestedFilename()).toMatch(new RegExp(`^bovaro-negocios-${HOJE.source}\\.xlsx$`));
   const zip = await conteudo(xlsx);
   expect(zip.subarray(0, 2).toString('latin1')).toBe('PK');
   expect(zip.includes(Buffer.from('xl/worksheets/sheet2.xml'))).toBe(true);
@@ -82,7 +82,7 @@ test('RF-041 e RNF-009: lança um lote, baixa o CSV e o XLSX e baixa os dados da
     page.waitForEvent('download'),
     secao.getByRole('button', { name: 'Baixar meus dados (JSON)' }).click(),
   ]);
-  expect(json.suggestedFilename()).toMatch(new RegExp(`^ogado-meus-dados-${HOJE.source}\\.json$`));
+  expect(json.suggestedFilename()).toMatch(new RegExp(`^bovaro-meus-dados-${HOJE.source}\\.json$`));
   const bruto = (await conteudo(json)).toString('utf8');
   const dados = JSON.parse(bruto) as {
     versaoDoFormato: number;

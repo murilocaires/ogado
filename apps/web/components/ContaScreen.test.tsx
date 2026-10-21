@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { FazendaDto, SessionResponse } from '@ogado/contracts';
+import type { FazendaDto, SessionResponse } from '@bovaro/contracts';
 import type { ApiClient, ApiResult } from '../lib/auth/api-client';
 import { sessionBody } from '../lib/auth/fixtures';
 import { createSessionController, type LocalIdentity } from '../lib/auth/session-controller';
@@ -758,10 +758,10 @@ describe('RNF-009 Meus dados', () => {
     await pronto();
     await user.click(botaoBaixar());
     expect(
-      await screen.findByText(/^Arquivo ogado-meus-dados-\d{4}-\d{2}-\d{2}\.json baixado\.$/),
+      await screen.findByText(/^Arquivo bovaro-meus-dados-\d{4}-\d{2}-\d{2}\.json baixado\.$/),
     ).toBeVisible();
     expect(exportData).toHaveBeenCalledTimes(1);
-    expect(baixados[0]!.nome).toMatch(/^ogado-meus-dados-\d{4}-\d{2}-\d{2}\.json$/);
+    expect(baixados[0]!.nome).toMatch(/^bovaro-meus-dados-\d{4}-\d{2}-\d{2}\.json$/);
     expect(baixados[0]!.tipo).toContain('application/json');
     expect(JSON.parse(String(baixados[0]!.conteudo))).toEqual(exportacao);
   });

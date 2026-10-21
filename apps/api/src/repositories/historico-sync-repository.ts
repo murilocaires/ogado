@@ -1,5 +1,5 @@
-import type { PrismaClient } from '@ogado/db';
-import type { HistoricoSyncCreate } from '@ogado/contracts';
+import type { PrismaClient } from '@bovaro/db';
+import type { HistoricoSyncCreate } from '@bovaro/contracts';
 import type { TenantContext } from '../tenant';
 
 export type HistoricoSyncRecord = NonNullable<

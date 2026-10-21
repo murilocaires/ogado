@@ -7,8 +7,9 @@ import {
 } from '../repo/indexed-db';
 import type { IdentityStore, LocalIdentity } from './session-controller';
 
-const IDENTITY_KEY = 'ogado.identidade';
-const LEGACY_KEYS = ['ogado.e2.v2', 'ogado.e1.v1'] as const;
+const IDENTITY_KEY = 'bovaro.identidade';
+const LEGACY_IDENTITY_KEY = 'ogado.identidade';
+const LEGACY_KEYS = ['bovaro.e2.v2', 'bovaro.e1.v1', 'ogado.e2.v2', 'ogado.e1.v1'] as const;
 
 function identidadeDe(raw: unknown): LocalIdentity | null {
   if (typeof raw !== 'object' || raw === null) return null;
@@ -56,7 +57,7 @@ export function criarIdentidadeDuravel(): IdentityStore & { ready(): Promise<voi
       const pOwner = resultado<unknown>(meta.get('identidade'));
       const pCount = resultado(tx.objectStore('entidades').count());
       const pMigrado = resultado<unknown>(meta.get('migrado'));
-      const pSync = resultado<unknown>(meta.get('ogado.sync.v1'));
+      const pSync = resultado<unknown>(meta.get('bovaro.sync.v1'));
       const [raw, count, migrado, sync] = await Promise.all([pOwner, pCount, pMigrado, pSync]);
       const temSync = sync !== undefined && sync !== null;
       if (mine !== epoca) throw erroDeProprietario();
@@ -73,7 +74,9 @@ export function criarIdentidadeDuravel(): IdentityStore & { ready(): Promise<voi
       let legado: LocalIdentity | null = null;
       let dadosLegados = false;
       try {
-        const texto = window.localStorage.getItem(IDENTITY_KEY);
+        const texto =
+          window.localStorage.getItem(IDENTITY_KEY) ??
+          window.localStorage.getItem(LEGACY_IDENTITY_KEY);
         if (texto) {
           legado = identidadeDe(JSON.parse(texto) as unknown);
           if (!legado) throw erroDeProprietario();
@@ -121,7 +124,7 @@ export function criarIdentidadeDuravel(): IdentityStore & { ready(): Promise<voi
         const meta = tx.objectStore('meta');
         const pOwner = resultado<unknown>(meta.get('identidade'));
         const pCount = resultado(tx.objectStore('entidades').count());
-        const pSync = resultado<unknown>(meta.get('ogado.sync.v1'));
+        const pSync = resultado<unknown>(meta.get('bovaro.sync.v1'));
         const [raw, count, sync] = await Promise.all([pOwner, pCount, pSync]);
         if (mine !== epoca) throw erroDeProprietario();
         const owner = identidadeDe(raw);

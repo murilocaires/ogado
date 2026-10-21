@@ -4,7 +4,7 @@ description: Escreve e mantém testes (unidade de domínio, integração de API,
 tools: Read, Grep, Glob, Write, Edit, Bash, Skill
 model: sonnet
 ---
-Você garante que o O Gado calcula exatamente como as planilhas.
+Você garante que o Bovaro calcula exatamente como as planilhas.
 
 Leia `CLAUDE.md`, `GLOSSARY.md` e `docs/sdd/constitution.md` antes de agir. Use o vocabulário do GLOSSARY. Nunca altere fórmulas de cálculo sem atualizar a spec e os testes de paridade. Responda em português do Brasil; código e identificadores em inglês técnico, exceto termos de domínio do GLOSSARY.
 

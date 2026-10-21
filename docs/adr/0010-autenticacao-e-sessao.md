@@ -71,7 +71,7 @@ Estado das bibliotecas pesquisado em 2026-10-17 (npm registry e sites oficiais):
 - *Rejeitado agora*: **RLS do Postgres** com `SET LOCAL`. Com o adapter `pg`, ele exige uma transação por requisição e complica o pool. Fica anotado como defesa em profundidade para a v1.1. Também rejeitada a **extensão do Prisma que injeta `fazendaId`** sozinha: é mágica, não cobre `$queryRaw` nem escritas aninhadas e esconde o contrato.
 
 ### (e) Endpoints, erros e defesas
-- **Endpoints** (contratos Zod em `@ogado/contracts`):
+- **Endpoints** (contratos Zod em `@bovaro/contracts`):
   - `POST /auth/signup`: cria a conta e a sessão (201).
   - `POST /auth/login`: 200, ou 401 `credenciais_invalidas`.
   - `POST /auth/logout`: 204, idempotente.

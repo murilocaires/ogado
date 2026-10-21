@@ -8,7 +8,7 @@ import { expect, test } from '@playwright/test';
 const SENHA = 'Segredo#2026';
 
 function uniqueEmail(prefix: string): string {
-  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@teste.ogado.invalid`;
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@teste.bovaro.invalid`;
 }
 
 /** Simula "termos atualizados": muda a versão aceita direto no banco. */
@@ -34,7 +34,7 @@ test.describe('páginas públicas', () => {
     page,
   }) => {
     await page.goto('/termos');
-    await expect(page).toHaveTitle('Termos de Uso · O Gado');
+    await expect(page).toHaveTitle('Termos de Uso · Bovaro');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Termos de Uso');
     await expect(
       page.getByText('[IDENTIFICAÇÃO DO CONTROLADOR — preencher]').first(),
@@ -42,7 +42,7 @@ test.describe('páginas públicas', () => {
     await expect(page).toHaveURL(/\/termos$/);
 
     await page.goto('/privacidade');
-    await expect(page).toHaveTitle('Política de Privacidade · O Gado');
+    await expect(page).toHaveTitle('Política de Privacidade · Bovaro');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Política de Privacidade');
     await expect(
       page.getByRole('heading', { level: 2, name: /Quais dados coletamos/ }),

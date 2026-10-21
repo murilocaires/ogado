@@ -1,6 +1,6 @@
 'use client';
 
-import type { AlertaRecria, Decimal, ResultadoRecria } from '@ogado/domain';
+import type { AlertaRecria, Decimal, ResultadoRecria } from '@bovaro/domain';
 import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { brl, dicaCampo, ehNegativo, lerCampo, num, TRACO } from '../lib/format';
 import { snapshotDaRecria } from '../lib/cenarios';

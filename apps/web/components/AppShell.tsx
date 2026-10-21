@@ -40,7 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <aside className="app-side">
           <div className="brand">
             <LogoMark size={40} />
-            <b>O Gado</b>
+            <b>Bovaro</b>
           </div>
           <nav className="nav" aria-label="Principal">
             {ITENS.map((i) => (

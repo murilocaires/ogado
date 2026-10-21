@@ -1,4 +1,4 @@
-import { createPrisma } from '@ogado/db';
+import { createPrisma } from '@bovaro/db';
 import { buildApp } from './app.js';
 import { configFromEnv } from './config.js';
 import { createGoogleOAuthClient } from './google/google-client.js';

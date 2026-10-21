@@ -1,6 +1,6 @@
-# O Gado — Requisitos (v1 web)
+# Bovaro — Requisitos (v1 web)
 
-> **Revisão de 2026-10-18 (ADR-0012):** o protótipo `docs/prototipo/ogado-prototipo.html` passou a ser a referência de comportamento e de UX. Itens alterados ou novos: RN-002, RN-009, RN-019, RN-021, RN-023, RN-024…RN-027, RF-004…RF-007, RF-011, RF-020…RF-026, RF-030…RF-036, RF-040, RF-052, RF-053, RNF-009. Pontos que dependem de decisão humana estão em "Em aberto" no ADR-0012 (Q-A…Q-G).
+> **Revisão de 2026-10-18 (ADR-0012):** o protótipo legado passou a ser a referência de comportamento e UX. Itens alterados ou novos: RN-002, RN-009, RN-019, RN-021, RN-023, RN-024…RN-027, RF-004…RF-007, RF-011, RF-020…RF-026, RF-030…RF-036, RF-040, RF-052, RF-053, RNF-009. Pontos que dependem de decisão humana estão em "Em aberto" no ADR-0012 (Q-A…Q-G).
 
 Legenda de prioridade: **M** = must (v1) · **S** = should (v1.1) · **C** = could/futuro. Todo ID abaixo deve ter ao menos um teste com o ID no nome (`node scripts/trace-check.mjs`). Critérios no formato Dado/Quando/Então.
 

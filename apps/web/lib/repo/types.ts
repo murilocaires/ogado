@@ -1,13 +1,13 @@
 // Entidades e interface do repositório de dados da web (ADR-0007, seam de dados).
-// As telas só falam com `OGadoRepo`; a implementação padrão é IndexedDB transacional (ADR-0016).
+// As telas só falam com `BovaroRepo`; a implementação padrão é IndexedDB transacional (ADR-0016).
 // Valores de dinheiro/peso ficam como STRING (pt-BR digitado).
-import type { ModoPeso, VarianteLotacaoInicial } from '@ogado/domain';
+import type { ModoPeso, VarianteLotacaoInicial } from '@bovaro/domain';
 import type {
   CenarioParametrosContrato,
   CenarioResultadoContrato,
   CenarioVariantesEntrada,
   RecriaFormContrato,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 
 export type LoteTipo = 'compra' | 'venda';
 export type BaseArroba = 'vivo' | 'carcaca';
@@ -151,7 +151,7 @@ export type RepoSnapshot =
       persistencia: PersistenciaStatus;
     };
 
-export interface OGadoRepo {
+export interface BovaroRepo {
   subscribe(listener: () => void): () => void;
   getSnapshot(): RepoSnapshot;
   getServerSnapshot(): RepoSnapshot;
@@ -177,7 +177,7 @@ export interface DadosCompletos {
 }
 
 /** Repositório local que também deixa o motor de sincronização ler e aplicar dados da nuvem. */
-export interface SyncableRepo extends OGadoRepo {
+export interface SyncableRepo extends BovaroRepo {
   /** Hidratação e confirmação de commit no armazenamento do aparelho. */
   ready?(): Promise<void>;
   flush?(): Promise<void>;

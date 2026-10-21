@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { calcularCompraVenda, calcularVenda, formatarBRL } from '@ogado/domain';
+import { calcularCompraVenda, calcularVenda, formatarBRL } from '@bovaro/domain';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
@@ -161,7 +161,7 @@ describe('RF-024 botões de criar contextuais por aba', () => {
 });
 
 describe('RF-020/RF-021/RF-023/RN-006 compra e venda geram o saldo do domínio', () => {
-  it('RF-023 cadastra uma compra e uma venda e o saldo bate com @ogado/domain', async () => {
+  it('RF-023 cadastra uma compra e uma venda e o saldo bate com @bovaro/domain', async () => {
     const user = userEvent.setup();
     renderComApp(<NegociosScreen />);
 
@@ -391,11 +391,11 @@ describe('RF-041 exportar compras e vendas', () => {
     await user.click(within(dialogo).getByRole('button', { name: 'Compras' }));
     await user.click(within(dialogo).getByRole('button', { name: 'Exportar' }));
 
-    await screen.findByText(/^Arquivo ogado-compras-\d{4}-\d{2}-\d{2}\.csv baixado\.$/);
+    await screen.findByText(/^Arquivo bovaro-compras-\d{4}-\d{2}-\d{2}\.csv baixado\.$/);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(baixados).toHaveLength(1);
     const csv = baixados[0]!;
-    expect(csv.nome).toMatch(/^ogado-compras-\d{4}-\d{2}-\d{2}\.csv$/);
+    expect(csv.nome).toMatch(/^bovaro-compras-\d{4}-\d{2}-\d{2}\.csv$/);
     expect(csv.tipo).toContain('text/csv');
     expect(String(csv.conteudo).startsWith(`${BOM}Tipo;Lote;Data;`)).toBe(true);
     expect(String(csv.conteudo)).toContain('Compra;1;');
@@ -405,7 +405,7 @@ describe('RF-041 exportar compras e vendas', () => {
     dialogo = screen.getByRole('dialog', { name: 'Exportar compras e vendas' });
     await user.click(within(dialogo).getByRole('button', { name: 'XLSX' }));
     await user.click(within(dialogo).getByRole('button', { name: 'Exportar' }));
-    await screen.findByText(/^Arquivo ogado-negocios-\d{4}-\d{2}-\d{2}\.xlsx baixado\.$/);
+    await screen.findByText(/^Arquivo bovaro-negocios-\d{4}-\d{2}-\d{2}\.xlsx baixado\.$/);
     expect(baixados[1]!.nome).toMatch(/\.xlsx$/);
     expect(baixados[1]!.conteudo).toBeInstanceOf(Uint8Array);
   });

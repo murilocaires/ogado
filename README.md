@@ -1,6 +1,6 @@
-# O Gado — kit de desenvolvimento (SDD + agentes + skills)
+# Bovaro — kit de desenvolvimento (SDD + agentes + skills)
 
-Kit para começar a construir a **versão web v1** do O Gado com Claude Code.
+Kit para começar a construir a **versão web v1** do Bovaro com Claude Code.
 
 | Pasta / arquivo | O que é |
 |---|---|
@@ -43,7 +43,7 @@ node scripts/validate-routing.mjs
 ```
 Os testes de API e os E2E integrados recusam banco não identificado como teste. Suba o serviço descartável com `docker compose --profile test up -d postgres-test` e configure **ambas** as variáveis `TEST_DATABASE_URL` e `DATABASE_URL` com `postgresql://ogado_test:ogado_test_local@127.0.0.1:55441/ogado_test?schema=public`. Não use a URL do desenvolvimento. A suíte aplica as migrações e limpa os dados desse banco. Ao terminar, remova apenas esse serviço com `docker compose --profile test rm -s -f postgres-test`; o volume de desenvolvimento permanece separado.
 
-E2E: `pnpm --filter @ogado/web test:e2e:local` (sem banco), `test:e2e` (API real) e `test:e2e:offline` (build PWA). Use `E2E_LOCAL_BUILD=1` para a jornada local em produção e `E2E_CHANNEL` vazio para o Chromium instalado via Playwright. `performance:check` mede cálculo puro e seleção de cenários; não certifica latência HTTP. A política de rastreabilidade distingue testes, gates e itens adiados em `docs/sdd/test-coverage-policy.json`.
+E2E: `pnpm --filter @bovaro/web test:e2e:local` (sem banco), `test:e2e` (API real) e `test:e2e:offline` (build PWA). Use `E2E_LOCAL_BUILD=1` para a jornada local em produção e `E2E_CHANNEL` vazio para o Chromium instalado via Playwright. `performance:check` mede cálculo puro e seleção de cenários; não certifica latência HTTP. A política de rastreabilidade distingue testes, gates e itens adiados em `docs/sdd/test-coverage-policy.json`.
 
 `pnpm parity:xlsx` roda o `verify.py` (compara com as planilhas .xlsx; exige Python + `pip install openpyxl`). É opcional e pensado para Linux/CI: no Windows o `verify.py` quebra por causa das barras invertidas no caminho passado ao node.
 

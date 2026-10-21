@@ -1,4 +1,4 @@
-import type { UsuarioDto } from '@ogado/contracts';
+import type { UsuarioDto } from '@bovaro/contracts';
 import type { Limiters } from './plugins/rate-limit';
 import type { RouteCatalogEntry } from './plugins/route-catalog';
 import type { TenantContext } from './tenant';

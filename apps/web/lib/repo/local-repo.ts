@@ -17,12 +17,15 @@ import {
   type RecriaForm,
   type RepoSnapshot,
 } from './types';
-import { normalizarCenarioSnapshot } from '@ogado/contracts';
+import { normalizarCenarioSnapshot } from '@bovaro/contracts';
 
 /** Chave atual (E2, esquema 3: lotes + recria + cenários; o 3 troca descontoPct por descontoKg). */
-export const STORAGE_KEY = 'ogado.e2.v2';
+export const STORAGE_KEY = 'bovaro.e2.v2';
 /** Chave da E1 (esquema 1, sem cenários): lida uma vez e migrada, nunca apagada. */
-export const STORAGE_KEY_E1 = 'ogado.e1.v1';
+export const STORAGE_KEY_E1 = 'bovaro.e1.v1';
+/** Chaves legadas mantidas para migrar dados já gravados antes do rebrand. */
+export const LEGACY_STORAGE_KEY = 'ogado.e2.v2';
+export const LEGACY_STORAGE_KEY_E1 = 'ogado.e1.v1';
 const SCHEMA = 3;
 const SCHEMA_E2 = 2;
 const SCHEMA_E1 = 1;
@@ -226,9 +229,17 @@ export function criarRepoLocal(opcoes: OpcoesRepoLocal = {}): SyncableRepo {
     try {
       bruto = storage.getItem(STORAGE_KEY);
       if (bruto === null) {
-        // Migração E1 -> E2: sem dados novos, lê os da E1 (esquema 1) sem perder lotes/entradas.
+        bruto = storage.getItem(LEGACY_STORAGE_KEY);
+        chave = LEGACY_STORAGE_KEY;
+      }
+      if (bruto === null) {
         bruto = storage.getItem(STORAGE_KEY_E1);
         chave = STORAGE_KEY_E1;
+      }
+      if (bruto === null) {
+        // Migração E1 -> E2: sem dados novos, lê os da E1 (esquema 1) sem perder lotes/entradas.
+        bruto = storage.getItem(LEGACY_STORAGE_KEY_E1);
+        chave = LEGACY_STORAGE_KEY_E1;
       }
     } catch {
       persistencia = 'indisponivel';

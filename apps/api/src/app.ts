@@ -4,7 +4,7 @@ import helmet from '@fastify/helmet';
 import { randomUUID } from 'node:crypto';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
-import type { PrismaClient } from '@ogado/db';
+import type { PrismaClient } from '@bovaro/db';
 import type { GoogleOAuthClient } from './google/google-client';
 import { createMemoryEmailSender } from './email/memory-sender';
 import type { EmailSender } from './email/email-sender';

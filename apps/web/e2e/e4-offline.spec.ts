@@ -10,7 +10,7 @@ import { preencherPlanilha, RESULTADO_CABECAS_INTEIRAS } from './planilha';
 const SENHA = 'Segredo#2026';
 
 function uniqueEmail(prefix: string): string {
-  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@teste.ogado.invalid`;
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@teste.bovaro.invalid`;
 }
 
 async function cadastrar(page: Page, prefix: string): Promise<void> {
@@ -31,7 +31,7 @@ async function esperarOffline(page: Page): Promise<void> {
       () =>
         page.evaluate(async () => {
           // A versão do cache é o id do build (RF-077): procura pelo prefixo.
-          const nome = (await caches.keys()).find((k) => k.startsWith('ogado-paginas-'));
+          const nome = (await caches.keys()).find((k) => k.startsWith('bovaro-paginas-'));
           if (!nome) return 0;
           return (await (await caches.open(nome)).keys()).length;
         }),
