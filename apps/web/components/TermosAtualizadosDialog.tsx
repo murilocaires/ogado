@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRef, useState } from 'react';
-import { TERMOS_VERSAO } from '@ogado/contracts';
+import { TERMOS_VERSAO } from '@bovaro/contracts';
 import { useSessionController } from '../lib/auth/session-provider';
 import { mensagemFalha } from '../lib/auth/falhas';
 import { Dialog } from './Dialog';

@@ -63,8 +63,8 @@ const envSchema = z.object({
   // IPs/CIDRs do proxy reverso confiável, separados por vírgula; `none` = sem proxy.
   // Obrigatório em produção (ver loadEnv).
   TRUST_PROXY: z.string().default('').transform(parseTrustProxy),
-  // Segredo compartilhado com o site (Vercel): quando o cabeçalho `x-ogado-proxy-secret` confere,
-  // o IP do cliente vem de `x-ogado-client-ip` (o proxy do Railway só enxerga o egress da Vercel).
+  // Segredo compartilhado com o site (Vercel): quando o cabeçalho `x-bovaro-proxy-secret` confere,
+  // o IP do cliente vem de `x-bovaro-client-ip` (o proxy do Railway só enxerga o egress da Vercel).
   PROXY_SECRET: z.string().min(32, 'PROXY_SECRET deve ter ao menos 32 caracteres.').optional(),
 });
 

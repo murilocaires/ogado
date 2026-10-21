@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { calcularRecria, ENTRADA_PADRAO, VARIANTES_PADRAO, formatarBRL } from '@ogado/domain';
+import { calcularRecria, ENTRADA_PADRAO, VARIANTES_PADRAO, formatarBRL } from '@bovaro/domain';
 import { screen, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -63,7 +63,9 @@ describe('RF-040 Painel', () => {
   it('RF-040 com as entradas da planilha preenchidas, a recria atual mostra o valor de ouro', () => {
     const repo = criarRepoComPlanilha(() => criarStorageMemoria());
     renderComApp(<PainelScreen />, repo);
-    const liquido = formatarBRL(calcularRecria(ENTRADA_PADRAO, COM_CABECAS_INTEIRAS).faturamentoLiquido);
+    const liquido = formatarBRL(
+      calcularRecria(ENTRADA_PADRAO, COM_CABECAS_INTEIRAS).faturamentoLiquido,
+    );
     expect(liquido).toBe('R$ 103.307,60');
     const cartao = screen.getByRole('region', { name: /Recria, simulação atual/ });
     expect(within(cartao).getByText(liquido)).toBeInTheDocument();
@@ -72,8 +74,14 @@ describe('RF-040 Painel', () => {
 
   it('RF-040 atalhos levam a novo lote (compra, venda) e à recria', () => {
     renderComApp(<PainelScreen />);
-    expect(screen.getByRole('link', { name: 'Nova compra' })).toHaveAttribute('href', '/negocios?novo=compra');
-    expect(screen.getByRole('link', { name: 'Nova venda' })).toHaveAttribute('href', '/negocios?novo=venda');
+    expect(screen.getByRole('link', { name: 'Nova compra' })).toHaveAttribute(
+      'href',
+      '/negocios?novo=compra',
+    );
+    expect(screen.getByRole('link', { name: 'Nova venda' })).toHaveAttribute(
+      'href',
+      '/negocios?novo=venda',
+    );
     expect(screen.getByRole('link', { name: 'Simular recria' })).toHaveAttribute('href', '/recria');
   });
 
@@ -107,7 +115,10 @@ describe('RF-053 navegação', () => {
     for (const nav of navs) {
       const links = within(nav).getAllByRole('link');
       expect(links.map((l) => l.textContent)).toEqual(['Painel', 'Negócios', 'Recria', 'Conta']);
-      expect(within(nav).getByRole('link', { name: 'Negócios' })).toHaveAttribute('aria-current', 'page');
+      expect(within(nav).getByRole('link', { name: 'Negócios' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
       expect(within(nav).getByRole('link', { name: 'Painel' })).not.toHaveAttribute('aria-current');
     }
     expect(screen.queryByText('PROTÓTIPO')).not.toBeInTheDocument();

@@ -16,8 +16,8 @@
     return v || 'v1';
   }
   var VERSAO = versaoDe(root && root.location ? root.location.search : '');
-  var CACHE_ESTATICO = 'ogado-estatico-' + VERSAO;
-  var CACHE_PAGINAS = 'ogado-paginas-' + VERSAO;
+  var CACHE_ESTATICO = 'bovaro-estatico-' + VERSAO;
+  var CACHE_PAGINAS = 'bovaro-paginas-' + VERSAO;
 
   /** Telas que abrem sem internet depois da primeira visita. */
   var ROTAS = ['/painel', '/negocios', '/recria', '/conta', '/entrar', '/cadastrar'];
@@ -109,5 +109,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (root) root.OGadoSwPolicy = api;
+  if (root) root.BovaroSwPolicy = api;
 })(typeof self !== 'undefined' ? self : undefined);

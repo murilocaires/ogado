@@ -1,4 +1,4 @@
-import type { ErrorCode, FieldError } from '@ogado/contracts';
+import type { ErrorCode, FieldError } from '@bovaro/contracts';
 
 /** Erro esperado da API: vira o envelope `{ erro: { codigo, mensagem } }` no setErrorHandler. */
 export class AppError extends Error {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { criarStorageMemoria } from '../../components/test-utils';
 import { snapshotDaRecria } from '../cenarios';
-import { criarRepoLocal, STORAGE_KEY, STORAGE_KEY_E1 } from './local-repo';
+import { criarRepoLocal, LEGACY_STORAGE_KEY_E1, STORAGE_KEY, STORAGE_KEY_E1 } from './local-repo';
 import type { LoteSalvar, RecriaEntity } from './types';
 import { recriaFormPlanilha } from './planilha.test-support';
 
@@ -306,6 +306,19 @@ describe('RNF-004 migração do storage da E1 para a E2', () => {
     expect(novo.lotes).toHaveLength(1);
     expect(novo.cenarios).toHaveLength(1);
     expect(storage.getItem(STORAGE_KEY_E1)).not.toBeNull(); // a cópia antiga fica de reserva
+  });
+
+  it('RNF-004 migra a chave antiga da marca para bovaro.e1.v1 sem apagar a origem', () => {
+    const storage = criarStorageMemoria({ [LEGACY_STORAGE_KEY_E1]: JSON.stringify(e1) });
+    const repo = criarRepoLocal({ storage: () => storage });
+    const snapshot = repo.getSnapshot();
+
+    expect(snapshot.status === 'pronto' && snapshot.lotes[0]?.id).toBe('l-1');
+    repo.salvarLote({ ...compra, numero: 2 });
+
+    expect(storage.getItem(STORAGE_KEY)).not.toBeNull();
+    expect(storage.getItem(STORAGE_KEY_E1)).toBeNull();
+    expect(storage.getItem(LEGACY_STORAGE_KEY_E1)).not.toBeNull();
   });
 
   it('RNF-004 a chave nova tem prioridade sobre a antiga', () => {

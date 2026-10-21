@@ -1,7 +1,7 @@
 // Cenários da recria (RF-032…RF-036, RN-023): snapshot, busca/ordenação e linhas da comparação.
-// Nenhuma fórmula aqui: o resultado vem de @ogado/domain e é guardado como string decimal sem
+// Nenhuma fórmula aqui: o resultado vem de @bovaro/domain e é guardado como string decimal sem
 // arredondar (ADR-0003). Ordenar e comparar usam Decimal sobre o snapshot, nunca recalculam.
-import { Decimal } from '@ogado/domain';
+import { Decimal } from '@bovaro/domain';
 import { brl, num, valorCampo } from './format';
 import type { InfoKey } from './info';
 import { calcularRecriaEntidade } from './recria';

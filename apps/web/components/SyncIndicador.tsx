@@ -71,7 +71,7 @@ export function SyncIndicador({
   );
 }
 
-/** Selo por registro (RF-075): "pendente" até a nuvem confirmar; "precisa de atenção" se travou. */
+/** Só interrompe o usuário quando um registro precisa de intervenção. */
 export function SeloSync({ id }: { id: string }) {
   const info = useSyncInfo();
   const travado =
@@ -84,11 +84,5 @@ export function SeloSync({ id }: { id: string }) {
       </span>
     );
   }
-  if (!info.pendentes.has(id)) return null;
-  return (
-    <span className="selo">
-      <i aria-hidden="true" />
-      pendente
-    </span>
-  );
+  return null;
 }

@@ -1,5 +1,5 @@
-import type { UsuarioDto } from '@ogado/contracts';
-import type { PrismaClient } from '@ogado/db';
+import type { UsuarioDto } from '@bovaro/contracts';
+import type { PrismaClient } from '@bovaro/db';
 import { toUsuarioDto, usuarioDtoSelect } from '../usuario-dto';
 import type { FazendaRecord } from './fazenda-repository';
 

@@ -1123,10 +1123,10 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .app .skeleton {
-    animation: ogado-pulse 1.4s ease-in-out infinite;
+    animation: bovaro-pulse 1.4s ease-in-out infinite;
   }
 }
-@keyframes ogado-pulse {
+@keyframes bovaro-pulse {
   50% {
     opacity: 0.6;
   }

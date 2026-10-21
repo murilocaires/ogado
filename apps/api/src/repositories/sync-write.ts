@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@ogado/db';
+import type { PrismaClient } from '@bovaro/db';
 import type { TenantContext } from '../tenant';
 
 type SyncTransaction = Pick<PrismaClient, 'lote' | 'cenario' | '$queryRaw'>;

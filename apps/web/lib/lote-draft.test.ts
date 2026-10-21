@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calcularVenda } from '@ogado/domain';
+import { calcularVenda } from '@bovaro/domain';
 import {
   DESCONTO_PADRAO_KG,
   errosDoRascunho,

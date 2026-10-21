@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-/** Apaga as contas @teste.ogado.invalid criadas pelo e2e (via script da API; o web não importa o banco). */
+/** Apaga as contas @teste.bovaro.invalid criadas pelo e2e (via script da API; o web não importa o banco). */
 export default function globalTeardown(): void {
   execFileSync(
     process.execPath,

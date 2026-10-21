@@ -1,4 +1,4 @@
-import { calcularCompraVenda } from '@ogado/domain';
+import { calcularCompraVenda } from '@bovaro/domain';
 import { describe, expect, it } from 'vitest';
 import { criarStorageMemoria } from '../../components/test-utils';
 import { snapshotDaRecria } from '../cenarios';

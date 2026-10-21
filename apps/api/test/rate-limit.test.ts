@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { errorEnvelopeSchema } from '@ogado/contracts';
+import { errorEnvelopeSchema } from '@bovaro/contracts';
 import { buildTestApp, postJson, prisma, uniqueEmail, VALID_PASSWORD } from './support/harness';
 
 // Limites reais (sem o relaxamento da suíte): o IP é fixado por teste para não interferir entre si.

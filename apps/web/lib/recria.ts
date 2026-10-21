@@ -5,7 +5,7 @@ import {
   type AlertaRecria,
   type EntradaRecria,
   type ResultadoRecria,
-} from '@ogado/domain';
+} from '@bovaro/domain';
 import { valorCampo } from './format';
 import type { RecriaEntity, RecriaForm } from './repo/types';
 

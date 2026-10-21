@@ -1,11 +1,11 @@
-// Ponte entre os lotes salvos e o domínio (@ogado/domain). Nenhuma fórmula aqui (constituição).
+// Ponte entre os lotes salvos e o domínio (@bovaro/domain). Nenhuma fórmula aqui (constituição).
 import {
   calcularCompraVenda,
   Decimal,
   type CompraVendaResultado,
   type LinhaCalculada,
   type LoteInput,
-} from '@ogado/domain';
+} from '@bovaro/domain';
 import { lerCampo, valorCampo } from './format';
 import type { LoteEntity, LoteTipo } from './repo/types';
 

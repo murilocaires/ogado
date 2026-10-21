@@ -5,7 +5,7 @@ import {
   type FazendaDto,
   type LoteDto,
   type RecriaEntradaDto,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import type { CenarioRecord } from '../repositories/cenario-repository';
 import type { FazendaRecord } from '../repositories/fazenda-repository';
 import type { LoteRecord } from '../repositories/lote-repository';

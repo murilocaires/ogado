@@ -1,6 +1,6 @@
 ---
 name: sdd-workflow
-description: Orquestra o ciclo SDD do O Gado (especificar, planejar, implementar em loop, revisar, entregar) com roteamento de modelo por custo. Use ao iniciar qualquer funcionalidade ou ao perguntar "qual o próximo passo".
+description: Orquestra o ciclo SDD do Bovaro (especificar, planejar, implementar em loop, revisar, entregar) com roteamento de modelo por custo. Use ao iniciar qualquer funcionalidade ou ao perguntar "qual o próximo passo".
 ---
 
 # Fluxo SDD com loops limitados
@@ -32,6 +32,7 @@ fim do ticket: `pnpm test` completo + `pnpm test:parity` → `code-review`
 ```
 
 ## Regras
+- Siga `docs/BRANCHING.md`: trabalho em branch temporária criada de `develop`, PR para `develop`; promoção para `main` por PR separado. Todo merge exige aprovação explícita; CI verde não autoriza merge automático.
 - Nunca pule do pedido para o código: sem requisito numerado, volte à fase 1.
 - Humano decide: regras de negócio, aprovação de spec, merge, migrações destrutivas, uso do tier `frontier`.
 - Um ticket cabe numa janela de contexto. Contexto > 60%: `handoff` e sessão nova.

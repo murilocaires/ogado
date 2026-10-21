@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import type { ReactNode } from 'react';
 import userEvent from '@testing-library/user-event';
-import { TERMOS_VERSAO } from '@ogado/contracts';
+import { TERMOS_VERSAO } from '@bovaro/contracts';
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SessionController, SessionState } from '../lib/auth/session-controller';

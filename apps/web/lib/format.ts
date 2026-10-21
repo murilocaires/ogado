@@ -1,5 +1,5 @@
 // Entrada e saída pt-BR da UI (RNF-007, RN-022). Só delega ao domínio; nenhuma fórmula aqui.
-import { Decimal, formatarBRL, formatarNumero, parseNumeroPtBr } from '@ogado/domain';
+import { Decimal, formatarBRL, formatarNumero, parseNumeroPtBr } from '@bovaro/domain';
 
 export const TRACO = '—';
 
@@ -7,9 +7,7 @@ export type Valor = Decimal | null | undefined;
 
 /** Leitura de um campo digitado: vazio, válido ou inválido (com a dica para o usuário). */
 export type LeituraCampo =
-  | { tipo: 'vazio' }
-  | { tipo: 'ok'; valor: Decimal }
-  | { tipo: 'invalido'; dica: string };
+  { tipo: 'vazio' } | { tipo: 'ok'; valor: Decimal } | { tipo: 'invalido'; dica: string };
 
 const PONTO_AMBIGUO = /^-?\d+\.\d+$|^-?\d{1,3}(\.\d{3})$/;
 
@@ -52,7 +50,9 @@ export function num(valor: Valor, casas = 2): string {
 
 /** Número sem zeros à direita (`450,50` -> `450,5`; `450,00` -> `450`). */
 export function numCompacto(valor: Valor, casas = 2): string {
-  return formatarNumero(valor, casas).replace(/(,\d*?)0+$/, '$1').replace(/,$/, '');
+  return formatarNumero(valor, casas)
+    .replace(/(,\d*?)0+$/, '$1')
+    .replace(/,$/, '');
 }
 
 export function brl(valor: Valor, casas = 2): string {

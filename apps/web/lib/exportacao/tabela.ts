@@ -1,6 +1,6 @@
 // Modelo neutro de tabela para exportação (RF-041). Os valores já vêm do domínio; aqui só se
 // escolhe a escrita final (casas decimais, data). Nenhuma fórmula nova (constituição).
-import { Decimal } from '@ogado/domain';
+import { Decimal } from '@bovaro/domain';
 
 /** `texto`, `numero` (com `casas`) ou `data` (célula `AAAA-MM-DD`). */
 export type TipoColuna = 'texto' | 'numero' | 'data';

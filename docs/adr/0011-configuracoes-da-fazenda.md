@@ -61,7 +61,7 @@ O T-04 criou a Fazenda (tenant) com a convenção sincronizável (`id` UUID do s
 - Snapshot: quem salvar uma simulação (T-08) guarda as variantes e os parâmetros que o resultado devolve; mudar a configuração depois não recalcula nada salvo. O T-05 só garante que o cálculo depende exclusivamente dos argumentos.
 
 ### 6. Validação (Zod nas bordas, mensagens pt-BR)
-- Um único schema em `@ogado/contracts` serve à API e aos formulários. **Não há faixas de negócio** (Q2, revisada): o pecuarista digita o que quiser; a validação é só técnica e feita sobre a string, sem `number`.
+- Um único schema em `@bovaro/contracts` serve à API e aos formulários. **Não há faixas de negócio** (Q2, revisada): o pecuarista digita o que quiser; a validação é só técnica e feita sobre a string, sem `number`.
 - Regras técnicas, por parâmetro (`regra` no erro de campo):
   - `formato`: string decimal canônica de entrada (`^\d+(\.\d+)?$`: ponto decimal, sem sinal, sem expoente, sem vírgula, sem separador de milhar); número JSON, `null`, vazio, `"1,5"`, `"1e3"`, `"-1"`, `"NaN"`, `"Infinity"` são recusados. Não negativo e finito decorrem do formato.
   - `faixa` (técnica): `arrobaVivoKg` (@ na compra), `arrobaCarcacaKg` (@ na venda), `uaKg` e `areaPastavelHa` estritamente > 0 (são divisores); percentuais (`rendCarcaca`, `imposto`, `consumoPct`) no máximo 100% (fração ≤ 1); os demais (`descontoVendaKgCab`, `precoSuplKg`, `sanidadeCabMes`) aceitam zero; excedente à capacidade da coluna (parte inteira maior que `precisão − escala`) também é `faixa`.

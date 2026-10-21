@@ -1,4 +1,4 @@
-import { TERMOS_VERSAO, type UsuarioDto } from '@ogado/contracts';
+import { TERMOS_VERSAO, type UsuarioDto } from '@bovaro/contracts';
 
 /** Seleção Prisma que alimenta `toUsuarioDto` (o hash nunca sai da API: só vira `temSenha`). */
 export const usuarioDtoSelect = {

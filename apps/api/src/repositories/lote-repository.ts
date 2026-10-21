@@ -1,5 +1,5 @@
-import type { PrismaClient } from '@ogado/db';
-import type { LoteCreate, LotePatch, LoteTipo } from '@ogado/contracts';
+import type { PrismaClient } from '@bovaro/db';
+import type { LoteCreate, LotePatch, LoteTipo } from '@bovaro/contracts';
 import type { TenantContext } from '../tenant';
 import { IdConflictError } from './account-repository';
 import { type WriteResult } from './sync';

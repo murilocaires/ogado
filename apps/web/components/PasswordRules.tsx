@@ -1,4 +1,4 @@
-import { PASSWORD_RULES, type PasswordRuleId } from '@ogado/contracts';
+import { PASSWORD_RULES, type PasswordRuleId } from '@bovaro/contracts';
 
 /** Nome curto de cada requisito, para os chips (a mensagem completa fica no contrato/API). */
 const ROTULO: Record<PasswordRuleId, string> = {

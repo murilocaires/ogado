@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { errorEnvelopeSchema, sessionResponseSchema, TERMOS_VERSAO } from '@ogado/contracts';
+import { errorEnvelopeSchema, sessionResponseSchema, TERMOS_VERSAO } from '@bovaro/contracts';
 import {
   buildTestApp,
   getWithCookie,

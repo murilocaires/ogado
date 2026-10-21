@@ -5,7 +5,7 @@ import { expect, test } from '@playwright/test';
  * testável aqui (o e-mail não é capturável); ele é coberto pelos testes da API.
  */
 function uniqueEmail(prefix: string): string {
-  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@teste.ogado.invalid`;
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@teste.bovaro.invalid`;
 }
 
 test('RF-002 a tela Entrar leva a Esqueci minha senha', async ({ page }) => {

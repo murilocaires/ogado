@@ -8,7 +8,7 @@ import {
   type LoginRequest,
   signupRequestSchema,
   type FieldError,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import type { ApiFailure } from '../lib/auth/api-client';
 import { useOnline, useSessionController, useSessionState } from '../lib/auth/session-provider';
 import { AuthShell } from './AuthShell';

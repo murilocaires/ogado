@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
 
 jobs:
@@ -38,7 +38,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
-      - run: pnpm --filter @ogado/domain test:coverage
+      - run: pnpm --filter @bovaro/domain test:coverage
       - run: pnpm test:parity
       - run: pnpm performance:check
       - run: node scripts/validate-routing.mjs
@@ -77,13 +77,14 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate
-      - run: pnpm --filter @ogado/db exec prisma migrate deploy
-      - run: pnpm --filter @ogado/web exec playwright install --with-deps chromium
-      - run: pnpm --filter @ogado/web test:e2e:local
+      - run: pnpm --filter @bovaro/db exec prisma migrate deploy
+      - run: pnpm --filter @bovaro/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @bovaro/web test:e2e:rebrand
+      - run: pnpm --filter @bovaro/web test:e2e:local
         env:
           E2E_LOCAL_BUILD: '1'
-      - run: pnpm --filter @ogado/web test:e2e
-      - run: pnpm --filter @ogado/web test:e2e:offline
+      - run: pnpm --filter @bovaro/web test:e2e
+      - run: pnpm --filter @bovaro/web test:e2e:offline
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

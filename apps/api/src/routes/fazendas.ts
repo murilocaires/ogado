@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { fazendaIdParamsSchema, fazendaListResponseSchema, fazendaSchema } from '@ogado/contracts';
+import { fazendaIdParamsSchema, fazendaListResponseSchema, fazendaSchema } from '@bovaro/contracts';
 import { notFound } from '../http-errors';
 import type { FazendaRepository } from '../repositories/fazenda-repository';
 import type { TenantContext } from '../tenant';

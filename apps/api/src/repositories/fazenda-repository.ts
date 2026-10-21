@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@ogado/db';
+import type { PrismaClient } from '@bovaro/db';
 import type { TenantContext } from '../tenant';
 import type { WriteResult } from './sync';
 

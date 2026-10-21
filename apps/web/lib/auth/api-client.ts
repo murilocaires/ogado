@@ -14,7 +14,7 @@ import {
   type SenhaRequest,
   type SessionResponse,
   type SignupRequest,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 
 /** Por que uma chamada falhou. A tela decide o texto; a API nunca dita a mensagem mostrada. */
 export type ApiFailure =
@@ -127,7 +127,7 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
         cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
-          ...(options.usuarioId ? { 'X-OGado-Usuario': options.usuarioId } : {}),
+          ...(options.usuarioId ? { 'X-Bovaro-Usuario': options.usuarioId } : {}),
         },
       });
     } catch {

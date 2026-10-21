@@ -1,9 +1,9 @@
 // Só para testes (ADR-0014): o simulador novo abre vazio; os testes que provam o valor de ouro da
 // planilha (R$ 102.408,05) preenchem as entradas da planilha explicitamente, como o usuário faria.
-import { Decimal, ENTRADA_PADRAO } from '@ogado/domain';
+import { Decimal, ENTRADA_PADRAO } from '@bovaro/domain';
 import { paraCampo } from '../format';
 import { criarRepoLocal } from './local-repo';
-import { RECRIA_CAMPOS, type OGadoRepo, type RecriaForm } from './types';
+import { RECRIA_CAMPOS, type BovaroRepo, type RecriaForm } from './types';
 
 const CAMPOS_PERCENTUAIS = new Set(['consumoPct', 'rendCarcaca', 'imposto']);
 
@@ -20,7 +20,7 @@ export function recriaFormPlanilha(): RecriaForm {
 }
 
 /** Repositório em memória com as entradas da planilha já preenchidas. */
-export function criarRepoComPlanilha(storage: () => Storage | null): OGadoRepo {
+export function criarRepoComPlanilha(storage: () => Storage | null): BovaroRepo {
   const repo = criarRepoLocal({ storage });
   repo.atualizarRecria({ form: recriaFormPlanilha(), lotacaoInicial: 'areaPastavel' });
   return repo;

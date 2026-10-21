@@ -21,7 +21,7 @@ Sempre restaure primeiro num banco vazio de teste; só depois decida o que fazer
 
 ## Monitoramento
 
-- Saúde da API: `GET https://ogado.vercel.app/api/health` (passa pelo rewrite; devolve `{"status":"ok","db":"ok"}`). O Railway também usa `/health` como healthcheck e reinicia em falha.
+- Saúde da API: `GET https://bovaro.com.br/api/health` (passa pelo rewrite; devolve `{"status":"ok","db":"ok"}`). O Railway também usa `/health` como healthcheck e reinicia em falha.
 - Alerta externo (ação manual, gratuita): criar um monitor HTTP no UptimeRobot ou similar apontando para a URL acima, a cada 5 minutos, com aviso por e-mail.
 - Logs: `railway logs --service api`. A API não loga senha, token de sessão, token de redefinição nem corpo de requisição.
 - Uso do banco: volume de 500 MB no plano gratuito; conferir com `railway service list` (campo `volume`).

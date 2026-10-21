@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, expect, it } from 'vitest';
-import { loteListResponseSchema, loteSchema, sessionResponseSchema } from '@ogado/contracts';
+import { loteListResponseSchema, loteSchema, sessionResponseSchema } from '@bovaro/contracts';
 import { createMemoryEmailSender } from '../src/email/memory-sender';
 import { TEST_ORIGIN } from './support/env';
 import { buildTestApp, getWithCookie, postJson, prisma, signup } from './support/harness';
@@ -44,7 +44,7 @@ it('RF-078/RNF-014: POST iniciado para A com cookie de B não cria lançamento e
   const payload = lote();
   const refused = await postJson(app, '/lotes', payload, {
     cookie: b.cookie,
-    headers: { 'x-ogado-usuario': aId },
+    headers: { 'x-bovaro-usuario': aId },
   });
   expect(refused.statusCode).toBe(401);
   expect(refused.headers['set-cookie']).toBeUndefined();
@@ -52,7 +52,7 @@ it('RF-078/RNF-014: POST iniciado para A com cookie de B não cria lançamento e
   expect(loteListResponseSchema.parse(list.json()).lotes).toEqual([]);
   const accepted = await postJson(app, '/lotes', payload, {
     cookie: b.cookie,
-    headers: { 'x-ogado-usuario': bId },
+    headers: { 'x-bovaro-usuario': bId },
   });
   expect(accepted.statusCode).toBe(201);
 });
@@ -65,7 +65,7 @@ it('RF-078/RNF-014: PATCH com contexto antigo não modifica o lote nem sua vers�
   const refused = await app.inject({
     method: 'PATCH',
     url: `/lotes/${initial.id}`,
-    headers: { cookie: b.cookie, origin: TEST_ORIGIN, 'x-ogado-usuario': aId },
+    headers: { cookie: b.cookie, origin: TEST_ORIGIN, 'x-bovaro-usuario': aId },
     payload: { version: initial.version, qtd: '999' },
   });
   expect(refused.statusCode).toBe(401);
@@ -83,7 +83,7 @@ it('RF-078/RNF-014: contexto antigo não lê nem exporta dados privados ou envia
     const refused = await app.inject({
       method: 'GET',
       url,
-      headers: { cookie: b.cookie, 'x-ogado-usuario': aId },
+      headers: { cookie: b.cookie, 'x-bovaro-usuario': aId },
     });
     expect(refused.statusCode, url).toBe(401);
     expect(refused.headers['set-cookie'], url).toBeUndefined();
@@ -96,7 +96,7 @@ it('RF-078/RNF-014: contexto antigo não lê nem exporta dados privados ou envia
     {},
     {
       cookie: b.cookie,
-      headers: { 'x-ogado-usuario': aId },
+      headers: { 'x-bovaro-usuario': aId },
     },
   );
   expect(refused.statusCode).toBe(401);
@@ -106,7 +106,7 @@ it('RF-078/RNF-014: contexto antigo não lê nem exporta dados privados ou envia
       await app.inject({
         method: 'GET',
         url: '/auth/session',
-        headers: { cookie: b.cookie, 'x-ogado-usuario': bId },
+        headers: { cookie: b.cookie, 'x-bovaro-usuario': bId },
       })
     ).statusCode,
   ).toBe(200);
@@ -120,7 +120,7 @@ it('RF-078/RNF-014: logout com contexto A não revoga B; logout legado e vincula
     {},
     {
       cookie: b.cookie,
-      headers: { 'x-ogado-usuario': aId },
+      headers: { 'x-bovaro-usuario': aId },
     },
   );
   expect(refused.statusCode).toBe(401);
@@ -134,7 +134,7 @@ it('RF-078/RNF-014: logout com contexto A não revoga B; logout legado e vincula
         {},
         {
           cookie: b.cookie,
-          headers: { 'x-ogado-usuario': bId },
+          headers: { 'x-bovaro-usuario': bId },
         },
       )
     ).statusCode,
@@ -145,7 +145,7 @@ it('RF-078/RNF-014: logout com contexto A não revoga B; logout legado e vincula
     '/auth/logout',
     {},
     {
-      headers: { 'x-ogado-usuario': aId },
+      headers: { 'x-bovaro-usuario': aId },
     },
   );
   expect(anonymousBound.statusCode).toBe(401);
@@ -169,7 +169,7 @@ it('RF-078/RNF-014: contexto divergente não prolonga a janela de inatividade da
     const refused = await timed.inject({
       method: 'GET',
       url: '/auth/session',
-      headers: { cookie: b.cookie, 'x-ogado-usuario': aId },
+      headers: { cookie: b.cookie, 'x-bovaro-usuario': aId },
     });
     expect(refused.statusCode).toBe(401);
     expect(refused.headers['set-cookie']).toBeUndefined();

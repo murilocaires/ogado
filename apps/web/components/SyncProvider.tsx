@@ -15,8 +15,8 @@ import { useOptionalSessionController } from '../lib/auth/session-provider';
 import type { SessionState } from '../lib/auth/session-controller';
 import { pedirPersistencia, verificarCota } from '../lib/pwa/armazenamento';
 import { useRepo, useRepoState } from '../lib/repo/repo-provider';
-import type { OGadoRepo, SyncableRepo } from '../lib/repo/types';
-import { cenarioSchema } from '@ogado/contracts';
+import type { BovaroRepo, SyncableRepo } from '../lib/repo/types';
+import { cenarioSchema } from '@bovaro/contracts';
 import { criarDadosClient, type DadosClient } from '../lib/sync/data-client';
 import {
   pendentes as calcularPendentes,
@@ -69,7 +69,7 @@ export function useSyncInfo(): SyncInfo {
   return useContext(SyncInfoContext);
 }
 
-function ehSincronizavel(repo: OGadoRepo): repo is SyncableRepo {
+function ehSincronizavel(repo: BovaroRepo): repo is SyncableRepo {
   return 'exportar' in repo && 'aplicar' in repo;
 }
 
@@ -265,7 +265,7 @@ export function SyncProvider({
       rodando = true;
       const operacao =
         typeof navigator !== 'undefined' && navigator.locks
-          ? navigator.locks.request('ogado.sync', excluir)
+          ? navigator.locks.request('bovaro.sync', excluir)
           : excluir();
       atual = operacao.catch(() => undefined);
       try {

@@ -1,4 +1,4 @@
-# API do O Gado (Fastify + Prisma). Contexto de build = raiz do monorepo (ver /railway.json).
+# API do Bovaro (Fastify + Prisma). Contexto de build = raiz do monorepo (ver /railway.json).
 FROM node:22-slim
 
 # openssl: exigido pelo motor de migração do Prisma.
@@ -15,14 +15,14 @@ COPY packages/contracts/package.json packages/contracts/
 COPY packages/db/package.json packages/db/
 COPY packages/domain/package.json packages/domain/
 # Só a API e o que ela usa (db, contracts, domain); o lockfile congelado garante as mesmas versões.
-RUN pnpm install --frozen-lockfile --filter "@ogado/api..."
+RUN pnpm install --frozen-lockfile --filter "@bovaro/api..."
 COPY . .
-RUN pnpm --filter @ogado/db exec prisma generate
-RUN pnpm --filter @ogado/api build
+RUN pnpm --filter @bovaro/db exec prisma generate
+RUN pnpm --filter @bovaro/api build
 
 ENV NODE_ENV=production
 # A plataforma injeta PORT; o servidor lê PORT quando API_PORT não está definido.
 EXPOSE 3001
 
 # Migrações aditivas antes de subir (idempotente: `migrate deploy` só aplica o que falta).
-CMD ["sh", "-c", "pnpm --filter @ogado/db exec prisma migrate deploy && node apps/api/dist/server.js"]
+CMD ["sh", "-c", "pnpm --filter @bovaro/db exec prisma migrate deploy && node apps/api/dist/server.js"]

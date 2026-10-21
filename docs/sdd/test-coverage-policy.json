@@ -18,7 +18,7 @@
     "tipo": "gate",
     "motivo": "TypeScript, lint e cobertura de domínio são verificados por comandos reais de CI.",
     "fonte": ".github/workflows/ci.yml",
-    "comandos": ["pnpm typecheck", "pnpm lint", "pnpm --filter @ogado/domain test:coverage"]
+    "comandos": ["pnpm typecheck", "pnpm lint", "pnpm --filter @bovaro/domain test:coverage"]
   },
   "RNF-002": {
     "tipo": "gate",

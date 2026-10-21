@@ -1,5 +1,5 @@
-import type { PrismaClient } from '@ogado/db';
-import type { RecriaEntradaPut } from '@ogado/contracts';
+import type { PrismaClient } from '@bovaro/db';
+import type { RecriaEntradaPut } from '@bovaro/contracts';
 import type { TenantContext } from '../tenant';
 import { IdConflictError } from './account-repository';
 import { isUniqueViolation } from './sync';

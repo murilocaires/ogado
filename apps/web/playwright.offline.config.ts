@@ -33,7 +33,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'pnpm --filter @ogado/api exec tsx src/server.ts',
+      command: 'pnpm --filter @bovaro/api exec tsx src/server.ts',
       cwd: '../..',
       url: `http://localhost:${apiPort}/health`,
       reuseExistingServer: !process.env['CI'],

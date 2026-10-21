@@ -1,9 +1,16 @@
-import { criarRepoLocal, STORAGE_KEY, STORAGE_KEY_E1 } from './local-repo';
+import {
+  criarRepoLocal,
+  LEGACY_STORAGE_KEY,
+  LEGACY_STORAGE_KEY_E1,
+  STORAGE_KEY,
+  STORAGE_KEY_E1,
+} from './local-repo';
 import {
   abrirBancoLocal,
   apagarBancoLocal,
   canalLocal,
   concluida,
+  LEGACY_SYNC_KEY,
   resultado,
   transacionar,
   LOCAL_ORIGIN,
@@ -118,7 +125,16 @@ export function criarRepoDuravel(): SyncableRepo {
       // Não confundir falha de leitura com ausência de legado. Sem leitura completa, não há
       // migração nem limpeza: a próxima tentativa precisa continuar encontrando os originais.
       const capturados = new Map<string, string>();
-      for (const k of [STORAGE_KEY, STORAGE_KEY_E1, 'ogado.sync.v1', 'ogado.identidade']) {
+      for (const k of [
+        STORAGE_KEY,
+        STORAGE_KEY_E1,
+        LEGACY_STORAGE_KEY,
+        LEGACY_STORAGE_KEY_E1,
+        'bovaro.sync.v1',
+        LEGACY_SYNC_KEY,
+        'bovaro.identidade',
+        'ogado.identidade',
+      ]) {
         const valor = window.localStorage.getItem(k);
         if (valor !== null) capturados.set(k, valor);
       }
@@ -143,8 +159,9 @@ export function criarRepoDuravel(): SyncableRepo {
         ...dadosLegados.lotes.map((valor): Entidade => ({ tipo: 'lote', valor })),
         ...dadosLegados.cenarios.map((valor): Entidade => ({ tipo: 'cenario', valor })),
       ];
-      const brutoSync = capturados.get('ogado.sync.v1');
-      const brutoIdentidade = capturados.get('ogado.identidade');
+      const brutoSync = capturados.get('bovaro.sync.v1') ?? capturados.get(LEGACY_SYNC_KEY);
+      const brutoIdentidade =
+        capturados.get('bovaro.identidade') ?? capturados.get('ogado.identidade');
       const sync: unknown = brutoSync ? JSON.parse(brutoSync) : undefined;
       const identidade: unknown = brutoIdentidade ? JSON.parse(brutoIdentidade) : undefined;
       const identidadeId = (valor: unknown): string | null => {
@@ -177,12 +194,16 @@ export function criarRepoDuravel(): SyncableRepo {
           tx.objectStore('entidades').put(e, chave(e));
           tx.objectStore('outbox').put({ id: e.valor.id, version: e.valor.version }, chave(e));
         }
-        if (sync) meta.put(sync, 'ogado.sync.v1');
+        if (sync) meta.put(sync, 'bovaro.sync.v1');
         if (brutoSync !== undefined) meta.put(brutoSync, 'legado.sync');
         if (identidade && dono === undefined) meta.put(identidade, 'identidade');
-        const envelope = capturados.get(STORAGE_KEY) ?? capturados.get(STORAGE_KEY_E1);
+        const envelope =
+          capturados.get(STORAGE_KEY) ??
+          capturados.get(LEGACY_STORAGE_KEY) ??
+          capturados.get(STORAGE_KEY_E1) ??
+          capturados.get(LEGACY_STORAGE_KEY_E1);
         if (envelope) meta.put(envelope, 'legado');
-        const e1 = capturados.get(STORAGE_KEY_E1);
+        const e1 = capturados.get(STORAGE_KEY_E1) ?? capturados.get(LEGACY_STORAGE_KEY_E1);
         if (e1) meta.put(e1, 'legado.e1');
         meta.put(true, 'migrado');
         meta.put(crypto.randomUUID(), 'geracao');

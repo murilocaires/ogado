@@ -6,7 +6,7 @@ import {
   type LocalIdentity,
 } from './session-controller';
 import { sessionBody } from './fixtures';
-import type { SessionResponse } from '@ogado/contracts';
+import type { SessionResponse } from '@bovaro/contracts';
 
 const identity: LocalIdentity = {
   usuarioId: sessionBody.usuario.id,
@@ -59,6 +59,23 @@ function respostaPendente<T>() {
 }
 
 describe('RF-002 máquina de estados da sessão', () => {
+  it.each(['login', 'signup'] as const)(
+    'RF-002 verificação automática durante %s não exige uma segunda tentativa',
+    async (acao) => {
+      const pending = respostaPendente<ApiResult<SessionResponse>>();
+      const api = fakeApi({
+        [acao]: vi.fn().mockReturnValue(pending.promise),
+        getSession: vi.fn().mockResolvedValue({ ok: false, kind: 'nao-autenticado' }),
+      });
+      const c = createSessionController({ api, identity: memoryStore(), clearLocalData: vi.fn() });
+      const entrada = c[acao]({ email: 'ana@fazenda.com', senha: 'Segredo#1', aceiteTermos: true });
+      await c.verify();
+      pending.resolve({ ok: true, data: sessionBody });
+      expect((await entrada).ok).toBe(true);
+      expect(api.getSession).not.toHaveBeenCalled();
+      expect(c.getState().status).toBe('autenticado');
+    },
+  );
   it.each(['login', 'signup'] as const)(
     'RF-078/RNF-014 %s em voo não restaura sessão encerrada em outra aba',
     async (acao) => {

@@ -1,10 +1,10 @@
 # Deploy da API no Railway (E3)
 
-A API (`apps/api`) roda no Railway com o Postgres do mesmo projeto (`ogado`, ambiente `production`). O site (Next.js) continua na Vercel e fala com a API pelo rewrite `/api/*` (ADR-0010 a.5): para o navegador, API e site são a mesma origem (`https://ogado.vercel.app`), então o cookie `__Host-ogado_session` (Secure, HttpOnly, SameSite=Lax) é de primeira parte.
+A API (`apps/api`) roda no Railway com o Postgres do mesmo projeto (`ogado`, ambiente `production`). O site (Next.js) continua na Vercel e fala com a API pelo rewrite `/api/*` (ADR-0010 a.5): para o navegador, API e site são a mesma origem (`https://bovaro.com.br`), então o cookie `__Host-bovaro_session` (Secure, HttpOnly, SameSite=Lax) é de primeira parte.
 
 ## Arquivos
 
-- `apps/api/Dockerfile`: node 22, pnpm 11.13.1 via corepack, `pnpm install --frozen-lockfile --filter "@ogado/api..."`, `prisma generate`, build com tsup. O `CMD` roda `prisma migrate deploy` e depois `node apps/api/dist/server.js`.
+- `apps/api/Dockerfile`: node 22, pnpm 11.13.1 via corepack, `pnpm install --frozen-lockfile --filter "@bovaro/api..."`, `prisma generate`, build com tsup. O `CMD` roda `prisma migrate deploy` e depois `node apps/api/dist/server.js`.
 - `railway.json` (raiz): usa o Dockerfile acima e o healthcheck `GET /health`. O Railway marcou o formato como legado (vale até 2026-12-01); migrar depois com `railway config migrate`.
 - `.dockerignore`: mantém o contexto pequeno (sem `references`, `docs`, `node_modules`, `.env*`).
 
@@ -14,11 +14,11 @@ A API (`apps/api`) roda no Railway com o Postgres do mesmo projeto (`ogado`, amb
 |---|---|---|
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` | referência ao serviço chamado exatamente `Postgres` (URL privada) |
 | `NODE_ENV` | `production` | liga cookie Secure/`__Host-` e HSTS (falha fechado) |
-| `WEB_ORIGIN` | `https://ogado.vercel.app` | lista de origens separadas por vírgula; vale para CORS e para a barreira de CSRF (`Origin`). Acrescente a URL de preview da Vercel só se for usar a API a partir dela |
+| `WEB_ORIGIN` | `https://bovaro.com.br` | lista de origens separadas por vírgula; vale para CORS e para a barreira de CSRF (`Origin`). Acrescente a URL de preview da Vercel só se for usar a API a partir dela |
 | `PROXY_SECRET` | segredo de 32+ caracteres | o mesmo valor na Vercel; ver "Limites de taxa" |
 | `TRUST_PROXY` | `100.64.0.0/10` | obrigatório em produção; faixa interna do proxy do Railway |
 | `RESEND_API_KEY` | chave da conta Resend (segredo) | e-mail de recuperação de senha (RF-002). Ausente: a API sobe, avisa no log e **não envia e-mails** (a resposta de "esqueci a senha" continua a mesma) |
-| `EMAIL_FROM` | `O Gado <nao-responda@seu-dominio>` | remetente; o domínio precisa estar verificado no Resend. Obrigatório se `RESEND_API_KEY` existir |
+| `EMAIL_FROM` | `Bovaro <nao-responda@bovaro.com.br>` | exemplo de remetente; `bovaro.com.br` precisa estar verificado no Resend. Obrigatório se `RESEND_API_KEY` existir |
 | `GOOGLE_CLIENT_ID` | ID do cliente OAuth (Google Cloud) | entrada com Google (RF-001/RF-006). Opcional, mas **as duas `GOOGLE_*` vão juntas** (uma sem a outra impede a subida). Ausentes: a API sobe e `/auth/google/*` responde 404 |
 | `GOOGLE_CLIENT_SECRET` | segredo do cliente OAuth (segredo) | par de `GOOGLE_CLIENT_ID`; nunca no repositório nem em log |
 
@@ -26,7 +26,7 @@ A API (`apps/api`) roda no Railway com o Postgres do mesmo projeto (`ogado`, amb
 
 Crie um cliente OAuth do tipo "Aplicativo da Web" (tela de consentimento com os escopos `openid`, `email` e `profile`). A URI de redirecionamento é `${primeiro item de WEB_ORIGIN}/api/auth/google/callback`: passa pelo rewrite da Vercel, então o cookie de sessão nasce no domínio do site (primeira parte, exigência do ADR-0010 a.5). Cadastre em "URIs de redirecionamento autorizados":
 
-- `https://ogado.vercel.app/api/auth/google/callback`
+- `https://bovaro.com.br/api/auth/google/callback`
 - `http://localhost:3000/api/auth/google/callback`
 
 Em desenvolvimento local use `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` no `.env` (não versionado). O limite por IP do fluxo é `RATE_LIMIT_GOOGLE_IP_PER_HOUR` (padrão 60).
@@ -35,7 +35,7 @@ Em desenvolvimento local use `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` no `.env`
 
 ### Limites de taxa atrás de dois proxies
 
-O tráfego chega pela Vercel (rewrite) e depois pelo proxy do Railway, então `request.ip` na API é o egress da Vercel (igual para todos). O site (`apps/web/proxy.ts`) repassa o IP real em `x-ogado-client-ip` com o segredo compartilhado `PROXY_SECRET` em `x-ogado-proxy-secret`; a API (`plugins/client-ip.ts`) só confia no IP repassado quando o segredo confere (comparação em tempo constante) e o IP é válido. Cabeçalhos `x-ogado-*` vindos de fora são descartados pelo proxy do site. Os limites voltaram aos padrões (cadastro 5/h, login 20/min por IP, 5/min por IP+e-mail). Recuperação de senha: 10/h por IP e 3/h por e-mail em "esqueci", 20/h por IP em "redefinir" (`RATE_LIMIT_FORGOT_IP_PER_HOUR`, `RATE_LIMIT_FORGOT_EMAIL_PER_HOUR`, `RATE_LIMIT_RESET_IP_PER_HOUR`). Envio dos dados do titular por e-mail (`POST /conta/exportar/enviar`, RNF-009): 3/h por usuário (`RATE_LIMIT_EXPORT_EMAIL_USER_PER_HOUR`); o e-mail leva o JSON como anexo via Resend.
+O tráfego chega pela Vercel (rewrite) e depois pelo proxy do Railway, então `request.ip` na API é o egress da Vercel (igual para todos). O site (`apps/web/proxy.ts`) repassa o IP real em `x-bovaro-client-ip` com o segredo compartilhado `PROXY_SECRET` em `x-bovaro-proxy-secret`; a API (`plugins/client-ip.ts`) só confia no IP repassado quando o segredo confere (comparação em tempo constante) e o IP é válido. Cabeçalhos `x-bovaro-*` vindos de fora são descartados pelo proxy do site. Os limites voltaram aos padrões (cadastro 5/h, login 20/min por IP, 5/min por IP+e-mail). Recuperação de senha: 10/h por IP e 3/h por e-mail em "esqueci", 20/h por IP em "redefinir" (`RATE_LIMIT_FORGOT_IP_PER_HOUR`, `RATE_LIMIT_FORGOT_EMAIL_PER_HOUR`, `RATE_LIMIT_RESET_IP_PER_HOUR`). Envio dos dados do titular por e-mail (`POST /conta/exportar/enviar`, RNF-009): 3/h por usuário (`RATE_LIMIT_EXPORT_EMAIL_USER_PER_HOUR`); o e-mail leva o JSON como anexo via Resend.
 
 `PROXY_SECRET` (mínimo 32 caracteres, igual nos dois lados): Railway (serviço `api`) e Vercel (Production e Preview). Para girar: gere outro, atualize os dois e faça novo deploy; durante a troca os limites caem para o IP do socket (nunca abrem).
 
@@ -50,7 +50,7 @@ railway link                       # projeto ogado, ambiente production
 railway add --service api \
   --variables 'DATABASE_URL=${{Postgres.DATABASE_URL}}' \
   --variables 'NODE_ENV=production' \
-  --variables 'WEB_ORIGIN=https://ogado.vercel.app' \
+  --variables 'WEB_ORIGIN=https://bovaro.com.br' \
   --variables 'TRUST_PROXY=100.64.0.0/10' \
   --variables "PROXY_SECRET=$(openssl rand -hex 32)"
 railway domain --service api       # gera https://<nome>.up.railway.app
@@ -63,7 +63,11 @@ As migrações rodam só pelo deploy (`prisma migrate deploy` no `CMD`); nunca a
 
 ## Conectar o site (Vercel)
 
-Defina `API_ORIGIN=https://<domínio público da API>` nas variáveis do projeto da Vercel e faça novo deploy: `apps/web/next.config.ts` passa a reescrever `/api/*` para a API. Defina também `PROXY_SECRET` (o mesmo do Railway).
+Adicione `bovaro.com.br` ao projeto Vercel e configure no DNS os registros exatos apresentados pela Vercel. Mantenha o domínio antigo como redirect durante a transição, se ainda estiver publicado.
+
+Defina `API_ORIGIN=https://<domínio público da API>` nas variáveis do projeto da Vercel e faça novo deploy: `apps/web/next.config.ts` reescreve `/api/*` para a API. Defina também `PROXY_SECRET` (o mesmo do Railway).
+
+No Railway, ajuste `WEB_ORIGIN=https://bovaro.com.br` (ou inclua a origem antiga separada por vírgula enquanto o redirect estiver ativo). No Google Cloud, atualize a URI OAuth para `https://bovaro.com.br/api/auth/google/callback`. Verifique `bovaro.com.br` no Resend antes de usar `EMAIL_FROM=Bovaro <nao-responda@bovaro.com.br>`.
 
 ## Verificação
 
@@ -71,9 +75,9 @@ Defina `API_ORIGIN=https://<domínio público da API>` nas variáveis do projeto
 API=https://<domínio público da API>
 curl -s $API/health
 # cadastro + sessão + lote (Origin precisa estar em WEB_ORIGIN)
-curl -s -c jar -X POST $API/auth/signup -H 'Origin: https://ogado.vercel.app' \
+curl -s -c jar -X POST $API/auth/signup -H 'Origin: https://bovaro.com.br' \
   -H 'Content-Type: application/json' -d '{"email":"voce@exemplo.com","senha":"Senha#Forte1"}'
-curl -s -b jar -X POST $API/lotes -H 'Origin: https://ogado.vercel.app' -H 'Content-Type: application/json' \
+curl -s -b jar -X POST $API/lotes -H 'Origin: https://bovaro.com.br' -H 'Content-Type: application/json' \
   -d '{"id":"<uuid>","tipo":"compra","categoria":"NOVILHO","modo":"medio","qtd":"10","peso":"200","preco":"300"}'
 ```
 

@@ -1,5 +1,11 @@
 // @vitest-environment happy-dom
-import { calcularRecria, ENTRADA_PADRAO, VARIANTES_PADRAO, formatarBRL, formatarNumero } from '@ogado/domain';
+import {
+  calcularRecria,
+  ENTRADA_PADRAO,
+  VARIANTES_PADRAO,
+  formatarBRL,
+  formatarNumero,
+} from '@bovaro/domain';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -9,7 +15,10 @@ import { criarStorageMemoria, renderComApp } from './test-utils';
 
 /** O simulador novo abre vazio (ADR-0014): estes testes partem das entradas da planilha. */
 function renderComPlanilha() {
-  return renderComApp(<RecriaScreen />, criarRepoComPlanilha(() => criarStorageMemoria()));
+  return renderComApp(
+    <RecriaScreen />,
+    criarRepoComPlanilha(() => criarStorageMemoria()),
+  );
 }
 
 function hero() {
@@ -22,12 +31,16 @@ const COM_CABECAS_INTEIRAS = { ...VARIANTES_PADRAO, cabecasInteiras: true };
 describe('RF-030/RF-031 simulador de recria', () => {
   it('RF-031 com as entradas da planilha preenchidas mostra o líquido de ouro R$ 103.307,60', () => {
     renderComPlanilha();
-    const ouro = formatarBRL(calcularRecria(ENTRADA_PADRAO, COM_CABECAS_INTEIRAS).faturamentoLiquido);
+    const ouro = formatarBRL(
+      calcularRecria(ENTRADA_PADRAO, COM_CABECAS_INTEIRAS).faturamentoLiquido,
+    );
     expect(ouro).toBe('R$ 103.307,60');
     expect(within(hero()).getByText('R$ 103.307,60')).toHaveClass('big');
     expect(screen.getByLabelText('Proteinado')).toHaveValue('0,30');
     expect(screen.getByLabelText('Se')).toHaveValue('52,00');
-    expect(screen.getAllByLabelText('Imposto').find((e) => e.tagName === 'INPUT')).toHaveValue('1,50');
+    expect(screen.getAllByLabelText('Imposto').find((e) => e.tagName === 'INPUT')).toHaveValue(
+      '1,50',
+    );
   });
 
   it('RF-031 mostra por mês, por hectare, total em caixa, custos, números do lote e alerta de cabeças', () => {
@@ -54,7 +67,10 @@ describe('RF-030/RF-031 simulador de recria', () => {
     const preco = screen.getByLabelText('R$/cab (venda)');
     await user.clear(preco);
     await user.type(preco, '330');
-    const esperado = calcularRecria({ ...ENTRADA_PADRAO, precoVenda: '330' }, COM_CABECAS_INTEIRAS).faturamentoLiquido;
+    const esperado = calcularRecria(
+      { ...ENTRADA_PADRAO, precoVenda: '330' },
+      COM_CABECAS_INTEIRAS,
+    ).faturamentoLiquido;
     expect(within(hero()).getByText(formatarBRL(esperado))).toBeInTheDocument();
   });
 
@@ -102,7 +118,6 @@ describe('RF-030/RF-031 simulador de recria', () => {
     expect(screen.queryByRole('button', { name: 'Limpar campos' })).not.toBeInTheDocument();
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
-
 });
 
 describe('ADR-0014 simulador sem padrões', () => {
@@ -138,7 +153,9 @@ describe('ADR-0014 simulador sem padrões', () => {
   it('RF-030 não existe botão "Restaurar padrões" nem seletor de lotação inicial', () => {
     renderComApp(<RecriaScreen />);
     expect(screen.queryByRole('button', { name: /Restaurar padrões/ })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/Lotação inicial \(UA\/ha\) calculada sobre/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/Lotação inicial \(UA\/ha\) calculada sobre/),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Limpar campos' })).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /^Limpar / })).toHaveLength(4);
@@ -150,10 +167,15 @@ describe('ADR-0014 simulador sem padrões', () => {
     const area = screen.getByLabelText('Área Pastável');
     await user.clear(area);
     await user.type(area, '50');
-    const r = calcularRecria({ ...ENTRADA_PADRAO, area: '50' }, { lotacaoInicial: 'areaPastavel', faturamentoBruto: 'pesoVivo', cabecasInteiras: true });
+    const r = calcularRecria(
+      { ...ENTRADA_PADRAO, area: '50' },
+      { lotacaoInicial: 'areaPastavel', faturamentoBruto: 'pesoVivo', cabecasInteiras: true },
+    );
     expect(r.lotacaoHaInicial).not.toBeNull();
     const lote = screen.getByRole('region', { name: 'Dados do lote' });
-    expect(within(lote).getByText(`${formatarNumero(r.lotacaoHaInicial, 2)} UA/ha`)).toBeInTheDocument();
+    expect(
+      within(lote).getByText(`${formatarNumero(r.lotacaoHaInicial, 2)} UA/ha`),
+    ).toBeInTheDocument();
   });
 
   it('RF-032 salvar cenário com entradas vazias não abre o diálogo e orienta a preencher', async () => {

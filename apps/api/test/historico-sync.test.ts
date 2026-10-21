@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { beforeAll, afterAll, expect, it } from 'vitest';
 import { buildTestApp, prisma, signup } from './support/harness';
 import { TEST_ORIGIN } from './support/env';
-import { historicoSyncSchema, historicoSyncListSchema } from '@ogado/contracts';
+import { historicoSyncSchema, historicoSyncListSchema } from '@bovaro/contracts';
 const app = buildTestApp();
 beforeAll(async () => {
   await app.ready();

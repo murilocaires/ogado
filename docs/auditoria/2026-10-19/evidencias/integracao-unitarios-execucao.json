@@ -1,5 +1,0 @@
-{
-    "exitCode":  1,
-    "command":  "pnpm.cmd --filter @ogado/api exec vitest run --config vitest.unit.config.ts --reporter=verbose --reporter=json",
-    "durationSeconds":  156.7737771
-}

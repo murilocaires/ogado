@@ -7,7 +7,7 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 const SENHA = 'Segredo#2026';
 
 function uniqueEmail(prefix: string): string {
-  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@teste.ogado.invalid`;
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@teste.bovaro.invalid`;
 }
 
 async function dumpBrowserStorage(page: Page): Promise<string> {
@@ -60,7 +60,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 /** A identidade local guarda só os dois UUIDs (ADR-0010 f), nunca token nem senha. */
 async function expectOnlyUuidIdentity(page: Page): Promise<void> {
-  const raw = await page.evaluate(() => window.localStorage.getItem('ogado.identidade'));
+  const raw = await page.evaluate(() => window.localStorage.getItem('bovaro.identidade'));
   expect(raw).not.toBeNull();
   const parsed = JSON.parse(raw ?? '{}') as Record<string, unknown>;
   expect(Object.keys(parsed).sort()).toEqual(['fazendaId', 'usuarioId']);
@@ -110,7 +110,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await expect(page).toHaveURL(/\/entrar$/);
 
     // Após o 204: identidade local sumiu e o mesmo cookie reenviado já não vale (401).
-    expect(await page.evaluate(() => window.localStorage.getItem('ogado.identidade'))).toBeNull();
+    expect(await page.evaluate(() => window.localStorage.getItem('bovaro.identidade'))).toBeNull();
     const replay = await request.get('/api/auth/session', {
       headers: { Cookie: `${first.name}=${first.value}` },
     });
@@ -202,7 +202,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
 
     // Dado local do aparelho (simula a fila do T-14) que nenhum 401 pode apagar.
     await page.evaluate(() => window.localStorage.setItem('fila-teste', 'lancamento-pendente'));
-    const antes = await page.evaluate(() => window.localStorage.getItem('ogado.identidade'));
+    const antes = await page.evaluate(() => window.localStorage.getItem('bovaro.identidade'));
     expect(antes).not.toBeNull();
 
     // Servidor deixa de reconhecer a sessão (cookie some): a próxima verificação dá 401.
@@ -215,7 +215,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     expect(await page.evaluate(() => window.localStorage.getItem('fila-teste'))).toBe(
       'lancamento-pendente',
     );
-    expect(await page.evaluate(() => window.localStorage.getItem('ogado.identidade'))).toBe(antes);
+    expect(await page.evaluate(() => window.localStorage.getItem('bovaro.identidade'))).toBe(antes);
 
     // Entrar de novo retoma o uso.
     await page.getByLabel('E-mail', { exact: true }).fill(email);
@@ -240,7 +240,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await expect(page).toHaveURL(/\/painel$/);
     await abrirConta(page, email);
     await page.evaluate(() => window.localStorage.setItem('fila-teste', 'lancamento-pendente'));
-    const identidade = await page.evaluate(() => window.localStorage.getItem('ogado.identidade'));
+    const identidade = await page.evaluate(() => window.localStorage.getItem('bovaro.identidade'));
 
     // O painel ainda não tem chamada de dados: a reverificação (evento "online") é a chamada
     // autenticada do meio do uso, e o servidor passa a responder 401.
@@ -258,7 +258,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     expect(await page.evaluate(() => window.localStorage.getItem('fila-teste'))).toBe(
       'lancamento-pendente',
     );
-    expect(await page.evaluate(() => window.localStorage.getItem('ogado.identidade'))).toBe(
+    expect(await page.evaluate(() => window.localStorage.getItem('bovaro.identidade'))).toBe(
       identidade,
     );
   });

@@ -10,7 +10,7 @@ import {
   IdConflictError,
   type AccountRepository,
 } from '../repositories/account-repository';
-import { sessionCookieName, setSessionCookie } from '../session/cookie';
+import { readSessionToken, setSessionCookie } from '../session/cookie';
 import type { SessionService } from '../session/session-service';
 import { requireTenant } from '../tenant';
 
@@ -40,7 +40,10 @@ const flowSchema = z.object({
 });
 type Flow = z.infer<typeof flowSchema>;
 
-const startQuerySchema = z.object({ modo: z.enum(['entrar', 'vincular']).default('entrar') });
+const startQuerySchema = z.object({
+  modo: z.enum(['entrar', 'vincular']).default('entrar'),
+  origem: z.url().max(2048).optional(),
+});
 const callbackQuerySchema = z.object({
   code: z.string().min(1).max(2048).optional(),
   state: z.string().min(1).max(512).optional(),
@@ -49,6 +52,10 @@ const callbackQuerySchema = z.object({
 
 /** Cookie do fluxo: `__Host-` em produção, como o da sessão (ADR-0010 a.2). */
 function flowCookieName(config: Pick<AppConfig, 'production'>): string {
+  return config.production ? '__Host-bovaro_google' : 'bovaro_google';
+}
+
+function legacyFlowCookieName(config: Pick<AppConfig, 'production'>): string {
   return config.production ? '__Host-ogado_google' : 'ogado_google';
 }
 
@@ -98,7 +105,7 @@ export function registerGoogleRoutes(app: FastifyInstance, deps: GoogleRoutesDep
 
   /** Sessão atual (se houver), sem exigir: estas rotas são públicas e decidem sozinhas. */
   const currentUsuarioId = async (request: FastifyRequest): Promise<string | null> => {
-    const token = request.cookies[sessionCookieName(deps.config)];
+    const token = readSessionToken(request.cookies, deps.config);
     if (!token) return null;
     const result = await deps.sessions.validate(token);
     return result.status === 'ok' ? result.tenant.usuarioId : null;
@@ -110,6 +117,22 @@ export function registerGoogleRoutes(app: FastifyInstance, deps: GoogleRoutesDep
     async (request, reply) => {
       const google = deps.google;
       if (!google) throw notFound();
+      // O cookie HttpOnly pertence à origem que respondeu ao start. O callback usa
+      // WEB_ORIGIN: entrar por um alias exige navegar para ela ANTES de criar o cookie.
+      // O destino é sempre configurado pelo servidor; a origem informada nunca vira redirect.
+      const origemInformada = request.query.origem ?? request.headers.referer;
+      let origem: string | undefined;
+      try {
+        origem = origemInformada ? new URL(origemInformada).origin : undefined;
+      } catch {
+        origem = undefined;
+      }
+      if (origem && origem !== new URL(deps.webOrigin).origin) {
+        const destino = new URL('/api/auth/google/start', deps.webOrigin);
+        destino.searchParams.set('modo', request.query.modo);
+        destino.searchParams.set('origem', new URL(deps.webOrigin).origin);
+        return reply.redirect(destino.href, 302);
+      }
       if (await limited(request)) return goEntrar(reply, 'google');
 
       const { modo } = request.query;
@@ -147,8 +170,11 @@ export function registerGoogleRoutes(app: FastifyInstance, deps: GoogleRoutesDep
 
       // O fluxo é de uso único: o cookie some a cada retorno, com sucesso ou erro.
       const cookieName = flowCookieName(deps.config);
-      const flow = readFlow(request.cookies[cookieName]);
+      const flow = readFlow(
+        request.cookies[cookieName] ?? request.cookies[legacyFlowCookieName(deps.config)],
+      );
       void reply.clearCookie(cookieName, flowCookieOptions(deps.config));
+      void reply.clearCookie(legacyFlowCookieName(deps.config), flowCookieOptions(deps.config));
 
       const falhar = (motivo: string): FastifyReply => {
         // Só uma categoria fixa: nunca code, state, tokens, e-mail ou mensagens do Google.

@@ -2,8 +2,8 @@ import { LegalPage } from '../../../components/LegalPage';
 import { lerDocumentoLegal } from '../../../lib/legal/conteudo';
 
 export const metadata = {
-  title: 'Política de Privacidade · O Gado',
-  description: 'Como o O Gado trata os seus dados pessoais (LGPD).',
+  title: 'Política de Privacidade · Bovaro',
+  description: 'Como o Bovaro trata os seus dados pessoais (LGPD).',
 };
 
 export const dynamic = 'force-static';

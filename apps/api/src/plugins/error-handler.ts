@@ -1,6 +1,6 @@
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
-import type { ErrorEnvelope, FieldError } from '@ogado/contracts';
+import type { ErrorEnvelope, FieldError } from '@bovaro/contracts';
 import { AppError } from '../http-errors';
 
 function envelope(

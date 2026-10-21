@@ -1,6 +1,0 @@
-
- RUN  v5.0.5 C:/Users/Murilo Caires/Desktop/Criando/ogado/ogado-dev-kit/ogado-dev-kit/apps/web
-
- ❯ components/NegociosScreen.test.tsx (17 tests | 1 failed) 36606ms
-   ❯ RF-041 exportar compras e vendas (3)
-     × RF-041 baixa o CSV (nome com a data, BOM, ;) e o XLSX, e avisa com um toast 5750ms

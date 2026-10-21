@@ -125,8 +125,8 @@ describe('e-mail transacional (RF-002)', () => {
       ...base,
       NODE_ENV: 'development',
       RESEND_API_KEY: 're_x',
-      EMAIL_FROM: 'O Gado <nao-responda@ogado.example>',
+      EMAIL_FROM: 'Bovaro <nao-responda@bovaro.com.br>',
     });
-    expect(env.EMAIL_FROM).toContain('ogado.example');
+    expect(env.EMAIL_FROM).toContain('bovaro.com.br');
   });
 });

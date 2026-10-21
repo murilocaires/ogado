@@ -2,19 +2,19 @@
 
 > **Rascunho.** Este texto deve ser revisado por profissional jurídico antes de qualquer uso comercial.
 
-**Versão 2026-10-20**
+**Versão 2026-10-21**
 
-**Vigência:** a partir de 20 de outubro de 2026.
+**Vigência:** a partir de 21 de outubro de 2026.
 
-Estes Termos explicam as regras para usar o **O Gado**. Ao criar uma conta e marcar "Li e aceito", ou ao continuar com o Google, você concorda com eles. Para saber como tratamos seus dados pessoais, leia também a [Política de Privacidade](/privacidade).
+Estes Termos explicam as regras para usar o **Bovaro**. Ao criar uma conta e marcar "Li e aceito", ou ao continuar com o Google, você concorda com eles. Para saber como tratamos seus dados pessoais, leia também a [Política de Privacidade](/privacidade).
 
 ## 1. Quem somos
 
-O O Gado é mantido por **[IDENTIFICAÇÃO DO CONTROLADOR — preencher]**. Em todo este texto, "nós" é essa pessoa ou empresa. Para falar conosco, escreva para **[E-MAIL DE CONTATO DO CONTROLADOR — preencher]**.
+O Bovaro é mantido por **[IDENTIFICAÇÃO DO CONTROLADOR — preencher]**. Em todo este texto, "nós" é essa pessoa ou empresa. Para falar conosco, escreva para **[E-MAIL DE CONTATO DO CONTROLADOR — preencher]**.
 
 ## 2. O que é o serviço
 
-O O Gado é uma ferramenta de **cálculo e registro** para quem trabalha com pecuária. Hoje você pode:
+O Bovaro é uma ferramenta de **cálculo e registro** para quem trabalha com pecuária. Hoje você pode:
 
 - registrar lotes de compra e venda de gado e ver os resultados;
 - montar cenários de recria e salvá-los;
@@ -23,7 +23,7 @@ O O Gado é uma ferramenta de **cálculo e registro** para quem trabalha com pec
 
 Os cálculos seguem as planilhas do curso O Pecuário. **Os resultados dependem dos números que você informa.** Se um dado estiver errado ou desatualizado, o resultado também estará.
 
-O O Gado **não é consultoria financeira, contábil, tributária nem agronômica**. Os resultados são apoio à sua decisão, não recomendação. Antes de comprar, vender ou investir, confira os números e, se precisar, procure um profissional.
+O Bovaro **não é consultoria financeira, contábil, tributária nem agronômica**. Os resultados são apoio à sua decisão, não recomendação. Antes de comprar, vender ou investir, confira os números e, se precisar, procure um profissional.
 
 ## 3. Sua conta
 
@@ -51,7 +51,7 @@ Os dados que você cadastra (lotes, cenários, nome da fazenda e demais informa�
 
 Você pode baixar uma cópia dos seus dados a qualquer momento em **Conta > Meus dados > Baixar meus dados**, ou recebê-la por e-mail, no endereço da sua conta, em **Enviar meus dados por e-mail**.
 
-O nome, a marca, o desenho das telas e o código do O Gado pertencem a nós ou a quem nos licenciou. Estes Termos não transferem esses direitos a você.
+O nome, a marca, o desenho das telas e o código do Bovaro pertencem a nós ou a quem nos licenciou. Estes Termos não transferem esses direitos a você.
 
 ## 6. Disponibilidade: "como está"
 
@@ -69,7 +69,7 @@ Nada nestes Termos tira direitos que a lei garante a você, inclusive os do Cód
 
 Dentro do que a lei permite:
 
-- não respondemos por decisões de negócio tomadas com base nos resultados do O Gado, nem por prejuízos causados por dados informados de forma incorreta;
+- não respondemos por decisões de negócio tomadas com base nos resultados do Bovaro, nem por prejuízos causados por dados informados de forma incorreta;
 - não respondemos por indisponibilidade, perda de lucro ou dano indireto decorrentes de falhas de internet, de aparelho ou de fornecedores fora do nosso controle;
 - se formos responsáveis por algum dano, a nossa responsabilidade fica limitada ao valor que você pagou pelo serviço nos 12 meses anteriores ao fato. Enquanto o serviço for gratuito, esse valor é zero, salvo quando a lei determinar o contrário (por exemplo, em caso de dolo ou culpa grave nossa).
 

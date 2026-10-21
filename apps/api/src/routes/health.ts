@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { logUnexpectedError } from '../plugins/error-handler';
-import { healthErrorSchema, healthResponseSchema } from '@ogado/contracts';
+import { healthErrorSchema, healthResponseSchema } from '@bovaro/contracts';
 
 export function registerHealthRoutes(
   app: FastifyInstance,

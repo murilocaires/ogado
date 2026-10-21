@@ -19,7 +19,7 @@ export default defineConfig({
   testDir: './e2e',
   // Jornadas da E1/E2 não dependem de API/Postgres: rodam pelo playwright.local.config.ts.
   // A E4 exige build de produção (service worker): playwright.offline.config.ts.
-  testIgnore: /e[124]-.*\.spec\.ts/,
+  testIgnore: /(?:e[124]-.*|rebrand-storage)\.spec\.ts/,
   timeout: 90_000,
   expect: { timeout: 15_000 },
   globalSetup: './e2e/warmup.ts',
@@ -34,7 +34,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'pnpm --filter @ogado/api exec tsx src/server.ts',
+      command: 'pnpm --filter @bovaro/api exec tsx src/server.ts',
       cwd: '../..',
       url: `http://localhost:${apiPort}/health`,
       reuseExistingServer: !process.env['CI'],

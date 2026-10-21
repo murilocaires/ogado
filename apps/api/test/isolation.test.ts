@@ -8,7 +8,7 @@ import {
   fazendaSchema,
   sessionResponseSchema,
   TERMOS_VERSAO,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import { TEST_ORIGIN } from './support/env';
 import { cenarioFixture } from './support/cenario';
 import {

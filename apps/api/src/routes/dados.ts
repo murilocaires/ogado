@@ -15,7 +15,7 @@ import {
   loteSchema,
   recriaEntradaPutSchema,
   recriaEntradaSchema,
-} from '@ogado/contracts';
+} from '@bovaro/contracts';
 import { genericConflict, notFound, versionConflict } from '../http-errors';
 import { IdConflictError } from '../repositories/account-repository';
 import type { CenarioRepository } from '../repositories/cenario-repository';
