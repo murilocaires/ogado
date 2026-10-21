@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
 
 /**
- * E5-A: sincronização robusta, contra a API real + Postgres. Pendências visíveis (indicador e selo),
+ * E5-A: sincronização robusta, contra a API real + Postgres. Pendências no indicador global,
  * volta da rede e conflito entre dois aparelhos (RF-074…RF-079).
  */
 const SENHA = 'Segredo#2026';
@@ -64,7 +64,7 @@ async function qtdNaNuvem(page: Page): Promise<number> {
 /** Sinal de "rodada concluída": o indicador some quando tudo está certo, então o shell expõe o estado. */
 const sincronizado = (page: Page) => page.locator('[data-sync-status="sincronizado"]');
 
-test('RF-075 lançar offline mostra "1 pendente" e o selo; ao voltar a rede some', async ({
+test('RF-075 lançar offline mostra "1 pendente" sem selo no lote; ao voltar a rede some', async ({
   page,
   context,
 }) => {
@@ -80,7 +80,7 @@ test('RF-075 lançar offline mostra "1 pendente" e o selo; ao voltar a rede some
   await lancarCompra(page, { qtd: '12', peso: '3600', preco: '310' });
 
   await expect(page.getByText('Sem conexão · 1 pendente').filter({ visible: true })).toBeVisible();
-  await expect(page.getByText('pendente', { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText('pendente', { exact: true })).toHaveCount(0);
 
   // Ao voltar a rede sobe sozinho, sem clicar em nada, e o indicador some.
   await context.setOffline(false);

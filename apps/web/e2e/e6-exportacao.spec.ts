@@ -74,6 +74,19 @@ test('RF-041 e RNF-009: lança um lote, baixa o CSV e o XLSX e baixa os dados da
   expect(zip.subarray(0, 2).toString('latin1')).toBe('PK');
   expect(zip.includes(Buffer.from('xl/worksheets/sheet2.xml'))).toBe(true);
 
+  // CSV/XLSX usam os dados locais; o JSON da API exige que o lote já tenha sincronizado.
+  await expect
+    .poll(
+      async () => {
+        const resposta = await page.request.get('/api/lotes');
+        expect(resposta.ok()).toBe(true);
+        const corpo = (await resposta.json()) as { lotes: { categoria: string }[] };
+        return corpo.lotes.map((lote) => lote.categoria);
+      },
+      { timeout: 30_000 },
+    )
+    .toEqual(['Bezerros; "nelore"'.toUpperCase()]);
+
   // Meus dados (JSON da API)
   await page.getByRole('link', { name: 'Conta' }).filter({ visible: true }).click();
   const secao = page.getByRole('region', { name: 'Meus dados' });
