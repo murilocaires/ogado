@@ -27,9 +27,7 @@ export function AuthShell({ mobileTitle, children }: { mobileTitle: string; chil
         <div className="title disp">{mobileTitle}</div>
       </div>
 
-      <main className="auth-main">
-        {children}
-      </main>
+      <main className="auth-main">{children}</main>
     </div>
   );
 }
