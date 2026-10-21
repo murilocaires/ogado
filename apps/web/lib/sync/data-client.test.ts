@@ -83,3 +83,45 @@ describe('data-client: falhas', () => {
     expect(r).toEqual({ ok: false, kind: 'conflito', atual: { a: 1 } });
   });
 });
+describe('RF-074: compatibilidade durante atualização da API', () => {
+  it.each(['lotes', 'cenarios'] as const)(
+    'sincroniza %s com API anterior sem paginação',
+    async (tipo) => {
+      const urls: string[] = [];
+      const api = criarDadosClient({
+        fetch: async (url) => {
+          urls.push(String(url));
+          return String(url).includes('incremental=')
+            ? new Response(
+                JSON.stringify({
+                  erro: {
+                    codigo: 'validacao_invalida',
+                    mensagem: 'Confira os campos informados.',
+                    campos: [
+                      {
+                        caminho: '',
+                        regra: 'unrecognized_keys',
+                        mensagem: 'Unrecognized keys: incremental, limit',
+                      },
+                    ],
+                  },
+                }),
+                { status: 400 },
+              )
+            : new Response(JSON.stringify({ [tipo]: [] }), { status: 200 });
+        },
+      }).paraUsuario!('usuario-teste');
+      const pagina = tipo === 'lotes' ? api.paginaLotes! : api.paginaCenarios!;
+
+      expect(
+        await pagina({ updatedAt: '2026-10-20T12:00:00.000Z', id: CORPO_LOTE.id }),
+      ).toEqual({
+        ok: true,
+        created: false,
+        data: { itens: [], proximoCursor: null },
+      });
+      expect(urls).toHaveLength(2);
+      expect(urls[1]).toBe(`/api/${tipo}?incluirExcluidos=true`);
+    },
+  );
+});

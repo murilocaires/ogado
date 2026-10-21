@@ -130,7 +130,15 @@ export const syncPageQueryFields = {
   limit: z.coerce.number().int().min(1).max(200).default(100),
 };
 
-function cursorCompleto(query: { cursorUpdatedAt?: string; cursorId?: string }): boolean {
+function cursorCompleto(query: {
+  cursorUpdatedAt?: string;
+  cursorId?: string;
+  incremental?: 'true' | 'false';
+}): boolean {
+  // Primeira página incremental: sem cursor é permitido
+  if (query.incremental === 'true' && !query.cursorUpdatedAt && !query.cursorId) {
+    return true;
+  }
   return Boolean(query.cursorUpdatedAt) === Boolean(query.cursorId);
 }
 
