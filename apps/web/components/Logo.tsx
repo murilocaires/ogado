@@ -24,8 +24,7 @@ export function LogoMark({ size = 48 }: { size?: number }) {
 export function Wordmark({ size = 30 }: { size?: number }) {
   return (
     <span className="disp" style={{ fontSize: size, letterSpacing: '-.02em' }}>
-      <span style={{ fontWeight: 400 }}>O </span>
-      <span style={{ fontWeight: 800 }}>Gado</span>
+      <span style={{ fontWeight: 800 }}>Bovaro</span>
     </span>
   );
 }
