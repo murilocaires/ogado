@@ -75,6 +75,7 @@ export function criarDadosClient(
     caminho: string,
     schema: Esquema<T>,
     corpo?: unknown,
+    legado?: () => Promise<DadosResult<T>>,
   ): Promise<DadosResult<T>> {
     let res: Response;
     try {
@@ -113,6 +114,11 @@ export function criarDadosClient(
     if (res.status === 400) {
       const envelope = errorEnvelopeSchema.safeParse(json);
       if (envelope.success && envelope.data.erro.codigo === 'validacao_invalida') {
+        // RF-074: frontend e API podem atualizar em momentos diferentes. Uma API anterior
+        // rejeita os parametros da pagina; reler a lista completa preserva dados e tombstones.
+        if (legado && envelope.data.erro.campos?.some((c) => c.regra === 'unrecognized_keys')) {
+          return legado();
+        }
         return {
           ok: false,
           kind: 'validacao',
@@ -173,11 +179,20 @@ export function criarDadosClient(
     return `${caminho}?${query}`;
   };
 
+  function lerPagina<T>(caminho: string, campo: 'lotes' | 'cenarios', lista: Esquema<T[]>, cursor?: SyncCursor) {
+    return pedir('GET', urlPagina(caminho, cursor), pagina(lista, campo), undefined, async () => {
+      const resposta = await pedir('GET', `${caminho}?incluirExcluidos=true`, lista);
+      return resposta.ok
+        ? { ...resposta, data: { itens: resposta.data, proximoCursor: null } }
+        : resposta;
+    });
+  }
+
   return {
     paraUsuario: (usuarioId) => criarDadosClient({ ...options, usuarioId }),
-    paginaLotes: (cursor) => pedir('GET', urlPagina('/lotes', cursor), pagina(listaLotes, 'lotes')),
+    paginaLotes: (cursor) => lerPagina('/lotes', 'lotes', listaLotes, cursor),
     paginaCenarios: (cursor) =>
-      pedir('GET', urlPagina('/cenarios', cursor), pagina(listaCenarios, 'cenarios')),
+      lerPagina('/cenarios', 'cenarios', listaCenarios, cursor),
     arquivarHistorico: (body) => pedir('POST', '/historico-sync', historicoSyncSchema, body),
     listarLotes: () =>
       pedir('GET', '/lotes?incluirExcluidos=true', listaLotes as unknown as Esquema<LoteDto[]>),
