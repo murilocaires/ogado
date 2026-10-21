@@ -479,17 +479,6 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
               ou
             </p>
             <GoogleLink texto="Entrar com Google" />
-            <p className="auth-legal">
-              Ao continuar com o Google você aceita os{' '}
-              <Link href="/termos" {...LINK_NOVA_ABA}>
-                Termos de Uso
-              </Link>{' '}
-              e a{' '}
-              <Link href="/privacidade" {...LINK_NOVA_ABA}>
-                Política de Privacidade
-              </Link>
-              .
-            </p>
           </>
         )}
 

@@ -436,12 +436,13 @@ describe('RNF-009 aceite dos termos na tela de cadastro', () => {
     expect(privacidade).toHaveAttribute('target', '_blank');
   });
 
-  it('os links de Termos e Privacidade não se repetem no rodapé: só o aviso contextual', async () => {
+  it('Entrar não mostra o aviso nem os links de documentos legais', async () => {
     setup('entrar');
     await screen.findByLabelText('Senha');
     expect(screen.queryByRole('navigation', { name: 'Documentos legais' })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Termos de Uso' })).toHaveLength(1);
-    expect(screen.getAllByRole('link', { name: 'Política de Privacidade' })).toHaveLength(1);
+    expect(screen.queryByRole('link', { name: 'Termos de Uso' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Política de Privacidade' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Ao continuar com o Google/)).not.toBeInTheDocument();
   });
 
   it('Cadastrar tem o aviso do Google e o checkbox, e nada no rodapé', async () => {
@@ -485,8 +486,8 @@ describe('RNF-009 aceite dos termos na tela de cadastro', () => {
     expect(screen.queryByText(/Marque que leu/)).not.toBeInTheDocument();
   });
 
-  it('o aviso do Google (com links) aparece em Entrar e em Cadastrar, sem checkbox próprio', async () => {
-    for (const modo of ['entrar', 'cadastrar'] as const) {
+  it('o aviso do Google (com links) aparece no cadastro, sem checkbox próprio', async () => {
+    for (const modo of ['cadastrar'] as const) {
       const { unmount } = (() => {
         setup(modo);
         return { unmount: () => undefined };
