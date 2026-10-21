@@ -210,7 +210,7 @@ a {
 .auth-hero {
   flex: 1 1 560px;
   min-width: 0;
-  background: linear-gradient(135deg, var(--floresta-900) 0%, #1b6b47 100%);
+  background: var(--floresta-900);
   color: #fff;
   position: relative;
   overflow: hidden;
@@ -219,37 +219,6 @@ a {
   flex-direction: column;
   justify-content: space-between;
   min-height: 100vh;
-}
-
-.auth-hero .stripes {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    100deg,
-    rgba(181, 224, 90, 0.08) 0 2px,
-    transparent 2px 26px
-  );
-}
-
-.auth-hero .ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 2px solid rgba(181, 224, 90, 0.25);
-}
-
-.auth-hero .ring-1 {
-  right: -160px;
-  bottom: -180px;
-  width: 560px;
-  height: 560px;
-}
-
-.auth-hero .ring-2 {
-  right: -90px;
-  bottom: -110px;
-  width: 420px;
-  height: 420px;
-  border-color: rgba(181, 224, 90, 0.18);
 }
 
 .auth-hero h2 {
@@ -273,8 +242,8 @@ a {
   min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 40px 24px;
+  justify-content: flex-start;
+  padding: clamp(40px, 12vh, 120px) 24px 40px;
   flex-direction: column;
   gap: 24px;
 }
@@ -401,18 +370,6 @@ a {
     overflow: hidden;
   }
 
-  .auth-page::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      100deg,
-      rgba(181, 224, 90, 0.08) 0 2px,
-      transparent 2px 26px
-    );
-    pointer-events: none;
-  }
-
   .auth-mobile-head {
     display: flex;
     flex-direction: column;
@@ -421,6 +378,12 @@ a {
     padding: 64px 24px 0;
     height: 210px;
     position: relative;
+  }
+
+  .auth-mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
   }
 
   .auth-mobile-head .title {
