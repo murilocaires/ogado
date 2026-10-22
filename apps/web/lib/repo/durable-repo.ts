@@ -11,6 +11,7 @@ import {
   canalLocal,
   concluida,
   LEGACY_SYNC_KEY,
+  lerTransacao,
   resultado,
   transacionar,
   LOCAL_ORIGIN,
@@ -38,6 +39,8 @@ export function criarRepoDuravel(): SyncableRepo {
   let hidratado = false;
   let aplicando = false;
   let erro: unknown;
+  /** Falha de leitura entre abas: não há escrita pendente para repetir, pode ser descartada. */
+  let erroDeLeitura = false;
   let persistencia: PersistenciaStatus = 'ok';
   let cache: RepoSnapshot = interno.getServerSnapshot();
   let vistos = new Map<string, Entidade>();
@@ -86,12 +89,11 @@ export function criarRepoDuravel(): SyncableRepo {
 
   async function recarregar() {
     const db = await abrirBancoLocal();
-    const tx = db.transaction(['entidades', 'meta'], 'readonly');
-    const fim = concluida(tx);
-    const geracao = resultado<unknown>(tx.objectStore('meta').get('geracao'));
-    const es = await resultado<Entidade[]>(tx.objectStore('entidades').getAll());
-    const novaGeracao = await geracao;
-    await fim;
+    const { es, novaGeracao } = await lerTransacao(db, ['entidades', 'meta'], async (tx) => {
+      const geracao = resultado<unknown>(tx.objectStore('meta').get('geracao'));
+      const entidades = await resultado<Entidade[]>(tx.objectStore('entidades').getAll());
+      return { es: entidades, novaGeracao: await geracao };
+    });
     if (geracaoBanco !== novaGeracao) {
       epoca++;
       aplicando = true;
@@ -338,12 +340,14 @@ export function criarRepoDuravel(): SyncableRepo {
         publicar();
         void fila.then(recarregar).catch((e: unknown) => {
           erro = e;
+          erroDeLeitura = true;
           persistencia = 'indisponivel';
           publicar();
         });
       } else
         void fila.then(recarregar).catch((e: unknown) => {
           erro = e;
+          erroDeLeitura = true;
           persistencia = 'indisponivel';
           publicar();
         });
@@ -367,10 +371,19 @@ export function criarRepoDuravel(): SyncableRepo {
     async flush() {
       await inicial;
       await fila;
+      if (erro && erroDeLeitura && !falhas.length && cache.status === 'pronto') {
+        // A releitura de outra aba falhou, mas não há escrita nossa pendente: o próximo
+        // acesso tenta uma conexão nova em vez de deixar o aviso de armazenamento para sempre.
+        erro = undefined;
+        erroDeLeitura = false;
+        persistencia = pendencias ? 'salvando' : 'ok';
+        publicar();
+      }
       if (erro && falhas.length) {
         const tarefas = falhas.splice(0);
         fila = fila.then(async () => {
           erro = undefined;
+          erroDeLeitura = false;
           persistencia = 'salvando';
           publicar();
           for (let i = 0; i < tarefas.length; i++) {

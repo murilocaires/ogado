@@ -80,6 +80,8 @@ export function NegociosScreen() {
   const [aba, setAba] = useState<Aba>('todas');
   const [modal, setModal] = useState<ModalAberto>(null);
   const [excluindo, setExcluindo] = useState<ItemNegocio | null>(null);
+  const [excluindoOcupado, setExcluindoOcupado] = useState(false);
+  const [erroExcluir, setErroExcluir] = useState('');
   const [exportando, setExportando] = useState(false);
 
   const pronto = dados.status === 'pronto';
@@ -129,6 +131,29 @@ export function NegociosScreen() {
 
   const editando = modal?.loteId ? lotes.find((l) => l.id === modal.loteId) : undefined;
 
+  function pedirExclusao(x: ItemNegocio): void {
+    setErroExcluir('');
+    setExcluindoOcupado(false);
+    setExcluindo(x);
+  }
+
+  async function confirmarExclusao(): Promise<void> {
+    if (!excluindo || excluindoOcupado) return;
+    setExcluindoOcupado(true);
+    setErroExcluir('');
+    try {
+      repo.excluirLote(excluindo.lote.id);
+      await aguardarGravacao(repo);
+      setExcluindo(null);
+      toast('Lote excluído.');
+    } catch {
+      // Mantém o diálogo aberto só para o usuário repetir; o texto explica o que houve.
+      setErroExcluir('Não foi possível confirmar a exclusão no aparelho. Tente novamente.');
+    } finally {
+      setExcluindoOcupado(false);
+    }
+  }
+
   function botoes(x: ItemNegocio) {
     return (
       <>
@@ -144,7 +169,7 @@ export function NegociosScreen() {
           type="button"
           className="icon-b"
           aria-label={`Excluir lote ${x.lote.numero} de ${x.tipo}`}
-          onClick={() => setExcluindo(x)}
+          onClick={() => pedirExclusao(x)}
         >
           <Icon name="trash" size={18} />
         </button>
@@ -346,19 +371,14 @@ export function NegociosScreen() {
           texto={`O lote de ${capitalizar(excluindo.lote.categoria)} será removido e o saldo recalculado. Esta ação não pode ser desfeita.`}
           confirmar="Excluir"
           perigo
-          onCancel={() => setExcluindo(null)}
-          onConfirm={async () => {
-            repo.excluirLote(excluindo.lote.id);
-            try {
-              await aguardarGravacao(repo);
-              setExcluindo(null);
-              toast('Lote excluído.');
-            } catch {
-              toast(
-                'Não foi possível confirmar a exclusão. Mantenha o app aberto e tente novamente.',
-              );
-            }
+          erro={erroExcluir || undefined}
+          ocupado={excluindoOcupado}
+          onCancel={() => {
+            if (excluindoOcupado) return;
+            setExcluindo(null);
+            setErroExcluir('');
           }}
+          onConfirm={() => void confirmarExclusao()}
         />
       )}
     </>

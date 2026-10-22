@@ -78,6 +78,8 @@ export function CenariosScreen({
   const [comparando, setComparando] = useState(false);
   const [renomeando, setRenomeando] = useState<CenarioEntity | null>(null);
   const [excluindo, setExcluindo] = useState<CenarioEntity | null>(null);
+  const [excluindoOcupado, setExcluindoOcupado] = useState(false);
+  const [erroExcluir, setErroExcluir] = useState('');
   const [exportando, setExportando] = useState(false);
   const painelComparacao = useRef<HTMLElement>(null);
   const copiasPendentes = useRef(new Set<string>());
@@ -175,6 +177,28 @@ export function CenariosScreen({
         />
       </label>
     );
+  }
+
+  function pedirExclusao(c: CenarioEntity): void {
+    setErroExcluir('');
+    setExcluindoOcupado(false);
+    setExcluindo(c);
+  }
+
+  async function confirmarExclusao(): Promise<void> {
+    if (!excluindo || excluindoOcupado) return;
+    setExcluindoOcupado(true);
+    setErroExcluir('');
+    try {
+      repo.excluirCenario(excluindo.id);
+      await aguardarGravacao(repo);
+      toast('Cenário excluído.');
+      setExcluindo(null);
+    } catch {
+      setErroExcluir('Não foi possível confirmar a exclusão no aparelho. Tente novamente.');
+    } finally {
+      setExcluindoOcupado(false);
+    }
   }
 
   return (
@@ -315,7 +339,7 @@ export function CenariosScreen({
                       className="icon-b"
                       title="Excluir"
                       aria-label={`Excluir ${c.nome}`}
-                      onClick={() => setExcluindo(c)}
+                      onClick={() => pedirExclusao(c)}
                     >
                       <Icon name="trash" size={16} />
                     </button>
@@ -396,7 +420,7 @@ export function CenariosScreen({
                     className="icon-b"
                     title="Excluir"
                     aria-label={`Excluir ${c.nome}`}
-                    onClick={() => setExcluindo(c)}
+                    onClick={() => pedirExclusao(c)}
                   >
                     <Icon name="trash" size={18} />
                   </button>
@@ -472,17 +496,14 @@ export function CenariosScreen({
           texto={`“${excluindo.nome}” será removido. Esta ação não pode ser desfeita.`}
           confirmar="Excluir"
           perigo
-          onCancel={() => setExcluindo(null)}
-          onConfirm={async () => {
-            try {
-              repo.excluirCenario(excluindo.id);
-              await aguardarGravacao(repo);
-              toast('Cenário excluído.');
-              setExcluindo(null);
-            } catch {
-              toast('Não foi possível gravar a exclusão no aparelho. Tente novamente.');
-            }
+          erro={erroExcluir || undefined}
+          ocupado={excluindoOcupado}
+          onCancel={() => {
+            if (excluindoOcupado) return;
+            setExcluindo(null);
+            setErroExcluir('');
           }}
+          onConfirm={() => void confirmarExclusao()}
         />
       )}
     </>
