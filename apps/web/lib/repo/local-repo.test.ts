@@ -4,6 +4,7 @@ import { snapshotDaRecria } from '../cenarios';
 import { criarRepoLocal, LEGACY_STORAGE_KEY_E1, STORAGE_KEY, STORAGE_KEY_E1 } from './local-repo';
 import type { LoteSalvar, RecriaEntity } from './types';
 import { recriaFormPlanilha } from './planilha.test-support';
+import { proximoNumero } from '../negocios';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
@@ -18,6 +19,22 @@ const compra: LoteSalvar = {
   pesos: [],
   preco: '300',
 };
+
+it('numera pelo maior lote ativo do mesmo tipo, ignorando os excluídos', () => {
+  const repo = criarRepoLocal({ storage: () => criarStorageMemoria() });
+  const um = repo.salvarLote(compra);
+  const dois = repo.salvarLote({ ...compra, numero: 2 });
+  const tres = repo.salvarLote({ ...compra, numero: 3 });
+  repo.salvarLote({ ...compra, tipo: 'venda', numero: 10 });
+  const proximo = () => proximoNumero(repo.exportar().lotes, 'compra');
+  expect(proximo()).toBe(4);
+  repo.excluirLote(tres.id);
+  expect(proximo()).toBe(3);
+  repo.excluirLote(um.id);
+  expect(proximo()).toBe(3);
+  repo.excluirLote(dois.id);
+  expect(proximo()).toBe(1);
+});
 
 function storageQuebrado(): Storage {
   const falha = (): never => {

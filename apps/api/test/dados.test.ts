@@ -138,10 +138,46 @@ describe('lotes na nuvem (RF-020 compra, RF-021 venda)', () => {
     );
     expect(comLapides.lotes.map((l) => l.id)).toContain(loteA.id);
     expect((await send(app, 'GET', `/lotes/${loteA.id}`, cookie)).statusCode).toBe(404);
-    // nunca reutiliza o número de um lote excluído
+    // Excluir um lote intermediário não preenche lacunas: segue o maior ativo (2).
     const c = loteSchema.parse((await send(app, 'POST', '/lotes', cookie, novoLote())).json());
     expect(c.numero).toBe(3);
   });
+
+  it.each(['compra', 'venda'])(
+    'reutiliza o último número excluído em %s e preserva as lápides',
+    async (tipo) => {
+      const cookie = await conta();
+      const criar = async () => {
+        const resposta = await send(app, 'POST', '/lotes', cookie, novoLote({ tipo }));
+        expect(resposta.statusCode).toBe(201);
+        return loteSchema.parse(resposta.json());
+      };
+      const excluir = async (lote: { id: string; version: number }) => {
+        expect(
+          (await send(app, 'DELETE', `/lotes/${lote.id}?version=${lote.version}`, cookie))
+            .statusCode,
+        ).toBe(200);
+      };
+      const um = await criar();
+      const dois = await criar();
+      const tres = await criar();
+      expect([um.numero, dois.numero, tres.numero]).toEqual([1, 2, 3]);
+      await excluir(tres);
+      const novoTres = await criar();
+      expect(novoTres.numero).toBe(3);
+      expect(novoTres.id).not.toBe(tres.id);
+      const lapides = loteListResponseSchema.parse(
+        (await send(app, 'GET', '/lotes?incluirExcluidos=true', cookie)).json(),
+      );
+      expect(lapides.lotes.find((lote) => lote.id === tres.id)?.deletedAt).toBeTruthy();
+      await excluir(novoTres);
+      await excluir(dois);
+      await excluir(um);
+      expect((await criar()).numero).toBe(1);
+      const paralelos = await Promise.all([criar(), criar()]);
+      expect(paralelos.map((lote) => lote.numero).sort()).toEqual([2, 3]);
+    },
+  );
 
   it('RF-021: lote de venda guarda base da @, desconto (kg por cabeça) e pesos individuais', async () => {
     const cookie = await conta();

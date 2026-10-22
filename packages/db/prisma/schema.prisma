@@ -118,7 +118,7 @@ model Lote {
   id              String     @id @db.Uuid
   fazendaId       String     @db.Uuid
   tipo            LoteTipo
-  // sequencial por fazenda + tipo, atribuído pelo servidor; lápides mantêm o número (nunca reutiliza)
+  // max+1 dos lotes ativos por fazenda + tipo; lápides preservam o número sem reservá-lo
   numero          Int
   categoria       String
   data            DateTime?  @db.Date
@@ -140,7 +140,7 @@ model Lote {
 
   fazenda Fazenda @relation(fields: [fazendaId], references: [id], onDelete: Cascade)
 
-  @@unique([fazendaId, tipo, numero])
+  // Unicidade parcial dos ativos definida em SQL: Lote_fazendaId_tipo_numero_ativo_key.
   @@index([fazendaId, updatedAt])
   @@index([fazendaId, updatedAt, id])
 }
