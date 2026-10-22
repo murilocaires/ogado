@@ -104,6 +104,45 @@ test('RF-075 o indicador também aparece em tela estreita', async ({ page, conte
   await context.setOffline(false);
 });
 
+test('RF-073 excluir offline some da nuvem ao reconectar e não volta', async ({
+  page,
+  context,
+}) => {
+  await cadastrar(page, uniqueEmail('exclui-off'));
+  await irParaNegocios(page);
+  await lancarCompra(page, { qtd: '12', peso: '3600', preco: '310' });
+  await expect(sincronizado(page)).toBeAttached();
+  await expect.poll(() => qtdNaNuvem(page)).toBe(12);
+
+  await context.setOffline(true);
+  await page
+    .getByRole('button', { name: 'Excluir lote 1 de compra' })
+    .filter({ visible: true })
+    .click();
+  const confirmacao = page.getByRole('alertdialog');
+  await confirmacao.getByRole('button', { name: 'Excluir', exact: true }).click();
+  await expect(confirmacao).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Editar lote 1 de compra' })).toHaveCount(0);
+  await expect(page.getByText('Sem conexão · 1 pendente').filter({ visible: true })).toBeVisible();
+
+  // A exclusão (tombstone) sobe sozinha e o lote não reaparece depois de recarregar.
+  await context.setOffline(false);
+  await expect(sincronizado(page)).toBeAttached({ timeout: 30_000 });
+  await expect
+    .poll(
+      async () => {
+        const r = await page.request.get('/api/lotes?incluirExcluidos=true');
+        const corpo = (await r.json()) as { lotes: { deletedAt: string | null }[] };
+        return corpo.lotes.map((l) => l.deletedAt !== null);
+      },
+      { timeout: 30_000 },
+    )
+    .toEqual([true]);
+  await expect(page.getByText(/Sem conexão/).filter({ visible: true })).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Nenhum lote' })).toBeVisible();
+});
+
 /** A e B na mesma conta, com o Lote 1 sincronizado nos dois. */
 async function doisAparelhos(browser: Browser, prefixo: string) {
   const email = uniqueEmail(prefixo);
