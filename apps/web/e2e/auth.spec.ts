@@ -186,7 +186,7 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await expect(page).toHaveURL(/\/painel$/);
   });
 
-  test('CA-21 sessão expirada mostra "Entre de novo" e não apaga o que há no aparelho', async ({
+  test('CA-21 sessão expirada leva ao login sem aviso e não apaga o que há no aparelho', async ({
     page,
     context,
   }) => {
@@ -209,9 +209,10 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await context.clearCookies();
     await page.reload();
 
-    // A barreira das telas leva a /entrar, que avisa que a sessão terminou.
+    // A barreira das telas leva a /entrar, que mostra o login direto, sem aviso de sessão.
     await expect(page).toHaveURL(/\/entrar$/);
-    await expect(page.getByText(/Entre de novo/)).toBeVisible();
+    await expect(page.getByLabel('Senha', { exact: true })).toBeVisible();
+    await expect(page.getByText(/Entre de novo|Sua sessão terminou/)).toHaveCount(0);
     expect(await page.evaluate(() => window.localStorage.getItem('fila-teste'))).toBe(
       'lancamento-pendente',
     );
@@ -254,7 +255,8 @@ test.describe('CA-22 jornada completa: cadastrar, sair, entrar', () => {
     await page.evaluate(() => window.dispatchEvent(new Event('online')));
 
     await expect(page).toHaveURL(/\/entrar$/);
-    await expect(page.getByText(/Entre de novo/)).toBeVisible();
+    await expect(page.getByLabel('Senha', { exact: true })).toBeVisible();
+    await expect(page.getByText(/Entre de novo|Sua sessão terminou/)).toHaveCount(0);
     expect(await page.evaluate(() => window.localStorage.getItem('fila-teste'))).toBe(
       'lancamento-pendente',
     );
