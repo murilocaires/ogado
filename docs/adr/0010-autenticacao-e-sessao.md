@@ -108,8 +108,9 @@ Estado das bibliotecas pesquisado em 2026-10-17 (npm registry e sites oficiais):
 | `autenticado` | `GET /auth/session` responde 200 | Uso normal; a fila sincroniza |
 | `anonimo` | 401 sem identidade local salva | Tela de login |
 | `offline-nao-verificado` | Sem rede, com identidade local (`usuarioId` + `fazendaId`, que não são segredo) | Uso local completo; a fila acumula; nada é apagado |
-| `expirada` | 401 (de sessão ou sync) com identidade local | Uso local continua; aviso "Entre de novo para enviar N lançamentos"; a fila **fica intacta**; sync pausada |
+| `expirada` | 401 (de sessão ou sync) com identidade local | A barreira leva a `/entrar`, que mostra o login direto, sem aviso de sessão expirada; a fila **fica intacta**; sync pausada; entrar de novo retoma |
 - 401 **nunca** dispara limpeza local. Só o logout explícito ou a troca de usuário apagam o banco local (RF-078).
+- O aviso persistente "Entre de novo" foi removido em 2026-10-22: a expiração leva ao login sem mensagem adicional, mantendo intactos os dados do aparelho.
 - Novo login com o **mesmo** `usuarioId`: a fila é retomada. Com **outro** usuário e pendências do anterior, o app avisa e só apaga com confirmação ("N lançamentos de outra conta ainda não foram enviados").
 - O service worker nunca cacheia `/auth/*` nem respostas autenticadas (ADR-0007).
 

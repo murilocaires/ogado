@@ -41,7 +41,7 @@
 
 **Front (tela de login e estados)**
 - [x] **CA-20** Dado a tela de entrar, quando envio credenciais válidas, então chego ao painel (ou ao onboarding do T-05); com credenciais inválidas, vejo a mensagem genérica e o foco vai para o erro (teclado e leitor de tela).
-- [x] **CA-21** Dado uma sessão que expira, quando a API responde 401, então o app mostra "Entre de novo" e **não** apaga dados locais; o logout explícito é a única ação que limpa o aparelho (contrato usado pelo T-14/RF-080).
+- [x] **CA-21** Dado uma sessão que expira, quando a API responde 401, então o app leva à tela de entrar sem aviso de sessão expirada e **não** apaga dados locais; o logout explícito é a única ação que limpa o aparelho (contrato usado pelo T-14/RF-080).
 - [x] **CA-22** (e2e) Dado um navegador limpo, quando cadastro, saio e entro de novo, então a jornada completa funciona e nenhum token aparece em localStorage ou IndexedDB.
 
 - [x] ADR-0010 aprovado pelo humano, com Q1–Q4, Q6 e Q7 respondidas.

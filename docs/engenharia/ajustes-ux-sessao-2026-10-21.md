@@ -30,7 +30,7 @@ Revogação/invalidade no servidor:
 
 Um novo login não revoga automaticamente as demais sessões. Desvincular Google não revoga a sessão atual. Perda de cookie por troca de domínio ou limpeza do navegador também impede autenticar, mesmo sem revogação no banco.
 
-O frontend apresenta “Sua sessão terminou…” quando recebe 401 e tem identidade local. Portanto, esse aviso não prova que os 30/90 dias decorreram. O aviso é persistente no estado `expirada`, sem contagem regressiva; não é o toast de 2,8 segundos. Falha de rede é tratada separadamente. Nenhum prazo ou texto de expiração foi alterado.
+O frontend, ao receber 401 com identidade local, leva à tela de entrar. Até 2026-10-21 essa tela apresentava o aviso persistente “Sua sessão terminou…”, removido em 2026-10-22: a expiração agora mostra o login direto, sem mensagem adicional. O aviso nunca provou que os 30/90 dias decorreram e não era o toast de 2,8 segundos. Falha de rede é tratada separadamente. Nenhum prazo ou texto de expiração foi alterado.
 
 ## Entrada em duas tentativas
 
