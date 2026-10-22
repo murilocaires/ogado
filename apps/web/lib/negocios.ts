@@ -66,7 +66,7 @@ export function ordenarPorData(itens: readonly ItemNegocio[]): ItemNegocio[] {
 }
 
 export function proximoNumero(lotes: readonly LoteEntity[], tipo: LoteTipo): number {
-  const numeros = lotes.filter((l) => l.tipo === tipo).map((l) => l.numero);
+  const numeros = lotes.filter((l) => l.tipo === tipo && l.deletedAt === null).map((l) => l.numero);
   return numeros.length ? Math.max(...numeros) + 1 : 1;
 }
 
