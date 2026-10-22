@@ -64,10 +64,20 @@ export interface DadosClient {
   gravarRecria(body: RecriaEntradaPut): Promise<DadosResult<RecriaEntradaDto>>;
 }
 
+/** Uma requisição pendurada (sinal fraco no celular) não pode segurar a rodada para sempre. */
+const PRAZO_REQUISICAO_MS = 20_000;
+
 export function criarDadosClient(
-  options: { baseUrl?: string; fetch?: typeof fetch; usuarioId?: string } = {},
+  options: {
+    baseUrl?: string;
+    fetch?: typeof fetch;
+    usuarioId?: string;
+    /** Sobrescreve o prazo de cada requisição (testes). */
+    prazoMs?: number;
+  } = {},
 ): DadosClient {
   const baseUrl = options.baseUrl ?? '/api';
+  const prazoMs = options.prazoMs ?? PRAZO_REQUISICAO_MS;
   const doFetch: typeof fetch = (input, init) => (options.fetch ?? fetch)(input, init);
 
   async function pedir<T>(
@@ -78,19 +88,33 @@ export function criarDadosClient(
     legado?: () => Promise<DadosResult<T>>,
   ): Promise<DadosResult<T>> {
     let res: Response;
+    const controlador = typeof AbortController === 'undefined' ? undefined : new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      res = await doFetch(`${baseUrl}${caminho}`, {
-        method: metodo,
-        credentials: 'include',
-        cache: 'no-store',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(options.usuarioId ? { 'X-Bovaro-Usuario': options.usuarioId } : {}),
-        },
-        ...(corpo === undefined ? {} : { body: JSON.stringify(corpo) }),
+      const prazo = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          controlador?.abort();
+          reject(new Error('tempo esgotado'));
+        }, prazoMs);
       });
+      res = await Promise.race([
+        doFetch(`${baseUrl}${caminho}`, {
+          method: metodo,
+          credentials: 'include',
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(options.usuarioId ? { 'X-Bovaro-Usuario': options.usuarioId } : {}),
+          },
+          ...(controlador ? { signal: controlador.signal } : {}),
+          ...(corpo === undefined ? {} : { body: JSON.stringify(corpo) }),
+        }),
+        prazo,
+      ]);
     } catch {
       return { ok: false, kind: 'rede' };
+    } finally {
+      if (timer) clearTimeout(timer);
     }
     if (res.status === 401) return { ok: false, kind: 'nao-autenticado' };
     if (res.status === 404) return { ok: false, kind: 'nao-encontrado' };

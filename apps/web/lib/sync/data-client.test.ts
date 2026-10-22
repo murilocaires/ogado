@@ -82,6 +82,16 @@ describe('data-client: falhas', () => {
     }).alterarLote('id', { version: 1 } as never);
     expect(r).toEqual({ ok: false, kind: 'conflito', atual: { a: 1 } });
   });
+
+  it('requisição sem resposta vira falha de rede (sinal fraco no celular)', async () => {
+    const api = criarDadosClient({
+      prazoMs: 20,
+      fetch: () => new Promise<Response>(() => undefined),
+    });
+    const inicio = Date.now();
+    expect(await api.listarLotes()).toEqual({ ok: false, kind: 'rede' });
+    expect(Date.now() - inicio).toBeLessThan(2_000);
+  });
 });
 describe('RF-074: compatibilidade durante atualização da API', () => {
   it.each(['lotes', 'cenarios'] as const)(
