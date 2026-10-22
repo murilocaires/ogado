@@ -155,6 +155,8 @@ export function createSessionController(deps: SessionControllerDeps): SessionCon
     epoch += 1;
     const mine = epoch;
     authenticationEpoch = mine;
+    // Cada tentativa mostra seu resultado, sem herdar o conflito anterior.
+    mismatch = null;
     try {
       return await performAuthCall(run, mine);
     } finally {

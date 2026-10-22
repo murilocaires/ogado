@@ -344,6 +344,25 @@ describe('RF-002 máquina de estados da sessão', () => {
     expect(store.current).toEqual(previous);
   });
 
+  it('RF-078 nova tentativa limpa o conflito anterior sem apagar dados', async () => {
+    const store = memoryStore({ usuarioId: 'outra-conta', fazendaId: 'outra-fazenda' });
+    const login = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, data: sessionBody })
+      .mockResolvedValueOnce({ ok: false, kind: 'credenciais' });
+    const clearLocalData = vi.fn();
+    const c = createSessionController({ api: fakeApi({ login }), identity: store, clearLocalData });
+    await c.login({ email: 'ana@fazenda.com', senha: 'Segredo#1' });
+    expect(c.getAccountMismatch()).not.toBeNull();
+    expect(await c.login({ email: 'original@fazenda.com', senha: 'Errada#1' })).toEqual({
+      ok: false,
+      kind: 'credenciais',
+    });
+    expect(c.getAccountMismatch()).toBeNull();
+    expect(store.current?.usuarioId).toBe('outra-conta');
+    expect(clearLocalData).not.toHaveBeenCalled();
+  });
+
   it('RF-078 mesma conta não sinaliza troca', async () => {
     const onAccountMismatch = vi.fn();
     const c = createSessionController({
