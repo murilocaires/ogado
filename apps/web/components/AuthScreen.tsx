@@ -281,15 +281,6 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
           </>
         )}
 
-        {session.status === 'expirada' && isLogin && (
-          <div className="notice notice-warn" role="status">
-            <strong>Entre de novo</strong>
-            <p style={{ margin: '4px 0 0' }}>
-              Sua sessão terminou. Seus dados continuam salvos neste aparelho.
-            </p>
-          </div>
-        )}
-
         {alertText && (
           <div
             ref={alertRef}

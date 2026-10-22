@@ -150,10 +150,10 @@ describe('RF-004 estados da tela Conta', () => {
     expect(screen.getByText('Carregando seus dados…')).toBeInTheDocument();
   });
 
-  it('sessão expirada convida a entrar de novo e garante que os dados ficam no aparelho', async () => {
+  it('sessao expirada mostra entrada sem aviso', async () => {
     await setup({ getSession: { ok: false, kind: 'sessao-expirada' } });
-    expect(await screen.findByRole('heading', { name: 'Entre de novo' })).toBeVisible();
-    expect(screen.getByText(/continuam salvos neste aparelho/)).toBeVisible();
+    expect(await screen.findByRole('link', { name: 'Entrar' })).toBeVisible();
+    expect(screen.queryByText(/Entre de novo|Sua sess\u00e3o terminou/)).not.toBeInTheDocument();
   });
 
   it('sem internet e sem verificar a sessão avisa que a conta precisa de internet', async () => {

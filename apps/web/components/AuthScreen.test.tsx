@@ -193,11 +193,12 @@ describe('RF-001 tela de entrar (CA-20)', () => {
 });
 
 describe('RF-002 sessão expirada na tela de entrar (CA-21)', () => {
-  it('RF-002 com 401 e identidade local mostra "Entre de novo" e garante que os dados ficam', async () => {
+  it('RF-002 com 401 mostra o login sem aviso', async () => {
     const getSession = vi.fn().mockResolvedValue({ ok: false, kind: 'sessao-expirada' });
     const { controller } = setup('entrar', { getSession }, identity);
-    expect(await screen.findByText(/Entre de novo/)).toBeInTheDocument();
-    expect(screen.getByText(/continuam salvos neste aparelho/i)).toBeInTheDocument();
+    await waitFor(() => expect(controller.getState().status).toBe('expirada'));
+    expect(screen.getByLabelText('Senha')).toBeVisible();
+    expect(screen.queryByText(/Entre de novo|Sua sess\u00e3o terminou/)).not.toBeInTheDocument();
     expect(controller.getState().status).toBe('expirada');
   });
 });

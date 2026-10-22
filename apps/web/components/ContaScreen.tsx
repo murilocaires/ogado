@@ -1191,7 +1191,7 @@ export function ContaScreen() {
   return (
     <>
       <PageHeader titulo="Conta" sub="Gerencie seus dados, acesso e fazenda." />
-      {sessao.status === 'anonimo' && (
+      {(sessao.status === 'anonimo' || sessao.status === 'expirada') && (
         <section className="card" aria-label="Entrar ou criar conta">
           <h2>Guarde seus dados na nuvem</h2>
           <p style={{ margin: '0 0 16px', color: 'var(--tinta-2)', lineHeight: 1.5 }}>
@@ -1206,17 +1206,6 @@ export function ContaScreen() {
               Criar conta
             </Link>
           </div>
-        </section>
-      )}
-      {sessao.status === 'expirada' && (
-        <section className="card" aria-label="Sessão encerrada">
-          <h2>Entre de novo</h2>
-          <p style={{ margin: '0 0 16px', color: 'var(--tinta-2)', lineHeight: 1.5 }}>
-            Sua sessão terminou. Seus dados continuam salvos neste aparelho.
-          </p>
-          <Link href="/entrar" className="btn">
-            Entrar
-          </Link>
         </section>
       )}
       {sessao.status === 'offline-nao-verificado' && (
