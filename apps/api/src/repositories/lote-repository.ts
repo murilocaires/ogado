@@ -15,8 +15,8 @@ function toDate(data: string | null): Date | null {
 
 /**
  * Repositório de Lote. Toda consulta filtra por `fazendaId` do tenant (RNF-004); lote de outra
- * fazenda é indistinguível de inexistente. O número é do servidor: max+1 por fazenda+tipo (lápides
- * contam, então nunca se reutiliza), protegido pela unicidade (fazendaId, tipo, numero).
+ * fazenda é indistinguível de inexistente. O número é max+1 dos lotes ativos por fazenda+tipo.
+ * Lápides preservam seu número, mas não o reservam; a unicidade vale apenas para lotes ativos.
  */
 export function createLoteRepository(prisma: PrismaClient) {
   const leitura = loteOperations(prisma);
@@ -109,7 +109,7 @@ function loteOperations(prisma: Pick<PrismaClient, 'lote'>) {
         if (existente) return { record: existente, created: false };
 
         const ultimo = await prisma.lote.aggregate({
-          where: { fazendaId: ctx.fazendaId, tipo: input.tipo },
+          where: { fazendaId: ctx.fazendaId, tipo: input.tipo, deletedAt: null },
           _max: { numero: true },
         });
         const { count } = await prisma.lote.createMany({
