@@ -50,5 +50,5 @@ test('o lote lançado no aparelho A aparece no aparelho B', async ({ browser }) 
   await expect(b).toHaveURL(/\/painel$/);
   await b.getByRole('link', { name: 'Negócios' }).filter({ visible: true }).click();
   await expect(b.getByRole('heading', { name: 'Nenhum lote' })).toBeHidden();
-  await expect(b.getByText('Lote 1')).toBeVisible();
+  await expect(b.getByText('Lote 1', { exact: true }).filter({ visible: true })).toBeVisible();
 });
